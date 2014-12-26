@@ -115,18 +115,24 @@ class Task(object):
         self.drawn_x_begin_coord = None
         self.drawn_x_end_coord = None
         self.drawn_y_coord = None
+        self.cache_start_date = None
+        self.cache_end_date = None
         return
 
 
     def start_date(self):
         """
         """
-        #__LOG__.debug('** Task::start_date ({0})'.format(self.name))
+        if self.cache_start_date is not None:
+            return self.cache_start_date
+
+        __LOG__.debug('** Task::start_date ({0})'.format(self.name))
         if self.depends_of is None:
             #__LOG__.debug('*** Do not depend of other task')
             start = self.start
             while start.weekday() in NOT_WORKED_DAYS or start in HOLLIDAYS:
                 start = start + datetime.timedelta(days=1)
+            self.cache_start_date = start
             return start
         else:
             #__LOG__.debug('*** Do depend of other tasks')
@@ -136,60 +142,53 @@ class Task(object):
                     #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
                     prev_task_end = t.end_date()
             if prev_task_end > self.start:
+                self.cache_start_date = prev_task_end
                 return prev_task_end
             else:
                 start = self.start
                 while start.weekday() in NOT_WORKED_DAYS or start in HOLLIDAYS:
                     start = start + datetime.timedelta(days=1)
+                self.cache_start_date = start
                 return start
 
 
     def end_date(self):
         """
         """
+        if self.cache_end_date is not None:
+            return self.cache_end_date
+
         __LOG__.debug('** Task::end_date ({0})'.format(self.name))
         current_day = self.start_date()
         real_duration = 0
         duration = self.duration 
         while duration > 0:
             if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in HOLLIDAYS):
-                __LOG__.debug('*** day worked {0}'.format(current_day.weekday()))
                 real_duration = real_duration + 1
                 duration -= 1
             else:
-                __LOG__.debug('*** day not worked {0}'.format(current_day.weekday()))
                 real_duration = real_duration + 1
 
             current_day = self.start_date() + datetime.timedelta(days=real_duration)
-            
-        return self.start_date() + datetime.timedelta(days=real_duration)
+
+        self.cache_end_date = self.start_date() + datetime.timedelta(days=real_duration)
+        return self.cache_end_date
 
 
     def svg(self, prev_y=0, start=None, end=None, color='#FFFF90', level=None):
         """
         """
+        __LOG__.debug('** Task::svg ({0}, {1}, {2}, {3}, {4})'.format(prev_y, start, end, color, level))
         if start is None:
             start = self.start_date()
         if end is None:
             end = self.end_date()
 
-        __LOG__.warning("{0}".format(self.start_date()))
-        __LOG__.warning("{0}".format(start))
-        __LOG__.warning("{0}".format((self.start_date() - start).days))
-
         add_begin_mark = False
         add_end_mark = False
 
         y = prev_y * 10
-        
-        # if self.start_date() >= start and self.start_date() <= end:
-        #     x = (self.start_date() - start).days * 10
-        #     self.drawn_x_begin_coord = x
-        # else:
-        #     x = 0
-        #     add_begin_mark = True
-            
-            
+                    
         # cas 1 -s--S==E--e-
         if self.start_date() >= start and self.end_date() <= end:
             x = (self.start_date() - start).days * 10
@@ -291,12 +290,12 @@ class Task(object):
     def svg_dependencies(self, prj):
         """
         """
+        __LOG__.debug('** Task::svg_dependencies ({0})'.format(prj))
         if self.depends_of is None:
             return None
         else:
             svg = svgwrite.container.Group()
             for t in self.depends_of:
-                print(self.name, t.name, t.drawn_x_end_coord)
                 if not (t.drawn_x_end_coord is None or t.drawn_y_coord is None or self.drawn_x_begin_coord is None) and prj.is_in_project(t):
                     svg.add(svgwrite.shapes.Line(
                             start=((t.drawn_x_end_coord-2)*mm, (t.drawn_y_coord+5)*mm), 
@@ -323,26 +322,29 @@ class Task(object):
     def nb_elements(self):
         """
         """
+        __LOG__.debug('** Task::nb_elements')
         return 1
 
 
     def reset_coord(self):
         """
         """
+        __LOG__.debug('** Task::reset_coord')
         self.drawn_x_begin_coord = None
         self.drawn_x_end_coord = None
         self.drawn_y_coord = None
+        self.cache_start_date = None
+        self.cache_end_date = None
         return
 
 
     def is_in_project(self, task):
         """
         """
+        __LOG__.debug('** Task::is_in_project ({0})'.format(task))
         if task is self:
-            print('OK')
             return True
 
-        print('KO')
         return False
 
 
@@ -356,12 +358,14 @@ class Project(object):
         self.tasks = []
         self.name = name
         self.color = color
+        self.cache_nb_elements = None
         return
 
     def add_task(self, task):
         """
         """
         self.tasks.append(task)
+        self.cache_nb_elements = None
         return
 
     def svg_calendar(self, maxx, maxy, start_date, today=None):
@@ -506,14 +510,20 @@ class Project(object):
     def nb_elements(self):
         """
         """
+        if self.cache_nb_elements is not None:
+            return self.cache_nb_elements
+        
         nb = 1
         for t in self.tasks:
             nb += t.nb_elements()
+
+        self.cache_nb_elements = nb
         return nb 
 
     def reset_coord(self):
         """
         """
+        self.cache_nb_elements = None
         for t in self.tasks:
             t.reset_coord()
         return
@@ -531,5 +541,5 @@ class Project(object):
 if __name__ == '__main__':
     pass
 else:
-    #__init_log_to_sysout__(level=logging.DEBUG)
-    __init_log_to_sysout__(level=logging.WARNING)
+    __init_log_to_sysout__(level=logging.DEBUG)
+    #_init_log_to_sysout__(level=logging.WARNING)
