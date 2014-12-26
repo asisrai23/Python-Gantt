@@ -57,7 +57,7 @@ __LOG__ = None
 
 ############################################################################
 
-WORKED_DAY = [0, 1, 2, 3 ,4]
+NOT_WORKED_DAYS = [5, 6]
 HOLLIDAYS = [
     datetime.date(2014, 12, 25),
     datetime.date(2015, 1, 1),
@@ -95,16 +95,26 @@ def __show_version__(name, **kwargs):
 class Task(object):
     """
     """
-    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, ressource=None, percent_done=0):
+    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, ressources=None, percent_done=0):
         """
         """
-        __LOG__.debug('** Task::__init__ {0}'.format({'name':name, 'start':start, 'stop':stop, 'duration':duration, 'depends_of':depends_of, 'ressource':ressource, 'percent_done':percent_done}))
+        __LOG__.debug('** Task::__init__ {0}'.format({'name':name, 'start':start, 'stop':stop, 'duration':duration, 'depends_of':depends_of, 'ressources':ressources, 'percent_done':percent_done}))
         self.name = name
         self.start = start
-        self.duration = duration - 1
-        self.depends_of = depends_of
-        self.ressource = ressource
+        self.duration = duration
+
+        if type(depends_of) is type([]):
+            self.depends_of = depends_of
+        elif depends_of is not None:
+            self.depends_of = [depends_of]
+        else:
+            self.depends_of = None
+
+        self.ressources = ressources
         self.percent_done = percent_done
+        self.drawn_x_begin_coord = None
+        self.drawn_x_end_coord = None
+        self.drawn_y_coord = None
         return
 
 
@@ -115,34 +125,23 @@ class Task(object):
         if self.depends_of is None:
             #__LOG__.debug('*** Do not depend of other task')
             start = self.start
-            while start.weekday() not in WORKED_DAY or start in HOLLIDAYS:
+            while start.weekday() in NOT_WORKED_DAYS or start in HOLLIDAYS:
                 start = start + datetime.timedelta(days=1)
             return start
         else:
-            if type(self.depends_of) is type([]):
-                #__LOG__.debug('*** Do depend of other tasks')
-                prev_task_end = self.depends_of[0].end_date() + datetime.timedelta(days=1)
-                for t in self.depends_of:
-                    if t.end_date() > prev_task_end:
-                        #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
-                        prev_task_end = t.end_date() + datetime.timedelta(days=1)
-                if prev_task_end > self.start:
-                    return prev_task_end
-                else:
-                    start = self.start
-                    while start.weekday() not in WORKED_DAY or start in HOLLIDAYS:
-                        start = start + datetime.timedelta(days=1)
-                    return start
+            #__LOG__.debug('*** Do depend of other tasks')
+            prev_task_end = self.depends_of[0].end_date()
+            for t in self.depends_of:
+                if t.end_date() > prev_task_end:
+                    #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
+                    prev_task_end = t.end_date()
+            if prev_task_end > self.start:
+                return prev_task_end
             else:
-                #__LOG__.debug('*** Do depend of one task ({0}) which end on {1}'.format(self.depends_of.name, self.depends_of.end_date()))
-                prev_task_end = self.depends_of.end_date() + datetime.timedelta(days=1)
-                if prev_task_end > self.start:
-                    return prev_task_end
-                else:
-                    start = self.start
-                    while start.weekday() not in WORKED_DAY or start in HOLLIDAYS:
-                        start = start + datetime.timedelta(days=1)
-                    return start
+                start = self.start
+                while start.weekday() in NOT_WORKED_DAYS or start in HOLLIDAYS:
+                    start = start + datetime.timedelta(days=1)
+                return start
 
 
     def end_date(self):
@@ -151,9 +150,9 @@ class Task(object):
         __LOG__.debug('** Task::end_date ({0})'.format(self.name))
         current_day = self.start_date()
         real_duration = 0
-        duration = self.duration
+        duration = self.duration 
         while duration > 0:
-            if current_day.weekday() in WORKED_DAY and current_day not in HOLLIDAYS:
+            if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in HOLLIDAYS):
                 __LOG__.debug('*** day worked {0}'.format(current_day.weekday()))
                 real_duration = real_duration + 1
                 duration -= 1
@@ -177,42 +176,175 @@ class Task(object):
         __LOG__.warning("{0}".format(self.start_date()))
         __LOG__.warning("{0}".format(start))
         __LOG__.warning("{0}".format((self.start_date() - start).days))
-        x = (self.start_date() - start).days * 10
+
+        add_begin_mark = False
+        add_end_mark = False
+
         y = prev_y * 10
-        d = (self.end_date() - self.start_date()).days * 10
+        
+        # if self.start_date() >= start and self.start_date() <= end:
+        #     x = (self.start_date() - start).days * 10
+        #     self.drawn_x_begin_coord = x
+        # else:
+        #     x = 0
+        #     add_begin_mark = True
+            
+            
+        # cas 1 -s--S==E--e-
+        if self.start_date() >= start and self.end_date() <= end:
+            x = (self.start_date() - start).days * 10
+            d = ((self.end_date() - self.start_date()).days) * 10
+            self.drawn_x_begin_coord = x
+            self.drawn_x_end_coord = x+d
+       # cas 5 -s--e--S==E-
+        elif self.start_date() >= end:
+            return (None, 0)
+        # cas 6 -S==E-s--e-
+        elif self.end_date() <= start:
+            return (None, 0)
+        # cas 2 -S==s==E--e-
+        elif self.start_date() < start and self.end_date() <= end:
+            x = 0
+            d = ((self.end_date() - start).days) * 10
+            self.drawn_x_begin_coord = x
+            self.drawn_x_end_coord = x+d
+            add_begin_mark = True
+        # cas 3 -s--S==e==E-
+        elif self.start_date() >= start and  self.end_date() > end:
+            x = (self.start_date() - start).days * 10
+            d = ((end - self.start_date()).days) * 10
+            self.drawn_x_begin_coord = x
+            self.drawn_x_end_coord = x+d
+            add_end_mark = True
+        # cas 4 -S==s==e==E-
+        elif self.start_date() < start and self.end_date() > end:
+            x = 0
+            d = ((end - start).days) * 10
+            self.drawn_x_begin_coord = x
+            self.drawn_x_end_coord = x+d
+            add_end_mark = True
+            add_begin_mark = True
+        else:
+            return (None, 0)
+
+        self.drawn_y_coord = y
+        
+
         svg = svgwrite.container.Group(id=self.name.replace(' ', '_'))
-        bar = svgwrite.shapes.Rect(
-            insert=((x+1)*mm, (y+1)*mm),
-            size=((d-2)*mm, 8*mm),
-            fill=color,
-            stroke=color,
-            stroke_width=1,
-            )
-        svg.add(bar)
-        if self.percent_done > 0:
-            barshade = svgwrite.shapes.Rect(
-                insert=((x+1)*mm, (y+6)*mm),
-                size=(((d-2)*self.percent_done/100)*mm, 3*mm),
-                fill="#000000",
+        svg.add(svgwrite.shapes.Rect(
+                insert=((x+1)*mm, (y+1)*mm),
+                size=((d-2)*mm, 8*mm),
+                fill=color,
                 stroke=color,
                 stroke_width=1,
-                opacity=0.3,
-                )
-            svg.add(barshade)
+                opacity=0.85,
+                ))
+        svg.add(svgwrite.shapes.Rect(
+                insert=((x+1)*mm, (y+6)*mm),
+                size=(((d-2))*mm, 3*mm),
+                fill="#909090",
+                stroke=color,
+                stroke_width=1,
+                opacity=0.2,
+                ))
+
+        if add_begin_mark:
+            svg.add(svgwrite.shapes.Rect(
+                    insert=((x+1)*mm, (y+1)*mm),
+                    size=(5*mm, 8*mm),
+                    fill="#000000",
+                    stroke=color,
+                    stroke_width=1,
+                    opacity=0.2,
+                    ))
+        if add_end_mark:
+            svg.add(svgwrite.shapes.Rect(
+                    insert=((x+d-7+1)*mm, (y+1)*mm),
+                    size=(5*mm, 8*mm),
+                    fill="#000000",
+                    stroke=color,
+                    stroke_width=1,
+                    opacity=0.2,
+                    ))
+
+        if self.percent_done > 0:
+            # Bar shade
+            svg.add(svgwrite.shapes.Rect(
+                    insert=((x+1)*mm, (y+6)*mm),
+                    size=(((d-2)*self.percent_done/100)*mm, 3*mm),
+                    fill="#F08000",
+                    stroke=color,
+                    stroke_width=1,
+                    opacity=0.25,
+                ))
 
         svg.add(svgwrite.text.Text(self.name, insert=((x+2)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
 
-        if self.ressource is not None:
-            svg.add(svgwrite.text.Text(self.ressource, insert=((x+2)*mm, (y + 8.5)*mm), fill='purple', stroke='black', stroke_width=0, font_family="Verdana", font_size="10"))
+        if self.ressources is not None:
+            t = " / ".join(["{0}".format(r) for r in self.ressources])
+            svg.add(svgwrite.text.Text("{0}".format(t), insert=((x+2)*mm, (y + 8.5)*mm), fill='purple', stroke='black', stroke_width=0, font_family="Verdana", font_size="10"))
 
 
         return (svg, 1)
+
+
+    def svg_dependencies(self, prj):
+        """
+        """
+        if self.depends_of is None:
+            return None
+        else:
+            svg = svgwrite.container.Group()
+            for t in self.depends_of:
+                print(self.name, t.name, t.drawn_x_end_coord)
+                if not (t.drawn_x_end_coord is None or t.drawn_y_coord is None or self.drawn_x_begin_coord is None) and prj.is_in_project(t):
+                    svg.add(svgwrite.shapes.Line(
+                            start=((t.drawn_x_end_coord-2)*mm, (t.drawn_y_coord+5)*mm), 
+                            end=((self.drawn_x_begin_coord)*mm, (t.drawn_y_coord+5)*mm), 
+                            stroke='black',
+                            stroke_dasharray='5,3',
+                            ))
+
+                    marker = svgwrite.container.Marker(insert=(5,5), size=(10,10))
+                    marker.add(svgwrite.shapes.Circle((5, 5), r=5, fill='#000000', opacity=0.5, stroke_width=0))
+                    svg.add(marker)
+                    eline = svgwrite.shapes.Line(
+                        start=((self.drawn_x_begin_coord)*mm, (t.drawn_y_coord+5)*mm), 
+                        end=((self.drawn_x_begin_coord)*mm, (self.drawn_y_coord + 5)*mm), 
+                        stroke='black',
+                        stroke_dasharray='5,3',
+                        )
+                    eline['marker-end'] = marker.get_funciri()
+                    svg.add(eline)
+
+        return svg
 
 
     def nb_elements(self):
         """
         """
         return 1
+
+
+    def reset_coord(self):
+        """
+        """
+        self.drawn_x_begin_coord = None
+        self.drawn_x_end_coord = None
+        self.drawn_y_coord = None
+        return
+
+
+    def is_in_project(self, task):
+        """
+        """
+        if task is self:
+            print('OK')
+            return True
+
+        print('KO')
+        return False
+
 
 
 class Project(object):
@@ -232,20 +364,17 @@ class Project(object):
         self.tasks.append(task)
         return
 
-    def make_svg_for_tasks(self, filename, today=None):
+    def svg_calendar(self, maxx, maxy, start_date, today=None):
         """
         """
-        dwg = svgwrite.Drawing(filename, debug=True)
+        dwg = svgwrite.container.Group()
+
+        cal = {0:'Mo', 1:'Tu', 2:'We', 3:'Th', 4:'Fr', 5:'Sa', 6:'Su'}
     
-        maxx = (p.end_date()-p.start_date()).days
-        maxy = p.nb_elements()
-    
-        start_date = p.start_date()
-    
-        vlines = dwg.add(dwg.g(id='vlines', stroke='lightgray'))
-        for x in range(maxx+1):
-            vlines.add(dwg.line(start=(x*cm, 1*cm), end=(x*cm, (maxy+1)*cm)))
-            if not (start_date + datetime.timedelta(days=x)).weekday() in WORKED_DAY or (start_date + datetime.timedelta(days=x)) in HOLLIDAYS:
+        vlines = dwg.add(svgwrite.container.Group(id='vlines', stroke='lightgray'))
+        for x in range(maxx):
+            vlines.add(svgwrite.shapes.Line(start=(x*cm, 1*cm), end=(x*cm, (maxy+1)*cm)))
+            if (start_date + datetime.timedelta(days=x)).weekday() in NOT_WORKED_DAYS or (start_date + datetime.timedelta(days=x)) in HOLLIDAYS:
                 vlines.add(svgwrite.shapes.Rect(
                     insert=(x*cm, 1*cm),
                     size=(1*cm, maxy*cm),
@@ -264,18 +393,46 @@ class Project(object):
                     stroke_width=0,
                     opacity=0.8
                     ))
-            vlines.add(svgwrite.text.Text('{0:02}/{1:02}'.format(jour.day, jour.month), insert=((x*10+2)*mm, 9*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="8"))
+            vlines.add(svgwrite.text.Text('{2}{0:02}/{1:02}'.format(jour.day, jour.month, cal[jour.weekday()][0]), insert=((x*10+1)*mm, 9*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="8"))
             if jour.weekday() == 0:
                 vlines.add(svgwrite.text.Text('week:{0:02}'.format(jour.isocalendar()[1]), insert=((x*10+2)*mm, 6*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="12"))
+        vlines.add(svgwrite.shapes.Line(start=(maxx*cm, 1*cm), end=(maxx*cm, (maxy+1)*cm)))
 
 
-        hlines = dwg.add(dwg.g(id='hlines', stroke='lightgray'))
+        hlines = dwg.add(svgwrite.container.Group(id='hlines', stroke='lightgray'))
         for y in range(1, maxy+2):
-            hlines.add(dwg.line(start=(0*cm, y*cm), end=((maxx+1)*cm, y*cm)))
+            hlines.add(svgwrite.shapes.Line(start=(0*cm, y*cm), end=(maxx*cm, y*cm)))
+
+        return dwg
+
+
+    def make_svg_for_tasks(self, filename, today=None, start=None, end=None):
+        """
+        """
+        self.reset_coord()
+        dwg = svgwrite.Drawing(filename, debug=True)
+
+        if start is None:
+            start_date = self.start_date()    
+        else:
+            start_date = start
+
+        if end is None:
+            end_date = self.end_date() 
+        else:
+            end_date = end + datetime.timedelta(days=1)
+
+
+        maxx = (end_date - start_date).days 
+        maxy = self.nb_elements()
+
+        dwg.add(self.svg_calendar(maxx, maxy, start_date, today))
     
-        
-        psvg, pheight = p.svg(prev_y=1, color = self.color)
+        psvg, pheight = self.svg(prev_y=1, start=start_date, end=end_date, color = self.color)
         dwg.add(psvg)
+        dep = self.svg_dependencies(self)
+        if dep is not None:
+            dwg.add(dep)
         dwg.save()
         return
 
@@ -315,11 +472,11 @@ class Project(object):
 
         cy = prev_y
         prj = svgwrite.container.Group(id=self.name.replace(' ', '_'))
-        prj.add(svgwrite.text.Text('{0}'.format(self.name), insert=(6*(level+1)*mm, (cy*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
+        prj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, (cy*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
 
         prj.add(svgwrite.shapes.Rect(
-            insert=(7*(level)*mm, (cy+0.5)*cm),
-            size=(0.2*cm, (self.nb_elements()-1)*cm),
+            insert=((6*level+0.8)*mm, (cy+0.5)*cm),
+            size=(0.2*cm, (self.nb_elements()-0.6)*cm),
             fill='purple',
             stroke='lightgray',
             stroke_width=0,
@@ -330,10 +487,21 @@ class Project(object):
         
         for t in self.tasks:
             trepr, theight = t.svg(cy, start=start, end=end, color=color, level=level+1)
-            prj.add(trepr)
-            cy += theight
+            if trepr is not None:
+                prj.add(trepr)
+                cy += theight
             
         return (prj, cy-prev_y)
+
+
+    def svg_dependencies(self, prj):
+        svg = svgwrite.container.Group()
+        for t in self.tasks:
+            trepr = t.svg_dependencies(prj)
+            if trepr is not None:
+                svg.add(trepr)
+        return svg
+
 
     def nb_elements(self):
         """
@@ -343,58 +511,25 @@ class Project(object):
             nb += t.nb_elements()
         return nb 
 
+    def reset_coord(self):
+        """
+        """
+        for t in self.tasks:
+            t.reset_coord()
+        return
 
+    def is_in_project(self, task):
+        """
+        """
+        test = False
+        for t in self.tasks:
+            if t.is_in_project(task):
+                return True
+        return test
 
 
 if __name__ == '__main__':
-    #basic_shapes('basic_shapes.svg')
-    __init_log_to_sysout__(level=logging.DEBUG)
+    pass
+else:
+    #__init_log_to_sysout__(level=logging.DEBUG)
     __init_log_to_sysout__(level=logging.WARNING)
-    t1 = Task(name='tache1', start=datetime.date(2014, 12, 25), duration=4, percent_done=44, ressource="Alexandre")
-    t1b = Task(name='tache1b', start=datetime.date(2014, 12, 29), duration=3)
-    t2 = Task(name='tache2', start=datetime.date(2014, 12, 28), duration=6)
-    t3 = Task(name='tache3', start=datetime.date(2014, 12, 25), duration=40, depends_of=[t1, t1b, t2])
-    t3b = Task(name='tache3b', start=datetime.date(2014, 12, 25), duration=4, depends_of=t1b)
-    t4 = Task(name='tache4', start=datetime.date(2015, 01, 01), duration=4, depends_of=t1)
-
-    print('t1', t1.start_date(), t1.end_date())
-    print('t1b', t1b.start_date(), t1b.end_date())
-    print('t2', t2.start_date(), t2.end_date())
-    print('t3', t3.start_date(), t3.end_date())
-    print('t4', t4.start_date(), t4.end_date())
-
-
-    p1 = Project(name='Projet 1')
-    p1.add_task(t1)
-    p1.add_task(t1b)
-    p1.add_task(t2)
-    p1.add_task(t3)
-    p1.add_task(t4)
-
-
-
-    p2 = Project(name='Projet 2', color='#FFFF40')
-    p2.add_task(t1)
-    p2.add_task(t2)
-
-    p = Project(name='Gantt')
-    p.add_task(p1)
-    p.add_task(p2)
-    p.add_task(t3b)
-
-
-    print p1.nb_elements()
-    print p2.nb_elements()
-    print p.nb_elements()
-
-
-    print('p1', p1.start_date(), p1.end_date())
-    print('p2', p2.start_date(), p2.end_date())
-    print('p', p.start_date(), p.end_date())
-
-##########################$ MAKE DRAW ###############
-    p.make_svg_for_tasks(filename='/tmp/test.svg', today=datetime.date(2014, 12, 31))
-##########################$ MAKE DRAW ###############
-
-    
-# BOUTEILLE
