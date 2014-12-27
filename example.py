@@ -6,6 +6,7 @@ import gantt
 
 gantt.add_vacations(datetime.date(2014, 12, 25))
 gantt.add_vacations(datetime.date(2015, 1, 1))
+gantt.add_vacations(datetime.date(2015, 1, 13))
 
 rANO = gantt.Ressource('ANO')
 rJLS = gantt.Ressource('JLS')

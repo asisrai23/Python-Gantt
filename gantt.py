@@ -610,7 +610,7 @@ class Project(object):
             # and add vacations on the calendar
             vac = svgwrite.container.Group()
             cday = start_date
-            while cday <= end_date:
+            while cday < end_date:
                 if not r.is_available(cday):
                      vac.add(svgwrite.shapes.Rect(
                             insert=(((cday - start_date).days * 10 + 1)*mm, ((nline)*10+1)*mm),
@@ -624,10 +624,32 @@ class Project(object):
 
             dwg.add(vac)
 
+            affected_days = []
+            conflicts = svgwrite.container.Group()
             for t in self.get_tasks():
                 if t.get_ressources() is not None and r in t.get_ressources():
                     psvg, void = t.svg(prev_y = nline + 1, start=start_date, end=end_date, color=self.color)
                     dwg.add(psvg)
+                    
+                    cday = t.start_date()
+                    while cday < t.end_date():
+                        if cday in affected_days:
+                            __LOG__.warning('** Conflict between tasks for {0} on date {1}'.format(r.name, cday))
+
+                            vac.add(svgwrite.shapes.Rect(
+                                    insert=(((cday - start_date).days * 10 + 1 + 4)*mm, ((nline)*10+1)*mm),
+                                    size=(4*mm, 8*mm),
+                                    fill="#AA0000",
+                                    stroke="#AA0000",
+                                    stroke_width=1,
+                                    opacity=0.65,
+                                    ))
+
+
+                        affected_days.append(cday)
+                        cday += datetime.timedelta(days=1)
+                    
+            dwg.add(conflicts)
 
             nline += 2
 
