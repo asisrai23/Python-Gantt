@@ -342,7 +342,7 @@ class Task(object):
                 size=((d-2)*mm, 8*mm),
                 fill=color,
                 stroke=color,
-                stroke_width=1,
+                stroke_width=2,
                 opacity=0.85,
                 ))
         svg.add(svgwrite.shapes.Rect(
@@ -627,7 +627,7 @@ class Project(object):
 
             dwg.add(vac)
 
-            affected_days = []
+            affected_days = {}
             conflicts = svgwrite.container.Group()
             for t in self.get_tasks():
                 if t.get_ressources() is not None and r in t.get_ressources():
@@ -637,7 +637,7 @@ class Project(object):
                     cday = t.start_date()
                     while cday < t.end_date():
                         if cday in affected_days:
-                            __LOG__.warning('** Conflict between tasks for {0} on date {1}'.format(r.name, cday))
+                            __LOG__.warning('** Conflict between tasks for {0} on date {1} tasks : {2} vs {3}'.format(r.name, cday, ",".join(affected_days[cday]), t.name))
 
                             vac.add(svgwrite.shapes.Rect(
                                     insert=(((cday - start_date).days * 10 + 1 + 4)*mm, ((nline)*10+1)*mm),
@@ -648,8 +648,11 @@ class Project(object):
                                     opacity=0.65,
                                     ))
 
+                        try:
+                            affected_days[cday].append(t.name)
+                        except KeyError:
+                            affected_days[cday] = [t.name]
 
-                        affected_days.append(cday)
                         cday += datetime.timedelta(days=1)
                     
             dwg.add(conflicts)
