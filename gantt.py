@@ -622,15 +622,14 @@ class Project(object):
                             ))
                 cday += datetime.timedelta(days=1)
 
-            nline += 1
             dwg.add(vac)
 
             for t in self.get_tasks():
                 if t.get_ressources() is not None and r in t.get_ressources():
-                    psvg, void = t.svg(prev_y = nline, start=start_date, end=end_date, color=self.color)
+                    psvg, void = t.svg(prev_y = nline + 1, start=start_date, end=end_date, color=self.color)
                     dwg.add(psvg)
-                    nline += 1
 
+            nline += 2
 
         dwg.save()
         return
