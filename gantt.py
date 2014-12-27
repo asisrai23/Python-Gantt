@@ -21,19 +21,35 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Contributors :
- - Jean-Lou Schmidt
- - Olivier Singer
+Test strings :
+^^^^^^^^^^^^
 
-Documentation :
- - EM630100UT68548.pdf [CONTROL-M/Enterprise Manager - Utility Guide]
-   p33 
- - MVS63010PR63689.pdf [CONTROL-M/Job Parameter and Variable Reference Guide]
-   p205
+>>> import gantt
+>>> r1 = gantt.Ressource('ANO')
+>>> r1.add_vacations(
+...     dfrom=datetime.date(2015, 1, 2), 
+...     dto=datetime.date(2015, 1, 4) 
+...     )
+>>> r1.add_vacations(
+...     dfrom=datetime.date(2015, 1, 6), 
+...     dto=datetime.date(2015, 1, 8) 
+...     )
+>>> print(r1.is_available(datetime.date(2015, 1, 5)))
+True
+>>> print(r1.is_available(datetime.date(2015, 1, 8)))
+False
+>>> print(r1.is_available(datetime.date(2015, 1, 6)))
+False
+>>> print(r1.is_available(datetime.date(2015, 1, 2)))
+False
+>>> print(r1.is_available(datetime.date(2015, 1, 1)))
+False
+
+
 """
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 __last_modification__ = '2014.12.25'
 
 import datetime
@@ -57,16 +73,26 @@ __LOG__ = None
 
 ############################################################################
 
+# Unworked days (0: Monday... 6: Sunday)
 NOT_WORKED_DAYS = [5, 6]
-HOLLIDAYS = [
-    datetime.date(2014, 12, 25),
-    datetime.date(2015, 1, 1),
-    ]
+
+# Vacations as datetime (non worked)
+VACATIONS = []
+
+############################################################################
+
+def add_vacations(date):
+    """
+    """
+    global VACATIONS
+    VACATIONS.append(date)
+    return
 
 ############################################################################
 
 def __init_log_to_sysout__(level=logging.INFO):
     """
+    debugging facilities
     """
     global __LOG__
     logger = logging.getLogger("Gantt")
@@ -92,16 +118,90 @@ def __show_version__(name, **kwargs):
 ############################################################################
 
 
+def __flatten__(l, ltypes=(list, tuple)):
+    """
+    Return a flatten list from a list like [1,2,[4,5,1]]
+    """
+    ltype = type(l)
+    l = list(l)
+    i = 0
+    while i < len(l):
+        while isinstance(l[i], ltypes):
+            if not l[i]:
+                l.pop(i)
+                i -= 1
+                break
+            else:
+                l[i:i + 1] = l[i]
+        i += 1
+    return ltype(l)
+
+############################################################################
+
+class Ressource(object):
+    """
+    Class for handling ressources assigned to tasks
+    """
+    def __init__(self, name):
+        """
+        Init a ressource
+
+        Keyword arguments:
+        name -- name given to the ressource
+        """
+        __LOG__.debug('** Ressource::__init__ {0}'.format({'name':name}))
+        self.name = name
+        self.vacations = []
+        return
+
+    def add_vacations(self, dfrom, dto):
+        """
+        Add vacations to a ressource begining at [dfrom] to [dto] (included)
+
+        Keyword arguments:
+        dfrom -- datetime.date begining of vacation
+        dto -- datetime.date end of vacation of vacation
+        """
+        __LOG__.debug('** Ressource::add_vacations {0}'.format({'name':self.name, 'dfrom':dfrom, 'dto':dto}))
+        self.vacations.append((dfrom, dto))
+        return
+
+    def is_available(self, date):
+        """
+        Returns True if the ressource is available at given date, False if not.
+        Availibility is taken from the global VACATIONS and ressource's ones.
+
+        Keyword arguments:
+        date -- datetime.date day to look for
+        """
+        if date in VACATIONS:
+            __LOG__.debug('** Ressource::is_available {0} : False'.format({'name':self.name, 'date':date}))
+            return False
+            
+        for h in self.vacations:
+            dfrom, dto = h
+            if date >= dfrom and date <= dto:
+                __LOG__.debug('** Ressource::is_available {0} : False'.format({'name':self.name, 'date':date}))
+                return False
+        __LOG__.debug('** Ressource::is_available {0} : True'.format({'name':self.name, 'date':date}))
+        return True
+
+
+############################################################################
+
+
 class Task(object):
     """
+    Class for manipulating Tasks
     """
-    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, ressources=None, percent_done=0):
+    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, ressources=None, percent_done=0, color=None):
         """
         """
         __LOG__.debug('** Task::__init__ {0}'.format({'name':name, 'start':start, 'stop':stop, 'duration':duration, 'depends_of':depends_of, 'ressources':ressources, 'percent_done':percent_done}))
         self.name = name
         self.start = start
         self.duration = duration
+        self.color = color
 
         if type(depends_of) is type([]):
             self.depends_of = depends_of
@@ -130,7 +230,7 @@ class Task(object):
         if self.depends_of is None:
             #__LOG__.debug('*** Do not depend of other task')
             start = self.start
-            while start.weekday() in NOT_WORKED_DAYS or start in HOLLIDAYS:
+            while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
                 start = start + datetime.timedelta(days=1)
             self.cache_start_date = start
             return start
@@ -146,7 +246,7 @@ class Task(object):
                 return prev_task_end
             else:
                 start = self.start
-                while start.weekday() in NOT_WORKED_DAYS or start in HOLLIDAYS:
+                while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
                     start = start + datetime.timedelta(days=1)
                 self.cache_start_date = start
                 return start
@@ -163,7 +263,7 @@ class Task(object):
         real_duration = 0
         duration = self.duration 
         while duration > 0:
-            if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in HOLLIDAYS):
+            if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
                 real_duration = real_duration + 1
                 duration -= 1
             else:
@@ -175,14 +275,18 @@ class Task(object):
         return self.cache_end_date
 
 
-    def svg(self, prev_y=0, start=None, end=None, color='#FFFF90', level=None):
+    def svg(self, prev_y=0, start=None, end=None, color=None, level=None):
         """
         """
-        __LOG__.debug('** Task::svg ({0}, {1}, {2}, {3}, {4})'.format(prev_y, start, end, color, level))
+        __LOG__.debug('** Task::svg ({0})'.format({'name':self.name, 'prev_y':prev_y, 'start':start, 'end':end, 'color':color, 'level':level}))
         if start is None:
             start = self.start_date()
         if end is None:
             end = self.end_date()
+
+        # override project color if defined
+        if self.color is not None:
+            color = self.color
 
         add_begin_mark = False
         add_end_mark = False
@@ -280,7 +384,7 @@ class Task(object):
         svg.add(svgwrite.text.Text(self.name, insert=((x+2)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
 
         if self.ressources is not None:
-            t = " / ".join(["{0}".format(r) for r in self.ressources])
+            t = " / ".join(["{0}".format(r.name) for r in self.ressources])
             svg.add(svgwrite.text.Text("{0}".format(t), insert=((x+2)*mm, (y + 8.5)*mm), fill='purple', stroke='black', stroke_width=0, font_family="Verdana", font_size="10"))
 
 
@@ -290,7 +394,7 @@ class Task(object):
     def svg_dependencies(self, prj):
         """
         """
-        __LOG__.debug('** Task::svg_dependencies ({0})'.format(prj))
+        __LOG__.debug('** Task::svg_dependencies ({0})'.format({'name':self.name, 'prj':prj}))
         if self.depends_of is None:
             return None
         else:
@@ -322,14 +426,14 @@ class Task(object):
     def nb_elements(self):
         """
         """
-        __LOG__.debug('** Task::nb_elements')
+        __LOG__.debug('** Task::nb_elements ({0})'.format({'name':self.name}))
         return 1
 
 
     def reset_coord(self):
         """
         """
-        __LOG__.debug('** Task::reset_coord')
+        __LOG__.debug('** Task::reset_coord ({0})'.format({'name':self.name}))
         self.drawn_x_begin_coord = None
         self.drawn_x_end_coord = None
         self.drawn_y_coord = None
@@ -341,12 +445,36 @@ class Task(object):
     def is_in_project(self, task):
         """
         """
-        __LOG__.debug('** Task::is_in_project ({0})'.format(task))
+        __LOG__.debug('** Task::is_in_project ({0})'.format({'name':self.name, 'task':task}))
         if task is self:
             return True
 
         return False
 
+
+    def get_ressources(self):
+        """
+        Returns Ressources used in the task
+        """
+        return self.ressources
+
+
+
+    def check_conflict_between_task_and_ressources_vacations(self):
+        """
+        """
+        if self.get_ressources() is None:
+            return
+        for r in self.get_ressources():
+            cday = self.start_date()
+            while cday < self.end_date():
+                if not r.is_available(cday):
+                    __LOG__.warning('** Caution ressource {0} is affected on task {2} during vacations on day {1}'.format(r.name, cday, self.name))
+                cday += datetime.timedelta(days=1)
+        return
+
+
+############################################################################
 
 
 class Project(object):
@@ -378,7 +506,7 @@ class Project(object):
         vlines = dwg.add(svgwrite.container.Group(id='vlines', stroke='lightgray'))
         for x in range(maxx):
             vlines.add(svgwrite.shapes.Line(start=(x*cm, 1*cm), end=(x*cm, (maxy+1)*cm)))
-            if (start_date + datetime.timedelta(days=x)).weekday() in NOT_WORKED_DAYS or (start_date + datetime.timedelta(days=x)) in HOLLIDAYS:
+            if (start_date + datetime.timedelta(days=x)).weekday() in NOT_WORKED_DAYS or (start_date + datetime.timedelta(days=x)) in VACATIONS:
                 vlines.add(svgwrite.shapes.Rect(
                     insert=(x*cm, 1*cm),
                     size=(1*cm, maxy*cm),
@@ -414,7 +542,6 @@ class Project(object):
         """
         """
         self.reset_coord()
-        dwg = svgwrite.Drawing(filename, debug=True)
 
         if start is None:
             start_date = self.start_date()    
@@ -430,6 +557,7 @@ class Project(object):
         maxx = (end_date - start_date).days 
         maxy = self.nb_elements()
 
+        dwg = svgwrite.Drawing(filename, debug=True)
         dwg.add(self.svg_calendar(maxx, maxy, start_date, today))
     
         psvg, pheight = self.svg(prev_y=1, start=start_date, end=end_date, color = self.color)
@@ -440,9 +568,71 @@ class Project(object):
         dwg.save()
         return
 
-    def make_svg_for_ressources(self, ressources=None):
+    def make_svg_for_ressources(self, filename, today=None, start=None, end=None, ressources=None):
         """
         """
+        self.reset_coord()
+
+        if start is None:
+            start_date = self.start_date()    
+        else:
+            start_date = start
+
+        if end is None:
+            end_date = self.end_date() 
+        else:
+            end_date = end + datetime.timedelta(days=1)
+
+        ressources = self.get_ressources()
+        maxx = (end_date - start_date).days 
+        maxy = len(ressources) * 2
+
+        if maxy == 0:
+            # No ressources
+            return
+
+
+        for t in self.get_tasks():
+            t.check_conflict_between_task_and_ressources_vacations()
+
+
+
+        dwg = svgwrite.Drawing(filename, debug=True)
+        dwg.add(self.svg_calendar(maxx, maxy, start_date, today))
+    
+        nline = 1
+        for r in ressources:
+            # do stuff for each ressource
+            ress = svgwrite.container.Group()
+            ress.add(svgwrite.text.Text('{0}'.format(r.name), insert=(3*mm, (nline*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
+            dwg.add(ress)
+
+            # and add vacations on the calendar
+            vac = svgwrite.container.Group()
+            cday = start_date
+            while cday <= end_date:
+                if not r.is_available(cday):
+                     vac.add(svgwrite.shapes.Rect(
+                            insert=(((cday - start_date).days * 10 + 1)*mm, ((nline)*10+1)*mm),
+                            size=(4*mm, 8*mm),
+                            fill="#00AA00",
+                            stroke="#00AA00",
+                            stroke_width=1,
+                            opacity=0.65,
+                            ))
+                cday += datetime.timedelta(days=1)
+
+            nline += 1
+            dwg.add(vac)
+
+            for t in self.get_tasks():
+                if t.get_ressources() is not None and r in t.get_ressources():
+                    psvg, void = t.svg(prev_y = nline, start=start_date, end=end_date, color=self.color)
+                    dwg.add(psvg)
+                    nline += 1
+
+
+        dwg.save()
         return
 
     def start_date(self):
@@ -538,8 +728,54 @@ class Project(object):
         return test
 
 
+    def get_ressources(self):
+        """
+        Returns Ressources used in the project
+        """
+        rlist = []
+        for t in self.tasks:
+            r = t.get_ressources()
+            if r is not None:
+                rlist.append(r)
+
+        flist = []
+        for r in __flatten__(rlist):
+            if r not in flist:
+                flist.append(r)
+        return flist
+
+
+
+    def get_tasks(self):
+        """
+        Returns flat list of Tasks used in the Project and subproject
+        """
+        tlist = []
+        for t in self.tasks:
+            # if it is a sub project, recurse
+            if type(t) is type(self):
+                st = t.get_tasks()
+                tlist.append(st)
+            else: # get task
+                tlist.append(t)
+
+        flist = []
+        for r in __flatten__(tlist):
+            if r not in flist:
+                flist.append(r)
+        return flist
+
+
+# MAIN -------------------
 if __name__ == '__main__':
-    pass
+    import doctest
+    # non regression test
+    doctest.testmod()
 else:
-    __init_log_to_sysout__(level=logging.DEBUG)
-    #_init_log_to_sysout__(level=logging.WARNING)
+    #__init_log_to_sysout__(level=logging.DEBUG)
+    __init_log_to_sysout__(level=logging.WARNING)
+
+
+#<EOF>######################################################################
+
+
