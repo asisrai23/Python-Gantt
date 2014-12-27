@@ -93,7 +93,7 @@ def add_vacations(date):
 
 ############################################################################
 
-def __init_log_to_sysout__(level=logging.INFO):
+def _init_log_to_sysout(level=logging.INFO):
     """
     debugging facilities
     """
@@ -109,7 +109,7 @@ def __init_log_to_sysout__(level=logging.INFO):
 
 ############################################################################
 
-def __show_version__(name, **kwargs):
+def _show_version(name, **kwargs):
     """
     Show version
     """
@@ -121,7 +121,7 @@ def __show_version__(name, **kwargs):
 ############################################################################
 
 
-def __flatten__(l, ltypes=(list, tuple)):
+def _flatten(l, ltypes=(list, tuple)):
     """
     Return a flatten list from a list like [1,2,[4,5,1]]
     """
@@ -199,6 +199,20 @@ class Task(object):
     """
     def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, ressources=None, percent_done=0, color=None):
         """
+        Initialize task object. Two of start, stop or duration may be given.
+        This task can rely on other task and will be completed with ressources.
+        If percent done is given, a progress bar will be included on the task.
+        If color is specified, it will be used for the task.
+
+        Keyword arguments:
+        name -- name of the task
+        start -- datetime.date, first day of the task, default None
+        stop -- datetime.date, last day of the task, default None
+        duration -- int, duration of the task, default None
+        depends_of -- list of Task which are parents of thi one, default None
+        ressources -- list of Ressources assigned to the task, default None
+        percent_done -- int, percent of achievment, default 0
+        color -- string, html color, default None
         """
         __LOG__.debug('** Task::__init__ {0}'.format({'name':name, 'start':start, 'stop':stop, 'duration':duration, 'depends_of':depends_of, 'ressources':ressources, 'percent_done':percent_done}))
         self.name = name
@@ -225,6 +239,8 @@ class Task(object):
 
     def start_date(self):
         """
+        Returns the first day of the task, either the one which was given at
+        task creation or the one calculated after checking dependencies
         """
         if self.cache_start_date is not None:
             return self.cache_start_date
@@ -257,6 +273,8 @@ class Task(object):
 
     def end_date(self):
         """
+        Returns the last day of the task, either the one which was given at task
+        creation or the one calculated after checking dependencies
         """
         if self.cache_end_date is not None:
             return self.cache_end_date
@@ -280,6 +298,14 @@ class Task(object):
 
     def svg(self, prev_y=0, start=None, end=None, color=None, level=None):
         """
+        Return SVG for drawing this task.
+
+        Keyword arguments:
+        prev_y -- int, line to start to draw
+        start -- datetime.date of first day to draw
+        end -- datetime.date of last day to draw
+        color -- string of color for drawing the project
+        level -- int, indentation level of the project, not used here
         """
         __LOG__.debug('** Task::svg ({0})'.format({'name':self.name, 'prev_y':prev_y, 'start':start, 'end':end, 'color':color, 'level':level}))
         if start is None:
@@ -396,6 +422,11 @@ class Task(object):
 
     def svg_dependencies(self, prj):
         """
+        Draws svg dependencies between task and project according to coordinates
+        cached when drawing tasks
+
+        Keyword arguments:
+        prj -- Project object to check against
         """
         __LOG__.debug('** Task::svg_dependencies ({0})'.format({'name':self.name, 'prj':prj}))
         if self.depends_of is None:
@@ -428,13 +459,15 @@ class Task(object):
 
     def nb_elements(self):
         """
+        Returns the number of task, 1 here
         """
         __LOG__.debug('** Task::nb_elements ({0})'.format({'name':self.name}))
         return 1
 
 
-    def reset_coord(self):
+    def _reset_coord(self):
         """
+        Reset cached elements of task
         """
         __LOG__.debug('** Task::reset_coord ({0})'.format({'name':self.name}))
         self.drawn_x_begin_coord = None
@@ -447,6 +480,10 @@ class Task(object):
 
     def is_in_project(self, task):
         """
+        Return True if the given Task is itself... (lazy coding ;)
+        
+        Keyword arguments:
+        task -- Task object 
         """
         __LOG__.debug('** Task::is_in_project ({0})'.format({'name':self.name, 'task':task}))
         if task is self:
@@ -465,6 +502,8 @@ class Task(object):
 
     def check_conflict_between_task_and_ressources_vacations(self):
         """
+        Displays a warning for each conflict between tasks and vacation of
+        ressources affected to the task
         """
         if self.get_ressources() is None:
             return
@@ -509,7 +548,7 @@ class Project(object):
         self.cache_nb_elements = None
         return
 
-    def svg_calendar(self, maxx, maxy, start_date, today=None):
+    def _svg_calendar(self, maxx, maxy, start_date, today=None):
         """
         Draw calendar in svg, begining at start_date for maxx days, containing
         maxy lines. If today is given, draw a blue line at date
@@ -570,7 +609,7 @@ class Project(object):
         start -- datetime.date of first day to draw
         end -- datetime.date of last day to draw
         """
-        self.reset_coord()
+        self._reset_coord()
 
         if start is None:
             start_date = self.start_date()    
@@ -587,7 +626,7 @@ class Project(object):
         maxy = self.nb_elements()
 
         dwg = svgwrite.Drawing(filename, debug=True)
-        dwg.add(self.svg_calendar(maxx, maxy, start_date, today))
+        dwg.add(self._svg_calendar(maxx, maxy, start_date, today))
     
         psvg, pheight = self.svg(prev_y=1, start=start_date, end=end_date, color = self.color)
         dwg.add(psvg)
@@ -609,7 +648,7 @@ class Project(object):
         end -- datetime.date of last day to draw
         ressources -- list of Ressource to check, default all
         """
-        self.reset_coord()
+        self._reset_coord()
 
         if start is None:
             start_date = self.start_date()    
@@ -638,7 +677,7 @@ class Project(object):
 
 
         dwg = svgwrite.Drawing(filename, debug=True)
-        dwg.add(self.svg_calendar(maxx, maxy, start_date, today))
+        dwg.add(self._svg_calendar(maxx, maxy, start_date, today))
     
         nline = 1
         for r in ressources:
@@ -701,6 +740,7 @@ class Project(object):
 
     def start_date(self):
         """
+        Returns first day of the project
         """
         first = self.tasks[0].start_date()
         for t in self.tasks:
@@ -711,6 +751,7 @@ class Project(object):
 
     def end_date(self):
         """
+        Returns last day of the project
         """
         last = self.tasks[0].end_date()
         for t in self.tasks:
@@ -720,6 +761,15 @@ class Project(object):
 
     def svg(self, prev_y=0, start=None, end=None, color=None, level=0):
         """
+        Return (SVG code, number of lines drawn) for the project. Draws all
+        tasks and add project name with a purple bar on the left side.
+
+        Keyword arguments:
+        prev_y -- int, line to start to draw
+        start -- datetime.date of first day to draw
+        end -- datetime.date of last day to draw
+        color -- string of color for drawing the project
+        level -- int, indentation level of the project
         """
         if start is None:
             start = self.start_date()
@@ -753,6 +803,13 @@ class Project(object):
 
 
     def svg_dependencies(self, prj):
+        """
+        Draws svg dependencies between tasks according to coordinates cached
+        when drawing tasks
+
+        Keyword arguments:
+        prj -- Project object to check against
+        """
         svg = svgwrite.container.Group()
         for t in self.tasks:
             trepr = t.svg_dependencies(prj)
@@ -763,6 +820,7 @@ class Project(object):
 
     def nb_elements(self):
         """
+        Returns the number of tasks included in the project or subproject
         """
         if self.cache_nb_elements is not None:
             return self.cache_nb_elements
@@ -774,22 +832,26 @@ class Project(object):
         self.cache_nb_elements = nb
         return nb 
 
-    def reset_coord(self):
+    def _reset_coord(self):
         """
+        Reset cached elements of all tasks and project
         """
         self.cache_nb_elements = None
         for t in self.tasks:
-            t.reset_coord()
+            t._reset_coord()
         return
 
     def is_in_project(self, task):
         """
+        Return True if the given Task is in the project, False if not
+        
+        Keyword arguments:
+        task -- Task object 
         """
-        test = False
         for t in self.tasks:
             if t.is_in_project(task):
                 return True
-        return test
+        return False
 
 
     def get_ressources(self):
@@ -803,7 +865,7 @@ class Project(object):
                 rlist.append(r)
 
         flist = []
-        for r in __flatten__(rlist):
+        for r in _flatten(rlist):
             if r not in flist:
                 flist.append(r)
         return flist
@@ -824,7 +886,7 @@ class Project(object):
                 tlist.append(t)
 
         flist = []
-        for r in __flatten__(tlist):
+        for r in _flatten(tlist):
             if r not in flist:
                 flist.append(r)
         return flist
@@ -836,8 +898,8 @@ if __name__ == '__main__':
     # non regression test
     doctest.testmod()
 else:
-    #__init_log_to_sysout__(level=logging.DEBUG)
-    __init_log_to_sysout__(level=logging.WARNING)
+    #_init_log_to_sysout(level=logging.DEBUG)
+    _init_log_to_sysout(level=logging.WARNING)
 
 
 #<EOF>######################################################################
