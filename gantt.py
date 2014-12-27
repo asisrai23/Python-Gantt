@@ -482,9 +482,15 @@ class Task(object):
 
 class Project(object):
     """
+    Class for handling projects
     """
     def __init__(self, name="", color='#FFFF90'):
         """
+        Initialize project with a given name and color for all tasks
+
+        Keyword arguments:
+        name -- string, name of the project
+        color -- color for all tasks of the project
         """
         self.tasks = []
         self.name = name
@@ -494,6 +500,10 @@ class Project(object):
 
     def add_task(self, task):
         """
+        Add a Task to the Project. Task can also be a subproject
+
+        Keyword arguments:
+        task -- Task or Project object
         """
         self.tasks.append(task)
         self.cache_nb_elements = None
@@ -501,6 +511,14 @@ class Project(object):
 
     def svg_calendar(self, maxx, maxy, start_date, today=None):
         """
+        Draw calendar in svg, begining at start_date for maxx days, containing
+        maxy lines. If today is given, draw a blue line at date
+
+        Keyword arguments:
+        maxx -- number of days to draw
+        maxy -- number of lines to draw
+        start_date -- datetime.date of the first day to draw
+        today -- datetime.date of day as today reference
         """
         dwg = svgwrite.container.Group()
 
@@ -543,6 +561,14 @@ class Project(object):
 
     def make_svg_for_tasks(self, filename, today=None, start=None, end=None):
         """
+        Draw gantt of tasks and output it to filename. If start or end are
+        given, use them as reference, otherwise use project first and last day
+
+        Keyword arguments:
+        filename -- string, filename to save to
+        today -- datetime.date of day marked as a reference
+        start -- datetime.date of first day to draw
+        end -- datetime.date of last day to draw
         """
         self.reset_coord()
 
@@ -573,6 +599,15 @@ class Project(object):
 
     def make_svg_for_ressources(self, filename, today=None, start=None, end=None, ressources=None):
         """
+        Draw ressources affectation and output it to filename. If start or end are
+        given, use them as reference, otherwise use project first and last day
+
+        Keyword arguments:
+        filename -- string, filename to save to
+        today -- datetime.date of day marked as a reference
+        start -- datetime.date of first day to draw
+        end -- datetime.date of last day to draw
+        ressources -- list of Ressource to check, default all
         """
         self.reset_coord()
 
@@ -586,7 +621,9 @@ class Project(object):
         else:
             end_date = end + datetime.timedelta(days=1)
 
-        ressources = self.get_ressources()
+        if ressources is None:
+            ressources = self.get_ressources()
+
         maxx = (end_date - start_date).days 
         maxy = len(ressources) * 2
 

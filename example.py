@@ -65,7 +65,7 @@ p.make_svg_for_tasks(filename='test_full2.svg', today=datetime.date(2014, 12, 31
 p.make_svg_for_tasks(filename='test.svg', today=datetime.date(2014, 12, 31), start=datetime.date(2015, 01, 3), end=datetime.date(2015, 01, 06))
 p1.make_svg_for_tasks(filename='test_p1.svg', today=datetime.date(2014, 12, 31))
 p2.make_svg_for_tasks(filename='test_p2.svg', today=datetime.date(2014, 12, 31))
-p.make_svg_for_ressources(filename='test_ressources.svg', today=datetime.date(2014, 12, 31))
+p.make_svg_for_ressources(filename='test_ressources.svg', today=datetime.date(2014, 12, 31), ressources=[rANO])
 ##########################$ MAKE DRAW ###############
 
 
