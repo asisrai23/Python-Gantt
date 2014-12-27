@@ -25,30 +25,49 @@ Test strings :
 ^^^^^^^^^^^^
 
 >>> import gantt
->>> r1 = gantt.Ressource('ANO')
->>> r1.add_vacations(
+>>> gantt.add_vacations(datetime.date(2015, 1, 1))
+
+>>> rANO = gantt.Ressource('ANO')
+>>> rJLS = gantt.Ressource('JLS')
+>>> rANO.add_vacations(
 ...     dfrom=datetime.date(2015, 1, 2), 
 ...     dto=datetime.date(2015, 1, 4) 
 ...     )
->>> r1.add_vacations(
+>>> rANO.add_vacations(
 ...     dfrom=datetime.date(2015, 1, 6), 
 ...     dto=datetime.date(2015, 1, 8) 
 ...     )
->>> print(r1.is_available(datetime.date(2015, 1, 5)))
+>>> print(rANO.is_available(datetime.date(2015, 1, 5)))
 True
->>> print(r1.is_available(datetime.date(2015, 1, 8)))
+>>> print(rANO.is_available(datetime.date(2015, 1, 8)))
 False
->>> print(r1.is_available(datetime.date(2015, 1, 6)))
+>>> print(rANO.is_available(datetime.date(2015, 1, 6)))
 False
->>> print(r1.is_available(datetime.date(2015, 1, 2)))
+>>> print(rANO.is_available(datetime.date(2015, 1, 2)))
 False
->>> print(r1.is_available(datetime.date(2015, 1, 1)))
+>>> print(rANO.is_available(datetime.date(2015, 1, 1)))
 False
-
+>>> t1 = gantt.Task(name='tache1', start=datetime.date(2014, 12, 25), duration=4, percent_done=44, ressources=[rANO], color="#FF8080")
+>>> t2 = gantt.Task(name='tache2', start=datetime.date(2014, 12, 28), duration=6, ressources=[rJLS])
+>>> t7 = gantt.Task(name='tache7', start=datetime.date(2014, 12, 28), duration=5, percent_done=50)
+>>> t3 = gantt.Task(name='tache3', start=datetime.date(2014, 12, 25), duration=4, depends_of=[t1, t7, t2], ressources=[rJLS])
+>>> t4 = gantt.Task(name='tache4', start=datetime.date(2015, 01, 01), duration=4, depends_of=t1, ressources=[rJLS])
+>>> t5 = gantt.Task(name='tache5', start=datetime.date(2014, 12, 23), duration=3)
+>>> t6 = gantt.Task(name='tache6', start=datetime.date(2014, 12, 25), duration=4, depends_of=t7, ressources=[rANO])
+>>> t8 = gantt.Task(name='tache8', start=datetime.date(2014, 12, 25), duration=4, depends_of=t7, ressources=[rANO, rJLS])
+>>> p1 = gantt.Project(name='Projet 1')
+>>> p1.add_task(t1)
+>>> p1.add_task(t7)
+>>> p1.add_task(t2)
+>>> p1.add_task(t3)
+>>> p1.add_task(t5)
+>>> p1.add_task(t8)
+>>> p1.make_svg_for_tasks(filename='/dev/null', today=datetime.date(2014, 12, 31))
+>>> p1.make_svg_for_ressources(filename='/dev/null', today=datetime.date(2014, 12, 31), ressources=[rANO, rJLS])
+{'conflicts_vacations': [{'ressource': 'JLS', 'date': datetime.date(2015, 1, 1), 'task': 'tache2'}, {'ressource': 'ANO', 'date': datetime.date(2015, 1, 6), 'task': 'tache8'}, {'ressource': 'ANO', 'date': datetime.date(2015, 1, 7), 'task': 'tache8'}, {'ressource': 'ANO', 'date': datetime.date(2015, 1, 8), 'task': 'tache8'}], 'conflicts_tasks': [{'ressource': 'JLS', 'tasks': ['tache2', 'tache8'], 'day': datetime.date(2015, 1, 6), 'task': 'tache8'}, {'ressource': 'JLS', 'tasks': ['tache3', 'tache8'], 'day': datetime.date(2015, 1, 7), 'task': 'tache8'}, {'ressource': 'JLS', 'tasks': ['tache3', 'tache8'], 'day': datetime.date(2015, 1, 8), 'task': 'tache8'}, {'ressource': 'JLS', 'tasks': ['tache3', 'tache8'], 'day': datetime.date(2015, 1, 9), 'task': 'tache8'}]}
 
 """
 
-# Sur les affections de ressources, ajouter un pourcentage ?
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
@@ -500,20 +519,24 @@ class Task(object):
 
 
 
-    def check_conflict_between_task_and_ressources_vacations(self):
+    def check_conflicts_between_task_and_ressources_vacations(self):
         """
         Displays a warning for each conflict between tasks and vacation of
         ressources affected to the task
+
+        And returns a dictionnary for ressource vacation conflicts
         """
+        conflicts = []
         if self.get_ressources() is None:
-            return
+            return conflicts
         for r in self.get_ressources():
             cday = self.start_date()
             while cday < self.end_date():
                 if not r.is_available(cday):
+                    conflicts.append({'ressource':r.name,'date':cday, 'task':self.name})
                     __LOG__.warning('** Caution ressource {0} is affected on task {2} during vacations on day {1}'.format(r.name, cday, self.name))
                 cday += datetime.timedelta(days=1)
-        return
+        return conflicts
 
 
 ############################################################################
@@ -585,9 +608,17 @@ class Project(object):
                     stroke_width=0,
                     opacity=0.8
                     ))
-            vlines.add(svgwrite.text.Text('{2}{0:02}/{1:02}'.format(jour.day, jour.month, cal[jour.weekday()][0]), insert=((x*10+1)*mm, 9*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="8"))
+            vlines.add(svgwrite.text.Text('{2}.{0:02}/{1:02}'.format(jour.day, jour.month, cal[jour.weekday()][0]), insert=((x*10+1)*mm, 9*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="8"))
+            daytext = []
             if jour.weekday() == 0:
-                vlines.add(svgwrite.text.Text('week:{0:02}'.format(jour.isocalendar()[1]), insert=((x*10+2)*mm, 6*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="12"))
+                daytext.append('W:{0:02}'.format(jour.isocalendar()[1]))
+
+            if jour.day == 1:
+                daytext.append('{0}'.format(jour.strftime("%B")[:3]))
+
+            if len(daytext) > 0:
+                vlines.add(svgwrite.text.Text(' / '.join(daytext), insert=((x*10+2)*mm, 6*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="12"))
+
         vlines.add(svgwrite.shapes.Line(start=(maxx*cm, 1*cm), end=(maxx*cm, (maxy+1)*cm)))
 
 
@@ -641,6 +672,9 @@ class Project(object):
         Draw ressources affectation and output it to filename. If start or end are
         given, use them as reference, otherwise use project first and last day
 
+        And returns to a dictionnary of dictionnaries for vacation and task
+        conflicts for ressources
+
         Keyword arguments:
         filename -- string, filename to save to
         today -- datetime.date of day marked as a reference
@@ -671,15 +705,19 @@ class Project(object):
             return
 
 
+        # detect conflicts between ressources and holidays
+        conflicts_vacations = []
         for t in self.get_tasks():
-            t.check_conflict_between_task_and_ressources_vacations()
+            conflicts_vacations.append(t.check_conflicts_between_task_and_ressources_vacations())
 
+        conflicts_vacations = _flatten(conflicts_vacations)
 
 
         dwg = svgwrite.Drawing(filename, debug=True)
         dwg.add(self._svg_calendar(maxx, maxy, start_date, today))
     
         nline = 1
+        conflicts_tasks = []
         for r in ressources:
             # do stuff for each ressource
             ress = svgwrite.container.Group()
@@ -713,6 +751,7 @@ class Project(object):
                     cday = t.start_date()
                     while cday < t.end_date():
                         if cday in affected_days:
+                            conflicts_tasks.append({'ressource':r.name, 'tasks':affected_days[cday], 'day':cday, 'task':t.name })
                             __LOG__.warning('** Conflict between tasks for {0} on date {1} tasks : {2} vs {3}'.format(r.name, cday, ",".join(affected_days[cday]), t.name))
 
                             vac.add(svgwrite.shapes.Rect(
@@ -736,7 +775,11 @@ class Project(object):
             nline += 2
 
         dwg.save()
-        return
+        return {
+            'conflicts_vacations': conflicts_vacations, 
+            'conflicts_tasks':conflicts_tasks
+            }
+
 
     def start_date(self):
         """
