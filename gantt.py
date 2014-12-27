@@ -48,6 +48,9 @@ False
 
 """
 
+# Sur les affections de ressources, ajouter un pourcentage ?
+
+
 __author__ = 'Alexandre Norman (norman at xael.org)'
 __version__ = '0.2.0'
 __last_modification__ = '2014.12.25'
