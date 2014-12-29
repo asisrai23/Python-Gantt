@@ -271,7 +271,7 @@ class Task(object):
             while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
                 start = start + datetime.timedelta(days=1)
             self.cache_start_date = start
-            return start
+            #return start
         else:
             #__LOG__.debug('*** Do depend of other tasks')
             prev_task_end = self.depends_of[0].end_date()
@@ -281,13 +281,16 @@ class Task(object):
                     prev_task_end = t.end_date()
             if prev_task_end > self.start:
                 self.cache_start_date = prev_task_end
-                return prev_task_end
+                #return prev_task_end
             else:
                 start = self.start
                 while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
                     start = start + datetime.timedelta(days=1)
                 self.cache_start_date = start
-                return start
+             
+        if self.cache_start_date != self.start:
+            __LOG__.warning('** starting date for task {0} is changed from {1} to {2}'.format(self.name, self.start, self.cache_start_date))
+        return self.cache_start_date
 
 
     def end_date(self):
@@ -822,19 +825,20 @@ class Project(object):
             color = self.color
 
         cy = prev_y
-        prj = svgwrite.container.Group(id=self.name.replace(' ', '_'))
-        prj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, (cy*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
+        prj = svgwrite.container.Group()
+        if self.name != "":
+            prj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, (cy*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
 
-        prj.add(svgwrite.shapes.Rect(
-            insert=((6*level+0.8)*mm, (cy+0.5)*cm),
-            size=(0.2*cm, (self.nb_elements()-0.6)*cm),
-            fill='purple',
-            stroke='lightgray',
-            stroke_width=0,
-            opacity=0.5
-            ))
+            prj.add(svgwrite.shapes.Rect(
+                    insert=((6*level+0.8)*mm, (cy+0.5)*cm),
+                    size=(0.2*cm, (self.nb_elements()-0.6)*cm),
+                    fill='purple',
+                    stroke='lightgray',
+                    stroke_width=0,
+                    opacity=0.5
+                    ))
 
-        cy += 1
+            cy += 1
         
         for t in self.tasks:
             trepr, theight = t.svg(cy, start=start, end=end, color=color, level=level+1)
