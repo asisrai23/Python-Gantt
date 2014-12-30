@@ -139,16 +139,16 @@ import gantt
                     gantt_code += "r{0}.add_vacations(dfrom={1})\n".format(r.headline, _iso_date_to_datetime(start))
                 
             else:
-                __LOG__.warning("Unknown task vacation line : {0}".format(line))
+                if line != '':
+                    __LOG__.warning("Unknown task vacation line : {0}".format(line))
 
-            if '--' in line:
+            if line.startswith('-'):
                 dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', line)
                 if len(dates) == 2:
                     start, end = dates
                 elif len(dates) == 1:
                     start = end = dates[0]
 
-                print(start, end)
                 gantt_code += "r{0}.add_vacations(dfrom={1}, dto={2})\n".format(r.headline, _iso_date_to_datetime(start), _iso_date_to_datetime(end))
             else:
                 if line != '':
@@ -175,9 +175,9 @@ import gantt
                     gantt_code += "gantt.add_vacations({0})\n".format(_iso_date_to_datetime(start))
 
             else:
-                __LOG__.warning("Unknown vacation line : {0}".format(line))
+                if line != '':
+                    __LOG__.warning("Unknown vacation line : {0}".format(line))
 
-    print gantt_code
 
     # Generate code for Projects
     gantt_code += "\n#### Projects \n"

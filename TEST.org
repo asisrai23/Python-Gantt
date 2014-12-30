@@ -68,7 +68,7 @@ SCHEDULED: <2015-01-05 lun.>
 :Effort:   3d
 :END:
 ** TODO Tache 4                                                        :ANO:
-SCHEDULED: <2015-01-12 lun.>
+SCHEDULED: <2015-01-10 lun.>
 :PROPERTIES:
 :Effort:   4d
 :Depends: Tache 1;Tache 2;Tache 3
@@ -81,7 +81,8 @@ SCHEDULED: <2015-01-11 dim.>
 ** TODO Tache 6
 SCHEDULED: <2015-01-16 ven.>
 :PROPERTIES:
-:Effort:   3d
+:Effort:   8d
+:Depends: Tache 4
 :END:
 * PROJET 3
 ** TODO Tache 7
