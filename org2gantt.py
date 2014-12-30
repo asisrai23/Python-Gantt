@@ -1,3 +1,31 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8-unix -*-
+"""
+org2gantt.py - version and date, see below
+
+Author : Alexandre Norman - norman at xael.org
+Licence : GPL v3 or any later version
+
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+
+__author__ = 'Alexandre Norman (norman at xael.org)'
+__version__ = '0.2.0'
+__last_modification__ = '2014.12.30'
+
 
 import datetime
 import logging
@@ -105,7 +133,10 @@ def __main__(org, gantt='', debug=False):
 
     __LOG__.debug('_analyse_nodes ({0})'.format({'nodes':nodes}))
 
-    gantt_code = """import datetime
+    gantt_code = """#!/usr/bin/env python3
+# -*- coding: utf-8-unix -*-
+
+import datetime
 import gantt
 """
 
@@ -127,16 +158,17 @@ import gantt
     # Generate code for ressources
     gantt_code += "\n#### Ressources \n"
     for r in n_ressources:
-        gantt_code += "r{0} = gantt.Ressource('{0}')\n".format(r.headline)
+        rname = r.headline.split(' ')[0]
+        gantt_code += "r{0} = gantt.Ressource('{1}')\n".format(rname, r.headline)
         for line in r.body.split('\n'):
             if line.startswith('-'):
                 dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', line)
                 if len(dates) == 2:
                     start, end = dates
-                    gantt_code += "r{0}.add_vacations(dfrom={1}, dto={2})\n".format(r.headline, _iso_date_to_datetime(start), _iso_date_to_datetime(end))
+                    gantt_code += "r{0}.add_vacations(dfrom={1}, dto={2})\n".format(rname, _iso_date_to_datetime(start), _iso_date_to_datetime(end))
                 elif len(dates) == 1:
                     start = dates[0]
-                    gantt_code += "r{0}.add_vacations(dfrom={1})\n".format(r.headline, _iso_date_to_datetime(start))
+                    gantt_code += "r{0}.add_vacations(dfrom={1})\n".format(rname, _iso_date_to_datetime(start))
                 
             else:
                 if line != '':
@@ -149,7 +181,7 @@ import gantt
                 elif len(dates) == 1:
                     start = end = dates[0]
 
-                gantt_code += "r{0}.add_vacations(dfrom={1}, dto={2})\n".format(r.headline, _iso_date_to_datetime(start), _iso_date_to_datetime(end))
+                gantt_code += "r{0}.add_vacations(dfrom={1}, dto={2})\n".format(rname, _iso_date_to_datetime(start), _iso_date_to_datetime(end))
             else:
                 if line != '':
                     print('ERR',line)
@@ -214,11 +246,21 @@ import gantt
                 for d in depends:
                     depends_of.append(tasks_name[d])
 
+            try:
+                percentdone = n.properties['PercentDone']
+            except KeyError:
+                percentdone = None
+
+            if n.todo == 'DONE':
+                if percentdone is not None:
+                    __LOG__.warning('** Task [{0}] marked as done but PercentDone is set to {1}'.format(name, percentdone))
+                percentdone = 100
+
             if len(n.tags) > 0:
                 ress = "{0}".format(["r{0}".format(x) for x in n.tags.keys()]).replace("'", "")
             else:
                 ress = None
-            gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, ressources={4}, depends_of={5})\n".format(ctask, name, start, duration, ress, str(depends_of).replace("'", ""), end)
+            gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, ressources={4}, depends_of={5}, percent_done={7})\n".format(ctask, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone)
             if name in tasks_name:
                 __LOG__.error("Duplicate task name : {0}".format(name))
 

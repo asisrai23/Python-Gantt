@@ -196,7 +196,7 @@ False
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
 __version__ = '0.2.0'
-__last_modification__ = '2014.12.25'
+__last_modification__ = '2014.12.30'
 
 import datetime
 import logging
@@ -210,7 +210,11 @@ except ImportError:
     import sys, os
     sys.path.insert(0, os.path.abspath(os.path.split(os.path.abspath(__file__))[0]+'/..'))
 
-from svgwrite import cm, mm   
+try:
+    from svgwrite import cm, mm   
+except ImportError:
+    print("This program uses svgwrite. See : https://bitbucket.org/mozman/svgwrite/")
+    sys.exit(1)
 
 
 ############################################################################
@@ -219,10 +223,10 @@ __LOG__ = None
 
 ############################################################################
 
-# Un
+# Unworked days (0: Monday ... 6: Sunday)
 NOT_WORKED_DAYS = [5, 6]
 
-# Vacations as datetime (non worked)
+# list of vacations as datetime (non worked days)
 VACATIONS = []
 
 ############################################################################
@@ -570,10 +574,21 @@ class Task(object):
         level -- int, indentation level of the project, not used here
         """
         __LOG__.debug('** Task::svg ({0})'.format({'name':self.name, 'prev_y':prev_y, 'start':start, 'end':end, 'color':color, 'level':level}))
+
+        add_modified_begin_mark = False
+        add_modified_end_mark = False
+
         if start is None:
             start = self.start_date()
+
+        if self.start_date() != self.start and self.start is not None:
+            add_modified_begin_mark = True
+
         if end is None:
             end = self.end_date()
+
+        if self.end_date() != self.stop and self.stop is not None:
+            add_modified_end_mark = True
 
         # override project color if defined
         if self.color is not None:
@@ -641,6 +656,27 @@ class Task(object):
                 stroke_width=1,
                 opacity=0.2,
                 ))
+
+        if add_modified_begin_mark:
+            svg.add(svgwrite.shapes.Rect(
+                    insert=((x+1)*mm, (y+1)*mm),
+                    size=(5*mm, 4*mm),
+                    fill="#0000FF",
+                    stroke=color,
+                    stroke_width=1,
+                    opacity=0.35,
+                    ))
+
+        if add_modified_end_mark:
+            svg.add(svgwrite.shapes.Rect(
+                    insert=((x+d-7+1)*mm, (y+1)*mm),
+                    size=(5*mm, 4*mm),
+                    fill="#0000FF",
+                    stroke=color,
+                    stroke_width=1,
+                    opacity=0.35,
+                    ))
+        
 
         if add_begin_mark:
             svg.add(svgwrite.shapes.Rect(

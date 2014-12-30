@@ -10,11 +10,11 @@
 #+PROPERTY: Effort_ALL 0 0:10 0:30 1:00 2:00 3:00 4:00 5:00 6:00 7:00
 #+EXCLUDE_TAGS: no_gantt
 * RESSOURCES
-** ANO
+** ANO Alexandre
 - [2015-01-05 lun.]--[2015-01-09 ven.]
 - [2015-01-15 jeu.]--[2015-01-18 dim.]
 - [2015-01-12 lun.]
-** JLS
+** JLS Jean Lou
 * VACATIONS
 - [2015-01-01 jeu.]--[2015-01-02 ven.]
 - [2014-12-25 jeu.]
@@ -61,11 +61,14 @@ SCHEDULED: <2015-01-01 jeu.>
 :PROPERTIES:
 :Effort:   6d
 :Depends: Tache 1
+:PercentDone: 40
 :END:
-** TODO Tache 3                                                    :ANO:JLS:
-SCHEDULED: <2015-01-05 lun.>
+** DONE Tache 3                                                    :ANO:JLS:
+CLOSED: [2014-12-30 mar. 16:41] SCHEDULED: <2015-01-05 lun.>
+- State "DONE"       from "TODO"       [2014-12-30 mar. 16:41]
 :PROPERTIES:
 :Effort:   3d
+:PercentDone: 50
 :END:
 ** TODO Tache 4                                                        :ANO:
 SCHEDULED: <2015-01-10 lun.>
