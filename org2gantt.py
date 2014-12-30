@@ -2,6 +2,7 @@
 import datetime
 import logging
 import sys
+import re
 
 ############################################################################
 
@@ -35,6 +36,7 @@ def __show_version__(name, **kwargs):
 def _iso_date_to_datetime(isodate):
     """
     """
+    __LOG__.debug("_iso_date_to_datetime ({0})".format({'isodate':isodate}))
     y, m, d = isodate.split('-')
     if m[0] == '0':
         m = m[1]
@@ -101,36 +103,11 @@ def __main__(org, gantt='', debug=False):
     # load orgfile
     nodes = Orgnode.makelist(org)
 
-    # def _analyse_nodes(nodes, level):
-    #     """
-    #     """
-    #     nl = []
-    #     __LOG__.debug('_analyse_nodes ({0})'.format({'nodes':len(nodes), 'level':level}))
-    #     sub_done = False
-    #     for n in range(len(nodes)):
-    #         if nodes[n].level == level:
-    #             __LOG__.debug('same level {0}'.format(nodes[n].headline))
-    #             nl.append(nodes[n])
-    #             sub_done = False
-    #         elif nodes[n].level > level and sub_done == False:
-    #             __LOG__.debug('sub level {0}'.format(nodes[n].headline))
-    #             sub_done = True
-    #             nl.append(_analyse_nodes(nodes[n:], nodes[n].level))
-    #         elif nodes[n].level < level:
-    #             __LOG__.debug('sup level {0}'.format(nodes[n].headline))
-    #             sub_done = False
-    #             return nl
-    #     return nl
-
     __LOG__.debug('_analyse_nodes ({0})'.format({'nodes':nodes}))
 
-    # Analyse nodes
-    #list_nodes = _analyse_nodes(nodes, 1)
- 
     gantt_code = """import datetime
 import gantt
 """
-
 
     # Find RESSOURCES in heading
     n_ressources = []
@@ -152,9 +129,26 @@ import gantt
     for r in n_ressources:
         gantt_code += "r{0} = gantt.Ressource('{0}')\n".format(r.headline)
         for line in r.body.split('\n'):
+            if line.startswith('-'):
+                dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', line)
+                if len(dates) == 2:
+                    start, end = dates
+                    gantt_code += "r{0}.add_vacations(dfrom={1}, dto={2})\n".format(r.headline, _iso_date_to_datetime(start), _iso_date_to_datetime(end))
+                elif len(dates) == 1:
+                    start = dates[0]
+                    gantt_code += "r{0}.add_vacations(dfrom={1})\n".format(r.headline, _iso_date_to_datetime(start))
+                
+            else:
+                __LOG__.warning("Unknown task vacation line : {0}".format(line))
+
             if '--' in line:
-                start = line.split('--')[0].split('[')[1].split(' ')[0]
-                end = line.split('--')[1].split('[')[1].split(' ')[0]
+                dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', line)
+                if len(dates) == 2:
+                    start, end = dates
+                elif len(dates) == 1:
+                    start = end = dates[0]
+
+                print(start, end)
                 gantt_code += "r{0}.add_vacations(dfrom={1}, dto={2})\n".format(r.headline, _iso_date_to_datetime(start), _iso_date_to_datetime(end))
             else:
                 if line != '':
@@ -171,18 +165,19 @@ import gantt
     gantt_code += "\n#### Vacations \n"
     if n_vacations is not None:
         for line in n_vacations.body.split('\n'):
-            if '--' in line:
-                start = line.split('--')[0].split('[')[1].split(' ')[0]
-                end = line.split('--')[1].split('[')[1].split(' ')[0]
-                exec("sd = " + _iso_date_to_datetime(start))
-                exec("en = " + _iso_date_to_datetime(end))
+            if line.startswith('-'):
+                dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', line)
+                if len(dates) == 2:
+                    start, end = dates
+                    gantt_code += "gantt.add_vacations({0}, {1})\n".format(_iso_date_to_datetime(start), _iso_date_to_datetime(end))
+                elif len(dates) == 1:
+                    start = dates[0]
+                    gantt_code += "gantt.add_vacations({0})\n".format(_iso_date_to_datetime(start))
 
-                while sd <= en:               
-                    gantt_code += "gantt.add_vacations({0})\n".format(_iso_date_to_datetime(str(sd)))
-                    sd += datetime.timedelta(days=1)
             else:
-                print(line)
+                __LOG__.warning("Unknown vacation line : {0}".format(line))
 
+    print gantt_code
 
     # Generate code for Projects
     gantt_code += "\n#### Projects \n"
@@ -199,11 +194,16 @@ import gantt
             prj_found = True
         elif n.level == 1:
             prj_found = False
-        elif n.level > 1 and prj_found == True and n.todo in ('TODO', 'STARTED', 'HOLD'):
+        elif n.level > 1 and prj_found == True and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
             ctask += 1
             name = n.headline
-            start = "{0}".format(_iso_date_to_datetime(str(n.scheduled)))
-            duration = n.properties['Effort'].replace('d', '')
+            start = end = duration = None
+            if n.scheduled != '':
+                start = "{0}".format(_iso_date_to_datetime(str(n.scheduled)))
+            if n.deadline != '':
+                end = "{0}".format(_iso_date_to_datetime(str(n.deadline)))
+            if 'Effort' in n.properties:
+                duration = n.properties['Effort'].replace('d', '')
 
             try:
                 depends = n.properties['Depends'].split(';')
@@ -218,7 +218,7 @@ import gantt
                 ress = "{0}".format(["r{0}".format(x) for x in n.tags.keys()]).replace("'", "")
             else:
                 ress = None
-            gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, duration={3}, ressources={4}, depends_of={5})\n".format(ctask, name, start, duration, ress, str(depends_of).replace("'", ""))
+            gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, ressources={4}, depends_of={5})\n".format(ctask, name, start, duration, ress, str(depends_of).replace("'", ""), end)
             if name in tasks_name:
                 __LOG__.error("Duplicate task name : {0}".format(name))
 

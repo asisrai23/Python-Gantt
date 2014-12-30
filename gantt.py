@@ -55,6 +55,19 @@ False
 >>> t5 = gantt.Task(name='tache5', start=datetime.date(2014, 12, 23), duration=3)
 >>> t6 = gantt.Task(name='tache6', start=datetime.date(2014, 12, 25), duration=4, depends_of=t7, ressources=[rANO])
 >>> t8 = gantt.Task(name='tache8', start=datetime.date(2014, 12, 25), duration=4, depends_of=t7, ressources=[rANO, rJLS])
+>>> t9 = gantt.Task(name='tache9', stop=datetime.date(2014, 12, 30), duration=4, depends_of=t7)
+>>> t9.start_date()
+datetime.date(2015, 1, 6)
+>>> task_9 = gantt.Task(name='Tache 99', start=datetime.date(2015, 1, 18), stop=datetime.date(2015, 1, 23), duration=None, ressources=None, depends_of=None)
+>>> task_9.start_date()
+datetime.date(2015, 1, 18)
+>>> task_9.end_date()
+datetime.date(2015, 1, 23)
+>>> task_7 = gantt.Task(name='Tache 77', start=None, stop=datetime.date(2015, 1, 9), duration=6, ressources=None, depends_of=None)
+>>> task_7.start_date()
+datetime.date(2015, 1, 2)
+>>> task_7.end_date()
+datetime.date(2015, 1, 9)
 >>> p1 = gantt.Project(name='Projet 1')
 >>> p1.add_task(t1)
 >>> p1.add_task(t7)
@@ -62,7 +75,10 @@ False
 >>> p1.add_task(t3)
 >>> p1.add_task(t5)
 >>> p1.add_task(t8)
+>>> p1.add_task(t9)
+>>> p1.add_task(task_7)
 >>> p1.make_svg_for_tasks(filename='/dev/null', today=datetime.date(2014, 12, 31))
+>>> p1.make_svg_for_tasks(filename='/tmp/h.svg', today=datetime.date(2014, 12, 31))
 >>> p1.make_svg_for_ressources(filename='/dev/null', today=datetime.date(2014, 12, 31), ressources=[rANO, rJLS])
 {'conflicts_vacations': [{'ressource': 'JLS', 'date': datetime.date(2015, 1, 1), 'task': 'tache2'}, {'ressource': 'ANO', 'date': datetime.date(2015, 1, 6), 'task': 'tache8'}, {'ressource': 'ANO', 'date': datetime.date(2015, 1, 7), 'task': 'tache8'}, {'ressource': 'ANO', 'date': datetime.date(2015, 1, 8), 'task': 'tache8'}], 'conflicts_tasks': [{'ressource': 'JLS', 'tasks': ['tache2', 'tache8'], 'day': datetime.date(2015, 1, 6), 'task': 'tache8'}, {'ressource': 'JLS', 'tasks': ['tache3', 'tache8'], 'day': datetime.date(2015, 1, 7), 'task': 'tache8'}, {'ressource': 'JLS', 'tasks': ['tache3', 'tache8'], 'day': datetime.date(2015, 1, 8), 'task': 'tache8'}, {'ressource': 'JLS', 'tasks': ['tache3', 'tache8'], 'day': datetime.date(2015, 1, 9), 'task': 'tache8'}]}
 
@@ -103,11 +119,18 @@ VACATIONS = []
 
 ############################################################################
 
-def add_vacations(date):
+
+def add_vacations(start_date, end_date=None):
     """
     """
     global VACATIONS
-    VACATIONS.append(date)
+    if end_date is None:
+        VACATIONS.append(start_date)
+    else:
+        while start_date <= end_date:               
+            VACATIONS.append(start_date)
+            start_date += datetime.timedelta(days=1)
+
     return
 
 ############################################################################
@@ -176,16 +199,20 @@ class Ressource(object):
         self.vacations = []
         return
 
-    def add_vacations(self, dfrom, dto):
+    def add_vacations(self, dfrom, dto=None):
         """
-        Add vacations to a ressource begining at [dfrom] to [dto] (included)
+        Add vacations to a ressource begining at [dfrom] to [dto] (included). If
+        [dto] is not defined, vacation will be for [dfrom] day only
 
         Keyword arguments:
         dfrom -- datetime.date begining of vacation
         dto -- datetime.date end of vacation of vacation
         """
         __LOG__.debug('** Ressource::add_vacations {0}'.format({'name':self.name, 'dfrom':dfrom, 'dto':dto}))
-        self.vacations.append((dfrom, dto))
+        if dto is None:
+            self.vacations.append((dfrom, dfrom))
+        else:
+            self.vacations.append((dfrom, dto))
         return
 
     def is_available(self, date):
@@ -236,8 +263,20 @@ class Task(object):
         __LOG__.debug('** Task::__init__ {0}'.format({'name':name, 'start':start, 'stop':stop, 'duration':duration, 'depends_of':depends_of, 'ressources':ressources, 'percent_done':percent_done}))
         self.name = name
         self.start = start
+        self.stop = stop
         self.duration = duration
         self.color = color
+
+        ends = (self.start, self.stop, self.duration)
+        nonecount = 0
+        for e in ends:
+            if e is None:
+                nonecount += 1
+
+        # check limits (2 must be set on 3)
+        if nonecount != 1:
+            __LOG__.error('** Task {1} must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, name))
+            raise ValueError('Task {1} must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, name))
 
         if type(depends_of) is type([]):
             self.depends_of = depends_of
@@ -265,29 +304,97 @@ class Task(object):
             return self.cache_start_date
 
         __LOG__.debug('** Task::start_date ({0})'.format(self.name))
-        if self.depends_of is None:
-            #__LOG__.debug('*** Do not depend of other task')
-            start = self.start
-            while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
-                start = start + datetime.timedelta(days=1)
-            self.cache_start_date = start
-            #return start
-        else:
-            #__LOG__.debug('*** Do depend of other tasks')
-            prev_task_end = self.depends_of[0].end_date()
-            for t in self.depends_of:
-                if t.end_date() > prev_task_end:
-                    #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
-                    prev_task_end = t.end_date()
-            if prev_task_end > self.start:
-                self.cache_start_date = prev_task_end
-                #return prev_task_end
-            else:
+        if self.start is not None and self.duration is not None:
+            # start date setted, calculate begining
+            if self.depends_of is None:
+                #__LOG__.debug('*** Do not depend of other task')
                 start = self.start
                 while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
                     start = start + datetime.timedelta(days=1)
+                
                 self.cache_start_date = start
+            else:
+                #__LOG__.debug('*** Do depend of other tasks')
+                prev_task_end = self.depends_of[0].end_date()
+                for t in self.depends_of:
+                    if t.end_date() > prev_task_end:
+                        #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
+                        prev_task_end = t.end_date()
+                if prev_task_end > self.start:
+                    self.cache_start_date = prev_task_end
+                else:
+                    start = self.start
+                    while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
+                        start = start + datetime.timedelta(days=1)
+                    self.cache_start_date = start
              
+        elif self.duration is None: # start and stop fixed
+            current_day = self.start
+
+            # check depends
+            if self.depends_of is not None:
+                prev_task_end = self.depends_of[0].end_date()
+                for t in self.depends_of:
+                    if t.end_date() > prev_task_end:
+                        #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
+                        prev_task_end = t.end_date()
+                if prev_task_end > current_day:
+                    depend_start_date = prev_task_end
+                    #return prev_task_end
+                else:
+                    start = self.start
+                    while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
+                        start = start + datetime.timedelta(days=1)
+                    depend_start_date = start
+
+                if depend_start_date > current_day:
+                    __LOG__.error("** Due to dependencies, Task {0}, could not be finished on time (should start as last on {1} but will start on {2})".format(self.name, current_day, depend_start_date))
+                    self.cache_start_date = depend_start_date           
+            else:
+                # should be first day of start...
+                self.cache_start_date = current_day            
+
+            return self.cache_start_date
+
+        else:
+            # start date not setted, calculate from end_date + depends
+            current_day = self.stop
+            real_duration = 0
+            duration = self.duration - 1
+            while duration > 0:
+                if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
+                    real_duration = real_duration + 1
+                    duration -= 1
+                else:
+                    real_duration = real_duration + 1
+
+                current_day = self.stop - datetime.timedelta(days=real_duration)
+
+
+            # check depends
+            if self.depends_of is not None:
+                prev_task_end = self.depends_of[0].end_date()
+                for t in self.depends_of:
+                    if t.end_date() > prev_task_end:
+                        #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
+                        prev_task_end = t.end_date()
+                if prev_task_end > current_day:
+                    depend_start_date = prev_task_end
+                    #return prev_task_end
+                else:
+                    start = self.start
+                    while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
+                        start = start + datetime.timedelta(days=1)
+                    depend_start_date = start
+
+                if depend_start_date > current_day:
+                    __LOG__.error("** Due to dependencies, Task {0}, could not be finished on time (should start as last on {1} but will start on {2})".format(self.name, current_day, depend_start_date))
+                    self.cache_start_date = depend_start_date           
+            else:
+                # should be first day of start...
+                self.cache_start_date = current_day            
+
+
         if self.cache_start_date != self.start:
             __LOG__.warning('** starting date for task {0} is changed from {1} to {2}'.format(self.name, self.start, self.cache_start_date))
         return self.cache_start_date
@@ -298,25 +405,34 @@ class Task(object):
         Returns the last day of the task, either the one which was given at task
         creation or the one calculated after checking dependencies
         """
+        # Should take care of ressources vacations ?
         if self.cache_end_date is not None:
             return self.cache_end_date
 
         __LOG__.debug('** Task::end_date ({0})'.format(self.name))
-        current_day = self.start_date()
-        real_duration = 0
-        duration = self.duration 
-        while duration > 0:
-            if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
-                real_duration = real_duration + 1
-                duration -= 1
-            else:
-                real_duration = real_duration + 1
 
-            current_day = self.start_date() + datetime.timedelta(days=real_duration)
+        if self.duration is None or self.start is None:
+            self.cache_end_date = self.stop
+            return self.cache_end_date
 
-        self.cache_end_date = self.start_date() + datetime.timedelta(days=real_duration)
-        return self.cache_end_date
+        if self.stop is None:
+            current_day = self.start_date()
+            real_duration = 0
+            duration = self.duration 
+            while duration > 0:
+                if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
+                    real_duration = real_duration + 1
+                    duration -= 1
+                else:
+                    real_duration = real_duration + 1
+    
+                current_day = self.start_date() + datetime.timedelta(days=real_duration)
+    
+            self.cache_end_date = self.start_date() + datetime.timedelta(days=real_duration)
+            return self.cache_end_date
 
+        raise(ValueError)
+        return None
 
     def svg(self, prev_y=0, start=None, end=None, color=None, level=None):
         """

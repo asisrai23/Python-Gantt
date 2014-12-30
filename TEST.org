@@ -13,14 +13,17 @@
 ** ANO
 - [2015-01-05 lun.]--[2015-01-09 ven.]
 - [2015-01-15 jeu.]--[2015-01-18 dim.]
+- [2015-01-12 lun.]
 ** JLS
 * VACATIONS
-- [2015-01-01 jeu.]--[2015-01-01 jeu.]
+- [2015-01-01 jeu.]--[2015-01-02 ven.]
+- [2014-12-25 jeu.]
 * PROJET 1
 ** TODO Tache 1                                                        :ANO:
 SCHEDULED: <2014-12-29 lun.>
 :PROPERTIES:
 :Effort:   2d
+:PercentDone: 40
 :ID:       f7a15e08-c497-47f2-b319-315908a04018
 :END:
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam at neque
@@ -82,12 +85,14 @@ SCHEDULED: <2015-01-16 ven.>
 :END:
 * PROJET 3
 ** TODO Tache 7
-SCHEDULED: <2015-01-07 mer.>
+DEADLINE: <2015-01-09 ven.> 
 :PROPERTIES:
-:Effort:   7d
+:Effort:   6d
 :END:
 *** TODO Sub task 7
 SCHEDULED: <2015-01-09 ven.>
 :PROPERTIES:
 :Effort:   7d
 :END:
+** TODO Tache 8
+DEADLINE: <2015-01-23 ven.> SCHEDULED: <2015-01-16 ven.>
