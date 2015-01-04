@@ -4,19 +4,19 @@ VERSION=`python3 setup.py --version`
 ARCHIVE=`python3 setup.py --fullname`
 
 readme:
-	@~/.cabal/bin/pandoc -f org -t markdown_github README.org -o README.txt
+	~/.cabal/bin/pandoc -f org -t rst README.org -o README.txt
 
 changelog:
-	@hg shortlog |~/.cabal/bin/pandoc -f org -t plain > CHANGELOG
+	hg shortlog |~/.cabal/bin/pandoc -f org -t plain > CHANGELOG
 
 manifest: readme changelog
-	@python3 setup.py sdist --manifest-only
+	python3 setup.py sdist --manifest-only
 
 test:
-	@(cd gantt; python3 gantt.py)
-	@python3 org2gantt.py  example.org -g test.py
-	@python3 test.py
-	@rm test.py
+	(cd gantt; python3 gantt.py)
+	python3 org2gantt.py  example.org -g test.py
+	python3 test.py
+	rm test.py
 
 install:
 	@python3 setup.py install
@@ -31,7 +31,7 @@ license:
 	@python3 setup.py --license
 
 register:
-	@python3 setup.py register
+	#@python3 setup.py register
 	@python3 setup.py sdist upload
 
 doc:
