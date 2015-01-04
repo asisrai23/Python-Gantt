@@ -158,6 +158,7 @@ __last_modification__ = '2014.12.30'
 
 import datetime
 import logging
+import sys
 
 # https://bitbucket.org/mozman/svgwrite
 # http://svgwrite.readthedocs.org/en/latest/

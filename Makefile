@@ -1,7 +1,7 @@
 # python-gantt Makefile
 
-VERSION=`python setup.py --version`
-ARCHIVE=`python setup.py --fullname`
+VERSION=`python3 setup.py --version`
+ARCHIVE=`python3 setup.py --fullname`
 
 readme:
 	@~/.cabal/bin/pandoc -f org -t markdown_github README.org -o README.txt
