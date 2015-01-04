@@ -9,6 +9,7 @@ MANIFEST
 build/*
 dist/*
 gantt.html
+CHANGELOG
 
 syntax: regexp
 (.*/)?\#[^/]*\#$
