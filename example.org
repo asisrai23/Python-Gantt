@@ -1,0 +1,67 @@
+#-*- mode: org; coding: utf-8-unix -*-
+* Configuration OrgMode										  :no_gantt:
+#+TITLE: example.org
+#+STARTUP: overview logdone hidestars
+#+TAGS: Ressource1(1) Ressource2(2) Ressource3(3)
+#+DRAWERS: PROPERTIES NOTE LOGBOOK
+#+OPTIONS: ^:{}
+#+EXCLUDE_TAGS: no_gantt
+* RESSOURCES
+** Ressource1 Full Name
+- [2015-01-05 lun.]--[2015-01-09 ven.]
+- [2015-01-15 jeu.]--[2015-01-18 dim.]
+- [2015-01-12 lun.]
+** Ressource2
+** Ressource3
+* VACATIONS
+- [2015-01-01 jeu.]
+- [2014-12-25 jeu.]
+* Project 1
+** DONE Task 1                                                  :Ressource1:
+SCHEDULED: <2014-12-15 lun.>
+:PROPERTIES:
+:Effort:   2d
+:END:
+** TODO Task 2                                       :Ressource2:Ressource1:
+SCHEDULED: <2014-12-21 dim.>
+:PROPERTIES:
+:Effort:   6d
+:Depends: Task 1
+:PercentDone: 40
+:END:
+** TODO Task 3                                                  :Ressource2:
+SCHEDULED: <2015-01-05 lun.>
+:PROPERTIES:
+:Effort:   3d
+:PercentDone: 50
+:END:
+** TODO Task 5                                                  :Ressource3:
+DEADLINE: <2014-12-22 lun.>
+:PROPERTIES:
+:Effort:   3d
+:END:
+** TODO Task 6                                                  :Ressource3:
+SCHEDULED: <2014-12-26 ven.> DEADLINE: <2015-01-13 mar.>
+:PROPERTIES:
+:Depends: Task 5
+:END:
+** TODO Task 4                                                   :Ressource1:
+SCHEDULED: <2015-01-10 lun.>
+:PROPERTIES:
+:Effort:   4d
+:Depends: Task 1;Task 2;Task 3;Task 6
+:END:
+* Project 2
+** TODO Task 7                                                  :Ressource2:
+DEADLINE: <2014-12-24 mer.> 
+:PROPERTIES:
+:Effort:   6d
+:END:
+** TODO Task 8                                                  :Ressource1:
+DEADLINE: <2015-01-10 sam.> SCHEDULED: <2014-12-31 mer.>
+** TODO Task 9                                                  :Ressource2:
+SCHEDULED: <2015-01-09 ven.>
+:PROPERTIES:
+:Effort:   5d
+:Depends: Task 7;Task 8
+:END:

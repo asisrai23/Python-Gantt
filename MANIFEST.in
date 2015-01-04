@@ -1,0 +1,11 @@
+include *.txt
+include CHANGELOG
+include MANIFEST.in
+include Makefile
+include gpl-3.0.txt
+include Orgnode.py
+include gantt/gantt.py
+include org2gantt.py
+include setup.py
+include README.org
+include example.org
