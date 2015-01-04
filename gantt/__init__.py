@@ -3,7 +3,7 @@
 """
 python-gantt - 2015.01.04
 
-python-gantt is a python library which helps to draw gantt schemas.
+python-gantt is a python library which helps to draw gantt charts.
 
 
 Author :

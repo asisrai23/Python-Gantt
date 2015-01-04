@@ -20,7 +20,7 @@ setup (
     author = 'Alexandre Norman',
     author_email = 'norman@xael.org',
     license ='gpl-3.0.txt',
-    keywords="gantt, graphics, schedulling, project management",
+    keywords="gantt, graphics, scheduling, project management",
     # Get more strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     platforms=[
         "Operating System :: OS Independent",
@@ -31,7 +31,6 @@ setup (
         "Environment :: Console",
         "Intended Audience :: Developers",
         "Intended Audience :: End Users/Desktop",
-        "Intended Audience :: System Administrators",
         "License :: OSI Approved :: GNU General Public License (GPL)",
         "Operating System :: OS Independent",
         "Topic :: Multimedia :: Graphics :: Editors :: Vector-Based",
@@ -40,6 +39,6 @@ setup (
         ],
     packages=['gantt'],
     url = 'http://xael.org/norman/python/python-gantt/',
-    description = 'This is a python class to create gantt schema and to convert org-mode projects in gantt schema',
+    description = 'This is a python class to create gantt chart and to convert org-mode projects in gantt chart',
     long_description=open('README.txt').read() + "\n" + open('CHANGELOG').read(),
     )
