@@ -1,0 +1,10 @@
+include *.txt
+include CHANGELOG
+include Makefile
+include example.org
+include README.org
+include MANIFEST.in
+include gantt/gantt.py
+include org2gantt.py
+include setup.py
+
