@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8-unix -*-
 
@@ -123,44 +124,8 @@ False
 (datetime.date(2015, 1, 12), datetime.date(2015, 1, 20))
 
  
-
-#>>> t1 = gantt.Task(name='tache1', start=datetime.date(2014, 12, 25), duration=4, percent_done=44, ressources=[rANO], color="#FF8080")
-#>>> t1.start_date()
-#datetime.date(2014, 12, 26)
-#>>> t1.end_date()
-#datetime.date(2014, 12, 31)
-#>>> t2 = gantt.Task(name='tache2', start=datetime.date(2014, 12, 28), duration=6, ressources=[rJLS])
-#>>> t7 = gantt.Task(name='tache7', start=datetime.date(2014, 12, 28), duration=5, percent_done=50)
-#>>> t3 = gantt.Task(name='tache3', start=datetime.date(2014, 12, 25), duration=4, depends_of=[t1, t7, t2], ressources=[rJLS])
-#>>> t4 = gantt.Task(name='tache4', start=datetime.date(2015, 01, 01), duration=4, depends_of=t1, ressources=[rJLS])
-#>>> t5 = gantt.Task(name='tache5', start=datetime.date(2014, 12, 23), duration=3)
-#>>> t6 = gantt.Task(name='tache6', start=datetime.date(2014, 12, 25), duration=4, depends_of=t7, ressources=[rANO])
-#>>> t8 = gantt.Task(name='tache8', start=datetime.date(2014, 12, 25), duration=4, depends_of=t7, ressources=[rANO, rJLS])
-#>>> t9 = gantt.Task(name='tache9', stop=datetime.date(2014, 12, 30), duration=4, depends_of=t7)
-#>>> t9.start_date()
-#datetime.date(2015, 1, 6)
-#>>> task_9 = gantt.Task(name='Tache 99', start=datetime.date(2015, 1, 18), stop=datetime.date(2015, 1, 23), duration=None, ressources=None, depends_of=None)
-#>>> task_9.start_date()
-#datetime.date(2015, 1, 18)
-#>>> task_9.end_date()
-#datetime.date(2015, 1, 23)
-#>>> task_77 = gantt.Task(name='Tache 77', start=None, stop=datetime.date(2015, 1, 9), duration=8, ressources=None, depends_of=None)
-#>>> task_77.start_date()
-#datetime.date(2015, 1, 2)
-#>>> task_77.end_date()
-#datetime.date(2015, 1, 9)
-
 >>> p1 = gantt.Project(name='Projet 1')
 
-#>>> p1.add_task(t1)
-#>>> p1.add_task(t7)
-#>>> p1.add_task(t2)
-#>>> p1.add_task(t3)
-#>>> p1.add_task(t5)
-#>>> p1.add_task(t8)
-#>>> p1.add_task(t9)
-#>>> p1.add_task(task_77)
-#
 >>> p1.add_task(tSADU)
 >>> p1.add_task(tSAST)
 >>> p1.add_task(tDUST)
@@ -182,13 +147,7 @@ False
 >>> p1.add_task(tBUG)
 >>> p1.add_task(tBUG2)
 
-
-#>>> p1.make_svg_for_tasks(filename='/dev/null', today=datetime.date(2014, 12, 31))
-
 >>> p1.make_svg_for_tasks(filename='/tmp/h.svg', today=datetime.date(2014, 12, 31))
-
-#>>> a=p1.make_svg_for_ressources(filename='/dev/null', today=datetime.date(2014, 12, 31), ressources=[rANO, rJLS])
-
 
 """
 
@@ -1030,7 +989,7 @@ class Project(object):
                     dwg.add(psvg)
                     
                     cday = t.start_date()
-                    while cday < t.end_date():
+                    while cday <= t.end_date():
                         if cday in affected_days:
                             conflicts_tasks.append({'ressource':r.name, 'tasks':affected_days[cday], 'day':cday, 'task':t.name })
                             __LOG__.warning('** Conflict between tasks for {0} on date {1} tasks : {2} vs {3}'.format(r.name, cday, ",".join(affected_days[cday]), t.name))
