@@ -14,7 +14,7 @@ manifest: readme changelog
 
 test:
 	@(cd gantt; python3 gantt.py)
-	@python3 org2gantt.py -o example.org -g test.py
+	@python3 org2gantt.py  example.org -g test.py
 	@python3 test.py
 	@rm test.py
 
