@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.2.0'
-__last_modification__ = '2014.12.30'
+__version__ = '0.2.1'
+__last_modification__ = '2015.01.05'
 
 
 import datetime
