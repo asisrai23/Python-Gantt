@@ -7,7 +7,7 @@ readme:
 	@~/.cabal/bin/pandoc -f org -t markdown_github README.org -o README.txt
 
 changelog:
-	touch CHANGELOG
+	@hg log --style changelog | sed 's/@/ at /g'> CHANGELOG
 
 manifest: readme changelog
 	@python3 setup.py sdist --manifest-only
