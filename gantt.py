@@ -907,7 +907,7 @@ class Project(object):
         dwg.save()
         return
 
-    def make_svg_for_ressources(self, filename, today=None, start=None, end=None, ressources=None):
+    def make_svg_for_ressources(self, filename, today=None, start=None, end=None, ressources=None, one_line_for_tasks=False):
         """
         Draw ressources affectation and output it to filename. If start or end are
         given, use them as reference, otherwise use project first and last day
@@ -921,6 +921,7 @@ class Project(object):
         start -- datetime.date of first day to draw
         end -- datetime.date of last day to draw
         ressources -- list of Ressource to check, default all
+        one_line_for_tasks -- use only one line to display all tasks ?
         """
         self._reset_coord()
 
@@ -942,7 +943,7 @@ class Project(object):
 
         if maxy == 0:
             # No ressources
-            return
+            return {}
 
 
         # detect conflicts between ressources and holidays
@@ -953,16 +954,23 @@ class Project(object):
         conflicts_vacations = _flatten(conflicts_vacations)
 
 
-        dwg = svgwrite.Drawing(filename, debug=True)
-        dwg.add(self._svg_calendar(maxx, maxy, start_date, today))
+        #dwg = svgwrite.Drawing(filename, debug=True)
+        ldwg = svgwrite.container.Group()
     
         nline = 1
         conflicts_tasks = []
+        conflict_display_line = 1
         for r in ressources:
             # do stuff for each ressource
             ress = svgwrite.container.Group()
             ress.add(svgwrite.text.Text('{0}'.format(r.name), insert=(3*mm, (nline*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
-            dwg.add(ress)
+            ldwg.add(ress)
+
+            nline += 1
+            if not one_line_for_tasks:
+                conflict_display_line = nline
+            else:
+                conflict_display_line = nline - 1
 
             # and add vacations on the calendar
             vac = svgwrite.container.Group()
@@ -970,7 +978,7 @@ class Project(object):
             while cday < end_date:
                 if not r.is_available(cday):
                      vac.add(svgwrite.shapes.Rect(
-                            insert=(((cday - start_date).days * 10 + 1)*mm, ((nline)*10+1)*mm),
+                            insert=(((cday - start_date).days * 10 + 1)*mm, ((conflict_display_line)*10+1)*mm),
                             size=(4*mm, 8*mm),
                             fill="#00AA00",
                             stroke="#00AA00",
@@ -979,14 +987,17 @@ class Project(object):
                             ))
                 cday += datetime.timedelta(days=1)
 
-            dwg.add(vac)
+            ldwg.add(vac)
 
             affected_days = {}
             conflicts = svgwrite.container.Group()
             for t in self.get_tasks():
                 if t.get_ressources() is not None and r in t.get_ressources():
-                    psvg, void = t.svg(prev_y = nline + 1, start=start_date, end=end_date, color=self.color)
-                    dwg.add(psvg)
+                    if not one_line_for_tasks:
+                        nline += 1
+                        
+                    psvg, void = t.svg(prev_y = nline, start=start_date, end=end_date, color=self.color)
+                    ldwg.add(psvg)
                     
                     cday = t.start_date()
                     while cday <= t.end_date():
@@ -995,7 +1006,7 @@ class Project(object):
                             __LOG__.warning('** Conflict between tasks for {0} on date {1} tasks : {2} vs {3}'.format(r.name, cday, ",".join(affected_days[cday]), t.name))
 
                             vac.add(svgwrite.shapes.Rect(
-                                    insert=(((cday - start_date).days * 10 + 1 + 4)*mm, ((nline)*10+1)*mm),
+                                    insert=(((cday - start_date).days * 10 + 1 + 4)*mm, ((conflict_display_line)*10+1)*mm),
                                     size=(4*mm, 8*mm),
                                     fill="#AA0000",
                                     stroke="#AA0000",
@@ -1009,11 +1020,22 @@ class Project(object):
                             affected_days[cday] = [t.name]
 
                         cday += datetime.timedelta(days=1)
-                    
-            dwg.add(conflicts)
 
-            nline += 2
+            ldwg.add(conflicts)
+            if not one_line_for_tasks:
+                ldwg.add(
+                    svgwrite.shapes.Line(
+                        start=((0)*cm, (nline+1)*cm), 
+                        end=((maxx+1)*cm, (nline+1)*cm), 
+                        stroke='black',
+                        stroke_dasharray='5,3',
+                        ))
+                
+            nline += 1
 
+        dwg = svgwrite.Drawing(filename, debug=True)
+        dwg.add(self._svg_calendar(maxx, nline-1, start_date, today))
+        dwg.add(ldwg)
         dwg.save()
         return {
             'conflicts_vacations': conflicts_vacations, 
