@@ -4,9 +4,9 @@
 from distutils.core import setup, Extension
 
 gantt = Extension('gantt',
-                 sources = ['gantt/gantt.py', 'gantt/__init__.py', 'gantt/example.py'])
+                 sources = ['gantt/gantt.py', 'gantt/__init__.py', 'org2gantt.py'])
 
-from gantt import *
+import gantt
 
 # Install : python setup.py install
 # Register : python setup.py register

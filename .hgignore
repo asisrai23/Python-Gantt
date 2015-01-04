@@ -4,8 +4,12 @@ syntax: glob
 .~lock.*#
 .#*
 *.deb
-svgwrite
-Orgnode.py
+README.txt
+MANIFEST
+build/*
+dist/*
+gantt.html
+
 syntax: regexp
 (.*/)?\#[^/]*\#$
 (.*/)?\#[^/]*$

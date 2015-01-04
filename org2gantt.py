@@ -29,6 +29,7 @@ __last_modification__ = '2014.12.30'
 
 import datetime
 import logging
+import os
 import sys
 import re
 
@@ -127,6 +128,10 @@ def __main__(org, gantt='', debug=False):
         _init_log_to_sysout(logging.DEBUG)
     else:
         _init_log_to_sysout()
+
+    if not os.path.isfile(org):
+        __LOG__.error('** File do not exist : {0}'.format(org))
+        sys.exit(1)
     
     # load orgfile
     nodes = Orgnode.makelist(org)

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8-unix -*-
 
@@ -162,14 +161,9 @@ import logging
 
 # https://bitbucket.org/mozman/svgwrite
 # http://svgwrite.readthedocs.org/en/latest/
-try:
-    import svgwrite
-except ImportError:
-    # if svgwrite is not 'installed' append parent dir of __file__ to sys.path
-    import sys, os
-    sys.path.insert(0, os.path.abspath(os.path.split(os.path.abspath(__file__))[0]+'/..'))
 
 try:
+    import svgwrite
     from svgwrite import cm, mm   
 except ImportError:
     print("This program uses svgwrite. See : https://bitbucket.org/mozman/svgwrite/")
@@ -193,6 +187,13 @@ VACATIONS = []
 
 def add_vacations(start_date, end_date=None):
     """
+    Add vacations to a ressource begining at [start_date] to [end_date]
+    (included). If [end_date] is not defined, vacation will be for [start_date]
+    day only
+
+    Keyword arguments:
+    start_date -- datetime.date begining of vacation
+    end_date -- datetime.date end of vacation of vacation
     """
     global VACATIONS
     if end_date is None:
