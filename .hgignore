@@ -8,6 +8,7 @@ README.txt
 MANIFEST
 build/*
 dist/*
+web
 gantt.html
 CHANGELOG
 python_gantt.egg-info/*
