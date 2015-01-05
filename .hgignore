@@ -10,6 +10,15 @@ build/*
 dist/*
 gantt.html
 CHANGELOG
+python_gantt.egg-info/*
+python-gantt-[0-9].?.?/*
+org2gantt/project.svg
+org2gantt/project_1.svg
+org2gantt/project_1_ressources.svg
+org2gantt/project_2.svg
+org2gantt/project_2_ressources.svg
+org2gantt/project_ressources.svg
+
 
 syntax: regexp
 (.*/)?\#[^/]*\#$

@@ -16,12 +16,14 @@ manifest: readme changelog
 
 test:
 	@(cd gantt; $(PYTHON) gantt.py)
-	@$(PYTHON) org2gantt.py  example.org -g test.py
-	@$(PYTHON) test.py
-	@rm test.py
+	@$(PYTHON) setup.py nosetests
+	@(cd org2gantt && $(PYTHON) org2gantt.py  example.org -g test.py && $(PYTHON) test.py && rm test.py)
 
 install:
 	@$(PYTHON) setup.py install
+
+egg:
+	@$(PYTHON) setup.py bdist_egg	
 
 archive: doc readme
 	@$(PYTHON) setup.py sdist

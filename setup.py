@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
 
 gantt = Extension('gantt',
-                 sources = ['gantt/gantt.py', 'gantt/__init__.py', 'org2gantt.py'])
+                 sources = ['gantt/gantt.py', 'gantt/__init__.py', 'org2gantt.py', 'Orgnode.py'])
 
-import gantt
 
 # Install : python setup.py install
 # Register : python setup.py register
@@ -16,7 +18,7 @@ import gantt
 
 setup (
     name = 'python-gantt',
-    version = gantt.__version__,
+    version = '0.2.1',
     author = 'Alexandre Norman',
     author_email = 'norman@xael.org',
     license ='gpl-3.0.txt',
@@ -41,4 +43,8 @@ setup (
     url = 'http://xael.org/norman/python/python-gantt/',
     description = 'This is a python class to create gantt chart and to convert org-mode projects in gantt chart',
     long_description=open('README.txt').read() + "\n" + open('CHANGELOG').read(),
+    install_requires=[
+        'svgwrite >= 1.1.6',
+        'clize >= 2.0',
+        ],
     )
