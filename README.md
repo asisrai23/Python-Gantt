@@ -1,6 +1,6 @@
 # Python-Gantt #
 
-Python-Gantt make possible to draw gantt charts from Python.  
+Python-Gantt make possible to easily draw gantt charts from Python.  
 Output format is SVG.
 
 ## Installation ##
