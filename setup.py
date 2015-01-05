@@ -1,20 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-try:
-    from setuptools import setup, Extension
-except ImportError:
-    from distutils.core import setup, Extension
-
-gantt = Extension('gantt',
-                 sources = ['gantt/gantt.py', 'gantt/__init__.py', 'org2gantt.py', 'Orgnode.py'])
-
-
-# Install : python setup.py install
-# Register : python setup.py register
-
-#  platform = 'Unix',
-#  download_url = 'http://xael.org/norman/python/python-gantt/',
+from distutils.core import setup, Extension
 
 setup (
     name = 'python-gantt',
@@ -41,10 +28,10 @@ setup (
         ],
     packages=['gantt'],
     url = 'http://xael.org/norman/python/python-gantt/',
-    description = 'This is a python class to create gantt chart and to convert org-mode projects in gantt chart',
+    description = 'This is a python class to create gantt chart using SVG.',
     long_description=open('README.txt').read() + "\n" + open('CHANGELOG').read(),
-    install_requires=[
-        'svgwrite >= 1.1.6',
-        'clize >= 2.0',
+    requires=[
+        'svgwrite (>=1.1.6)',
+        'clize (>=2.0)',
         ],
     )

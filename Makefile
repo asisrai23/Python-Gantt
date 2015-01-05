@@ -6,17 +6,16 @@ PYTHON=python3
 
 
 readme:
-	@~/.cabal/bin/pandoc -f org -t markdown_github README.org -o README.txt
+	@~/.cabal/bin/pandoc -f org -t markdown_github org2gantt/README.org -o org2gantt/README.txt
 
 changelog:
-	@hg log --style changelog | sed 's/@/ at /g'> CHANGELOG
+	@hg shortlog |~/.cabal/bin/pandoc -f org -t plain > CHANGELOG
 
 manifest: readme changelog
 	@$(PYTHON) setup.py sdist --manifest-only
 
 test:
-	@(cd gantt; $(PYTHON) gantt.py)
-	@$(PYTHON) setup.py nosetests
+	nosetests gantt
 	@(cd org2gantt && $(PYTHON) org2gantt.py  example.org -g test.py && $(PYTHON) test.py && rm test.py)
 
 install:
@@ -25,7 +24,7 @@ install:
 egg:
 	@$(PYTHON) setup.py bdist_egg	
 
-archive: doc readme
+archive: doc readme manifest changelog
 	@$(PYTHON) setup.py sdist
 	@echo Archive is create and named dist/$(ARCHIVE).tar.gz
 	@echo -n md5sum is :
