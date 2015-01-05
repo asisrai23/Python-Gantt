@@ -1,38 +1,40 @@
 # python-gantt Makefile
 
-VERSION=`python3 setup.py --version`
-ARCHIVE=`python3 setup.py --fullname`
+VERSION=`$(PYTHON) setup.py --version`
+ARCHIVE=`$(PYTHON) setup.py --fullname`
+PYTHON=python3
+
 
 readme:
-	~/.cabal/bin/pandoc -f org -t rst README.org -o README.txt
+	@~/.cabal/bin/pandoc -f org -t markdown_github README.org -o README.txt
 
 changelog:
-	hg shortlog |~/.cabal/bin/pandoc -f org -t plain > CHANGELOG
+	@hg log --style changelog | sed 's/@/ at /g'> CHANGELOG
 
 manifest: readme changelog
-	python3 setup.py sdist --manifest-only
+	@$(PYTHON) setup.py sdist --manifest-only
 
 test:
-	(cd gantt; python3 gantt.py)
-	python3 org2gantt.py  example.org -g test.py
-	python3 test.py
-	rm test.py
+	@(cd gantt; $(PYTHON) gantt.py)
+	@$(PYTHON) org2gantt.py  example.org -g test.py
+	@$(PYTHON) test.py
+	@rm test.py
 
 install:
-	@python3 setup.py install
+	@$(PYTHON) setup.py install
 
 archive: doc readme
-	@python3 setup.py sdist
+	@$(PYTHON) setup.py sdist
 	@echo Archive is create and named dist/$(ARCHIVE).tar.gz
 	@echo -n md5sum is :
 	@md5sum dist/$(ARCHIVE).tar.gz
 
 license:
-	@python3 setup.py --license
+	@$(PYTHON) setup.py --license
 
 register:
-	#@python3 setup.py register
-	@python3 setup.py sdist upload
+	@$(PYTHON) setup.py register
+	@$(PYTHON) setup.py sdist upload
 
 doc:
 	@pydoc3 -w gantt/gantt.py
