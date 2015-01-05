@@ -119,7 +119,7 @@ p.make_svg_for_ressources(filename='test_ressources.svg', today=datetime.date(20
 
 
 
-## Licence ## 
+## Licence ##
 
 GPL v3 or any later version
 
