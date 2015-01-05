@@ -232,7 +232,7 @@ class Orgnode(object):
         For example, hasTag('COMPUTER') on headling containing
         :HOME:COMPUTER: would return True.
         """
-        return self.tags.has_key(srch)
+        return srch in self.tags
         
     def setTag(self, newtag):
         """
