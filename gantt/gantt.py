@@ -4,6 +4,9 @@
 """
 gantt.py - version and date, see below
 
+This is a python class to create gantt chart using SVG
+
+
 Author : Alexandre Norman - norman at xael.org
 Licence : GPL v3 or any later version
 
@@ -20,133 +23,6 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-Test strings :
-^^^^^^^^^^^^
-
->>> import gantt
->>> gantt.add_vacations(datetime.date(2015, 1, 1))
->>> gantt.add_vacations(datetime.date(2014, 12, 25))
-
->>> rANO = gantt.Ressource('ANO')
->>> rJLS = gantt.Ressource('JLS')
->>> rANO.add_vacations(
-...     dfrom=datetime.date(2015, 1, 2), 
-...     dto=datetime.date(2015, 1, 4) 
-...     )
->>> rANO.add_vacations(
-...     dfrom=datetime.date(2015, 1, 6), 
-...     dto=datetime.date(2015, 1, 8) 
-...     )
->>> print(rANO.is_available(datetime.date(2015, 1, 5)))
-True
->>> print(rANO.is_available(datetime.date(2015, 1, 8)))
-False
->>> print(rANO.is_available(datetime.date(2015, 1, 6)))
-False
->>> print(rANO.is_available(datetime.date(2015, 1, 2)))
-False
->>> print(rANO.is_available(datetime.date(2015, 1, 1)))
-False
-
-
->>> tSADU = gantt.Task(name='tache SADU', start=datetime.date(2014, 12, 25), duration=4)
->>> (tSADU.start_date(), tSADU.end_date())
-(datetime.date(2014, 12, 26), datetime.date(2014, 12, 31))
-
->>> tSAST = gantt.Task(name='tache SAST', start=datetime.date(2014, 12, 25), stop=datetime.date(2014, 12, 31))
->>> (tSAST.start_date(), tSAST.end_date())
-(datetime.date(2014, 12, 26), datetime.date(2014, 12, 31))
-
->>> tDUST = gantt.Task(name='tache DUST', stop=datetime.date(2014, 12, 31), duration=4)
->>> (tDUST.start_date(), tDUST.end_date())
-(datetime.date(2014, 12, 26), datetime.date(2014, 12, 31))
-
->>> tDUSTSADU = gantt.Task(name='tache DUST SADU', start=datetime.date(2015, 1, 1), duration=4, depends_of=[tDUST])
->>> (tDUSTSADU.start_date(), tDUSTSADU.end_date())
-(datetime.date(2015, 1, 2), datetime.date(2015, 1, 7))
-
->>> tDUSTSAST = gantt.Task(name='tache DUST SAST', start=datetime.date(2015, 1, 1), stop=datetime.date(2015, 1, 7), depends_of=[tDUST])
->>> (tDUSTSAST.start_date(), tDUSTSAST.end_date())
-(datetime.date(2015, 1, 2), datetime.date(2015, 1, 7))
-
->>> tDUSTDUST = gantt.Task(name='tache DUST DUST', stop=datetime.date(2015, 1, 7), duration=9, depends_of=[tDUST])
->>> (tDUSTDUST.start_date(), tDUSTDUST.end_date())
-(datetime.date(2015, 1, 2), datetime.date(2015, 1, 7))
-
->>> tDUSTDUST2 = gantt.Task(name='tache DUST DUST2', stop=datetime.date(2015, 1, 10), duration=2, depends_of=[tDUST])
->>> (tDUSTDUST2.start_date(), tDUSTDUST2.end_date())
-(datetime.date(2015, 1, 8), datetime.date(2015, 1, 9))
-
-
->>> tSADUSADU = gantt.Task(name='tache SADU SADU', start=datetime.date(2015, 1, 1), duration=4, depends_of=[tSADU])
->>> (tSADUSADU.start_date(), tSADUSADU.end_date())
-(datetime.date(2015, 1, 2), datetime.date(2015, 1, 7))
-
->>> tSADUSAST = gantt.Task(name='tache SADU SAST', start=datetime.date(2015, 1, 1), stop=datetime.date(2015, 1, 7), depends_of=[tSADU])
->>> (tSADUSAST.start_date(), tSADUSAST.end_date())
-(datetime.date(2015, 1, 2), datetime.date(2015, 1, 7))
-
->>> tSADUDUST = gantt.Task(name='tache SADU DUST', stop=datetime.date(2015, 1, 7), duration=9, depends_of=[tSADU])
->>> (tSADUDUST.start_date(), tSADUDUST.end_date())
-(datetime.date(2015, 1, 2), datetime.date(2015, 1, 7))
-
->>> tSADUDUST2 = gantt.Task(name='tache SADU DUST2', stop=datetime.date(2015, 1, 10), duration=2, depends_of=[tSADU])
->>> (tSADUDUST2.start_date(), tSADUDUST2.end_date())
-(datetime.date(2015, 1, 8), datetime.date(2015, 1, 9))
-
-
-
->>> tSASTSADU = gantt.Task(name='tache SAST SADU', start=datetime.date(2015, 1, 1), duration=4, depends_of=[tSAST])
->>> (tSASTSADU.start_date(), tSASTSADU.end_date())
-(datetime.date(2015, 1, 2), datetime.date(2015, 1, 7))
-
->>> tSASTSAST = gantt.Task(name='tache SAST SAST', start=datetime.date(2015, 1, 1), stop=datetime.date(2015, 1, 7), depends_of=[tSAST])
->>> (tSASTSAST.start_date(), tSASTSAST.end_date())
-(datetime.date(2015, 1, 2), datetime.date(2015, 1, 7))
-
->>> tSASTDUST = gantt.Task(name='tache SAST DUST', stop=datetime.date(2015, 1, 7), duration=9, depends_of=[tSAST])
->>> (tSASTDUST.start_date(), tSASTDUST.end_date())
-(datetime.date(2015, 1, 2), datetime.date(2015, 1, 7))
-
->>> tSASTDUST2 = gantt.Task(name='tache SAST DUST2', stop=datetime.date(2015, 1, 10), duration=2, depends_of=[tSAST])
->>> (tSASTDUST2.start_date(), tSASTDUST2.end_date())
-(datetime.date(2015, 1, 8), datetime.date(2015, 1, 9))
-
-
->>> tBUG = gantt.Task(name='tBUG', start=datetime.date(2015, 1, 9), duration=7)
->>> (tBUG.start_date(), tBUG.end_date())
-(datetime.date(2015, 1, 9), datetime.date(2015, 1, 19))
-
->>> tBUG2 = gantt.Task(name='tBUG2', start=datetime.date(2015, 1, 10), duration=7)
->>> (tBUG2.start_date(), tBUG2.end_date())
-(datetime.date(2015, 1, 12), datetime.date(2015, 1, 20))
-
- 
->>> p1 = gantt.Project(name='Projet 1')
-
->>> p1.add_task(tSADU)
->>> p1.add_task(tSAST)
->>> p1.add_task(tDUST)
->>> p1.add_task(tDUSTSADU)
->>> p1.add_task(tDUSTSAST)
->>> p1.add_task(tDUSTDUST)
->>> p1.add_task(tDUSTDUST2)
-
->>> p1.add_task(tSADUSADU)
->>> p1.add_task(tSADUSAST)
->>> p1.add_task(tSADUDUST)
->>> p1.add_task(tSADUDUST2)
-
->>> p1.add_task(tSASTSADU)
->>> p1.add_task(tSASTSAST)
->>> p1.add_task(tSASTDUST)
->>> p1.add_task(tSASTDUST2)
-
->>> p1.add_task(tBUG)
->>> p1.add_task(tBUG2)
-
->>> p1.make_svg_for_tasks(filename='/tmp/h.svg', today=datetime.date(2014, 12, 31))
 
 """
 
@@ -1133,7 +1009,7 @@ class Project(object):
         if self.cache_nb_elements is not None:
             return self.cache_nb_elements
         
-        nb = 1
+        nb = 0
         for t in self.tasks:
             nb += t.nb_elements()
 
