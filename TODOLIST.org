@@ -1,0 +1,3 @@
+* TODOLIST
+** TODO Support common tags http://orgmode.org/worg/org-tutorials/org-taskjuggler.html
+** TODO Support repetitive task (ie SCHEDULED DATE +1w or ++1w)

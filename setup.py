@@ -5,7 +5,7 @@ from distutils.core import setup, Extension
 
 setup (
     name = 'python-gantt',
-    version = '0.2.1',
+    version = '0.2.2',
     author = 'Alexandre Norman',
     author_email = 'norman@xael.org',
     license ='gpl-3.0.txt',
