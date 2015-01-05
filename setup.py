@@ -29,7 +29,7 @@ setup (
     packages=['gantt'],
     url = 'http://xael.org/norman/python/python-gantt/',
     description = 'This is a python class to create gantt chart using SVG.',
-    long_description=open('README.txt').read() + "\n" + open('CHANGELOG').read(),
+    long_description=open('README.txt').read(),
     requires=[
         'svgwrite (>=1.1.6)',
         'clize (>=2.0)',

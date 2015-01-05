@@ -7,6 +7,7 @@ PYTHON=python3
 
 readme:
 	@~/.cabal/bin/pandoc -f org -t markdown_github org2gantt/README.org -o org2gantt/README.txt
+	@~/.cabal/bin/pandoc -f markdown -t rst README.md -o README.txt
 
 changelog:
 	@hg shortlog |~/.cabal/bin/pandoc -f org -t plain > CHANGELOG
@@ -41,8 +42,8 @@ doc:
 	@pydoc3 -w gantt/gantt.py
 #	@cd docs && make html
 
-#web:
-#	@cp dist/$(ARCHIVE).tar.gz web/
-#	@m4 -DVERSION=$(VERSION) -DMD5SUM=$(shell md5sum dist/$(ARCHIVE).tar.gz |cut -d' ' -f1) -DDATE=$(shell date +%Y-%m-%d) web/index.gtm.m4 > web/index.gtm
+web:
+	@cp dist/$(ARCHIVE).tar.gz web/
+	@m4 -DVERSION=$(VERSION) -DMD5SUM=$(shell md5sum dist/$(ARCHIVE).tar.gz |cut -d' ' -f1) -DDATE=$(shell date +%Y-%m-%d) web/index.gtm.m4 > web/index.gtm
 
 .PHONY: web
