@@ -131,20 +131,100 @@ def _flatten(l, ltypes=(list, tuple)):
     return ltype(l)
 
 ############################################################################
+class GroupOfRessources(object):
+    """
+    Class for grouping ressources
+    """
+    def __init__(self, name, fullname=None):
+        """
+        Init a group of ressource ressource
+
+        Keyword arguments:
+        name -- name given to the ressource (id)
+        fullname -- long name given to the ressource
+        """
+        __LOG__.debug('** GroupOfRessources::__init__ {0}'.format({'name':name}))
+        self.name = name
+        if fullname is not None:
+            self.fullname = fullname
+        else:
+            self.fullname = name
+
+        self.ressources = []
+        return
+
+    def add_ressource(self, ressource):
+        """
+        Add a ressource to the group of ressources
+
+        Keyword arguments:
+        ressource -- Ressource object
+        """
+        if ressource not in self.ressources:
+            self.ressources.append(ressource)
+        return
+
+
+    def nb_elements(self):
+        """
+        Returns the number of ressources
+        """
+        __LOG__.debug('** GroupOfRessources::nb_elements ({0})'.format({'name':self.name}))
+        return len(self.ressources)
+
+
+
+    def is_available(self, date):
+        """
+        Returns True if any ressource is available at given date, False if not.
+        Availibility is taken from the global VACATIONS and ressource's ones.
+
+        Keyword arguments:
+        date -- datetime.date day to look for
+        """
+        if date in VACATIONS:
+            __LOG__.debug('** GroupOfRessources::is_available {0} : False'.format({'name':self.name, 'date':date}))
+            return False
+
+        for r in self.ressources:
+            if r.is_available(date):
+                __LOG__.debug('** GroupOfRessources::is_available {0} : True {1}'.format({'name':self.name, 'date':date}, r.name))
+                return True
+
+        __LOG__.debug('** GroupOfRessources::is_available {0} : False'.format({'name':self.name, 'date':date}))
+        return False
+
+        for h in self.vacations:
+            dfrom, dto = h
+            if date >= dfrom and date <= dto:
+                __LOG__.debug('** Ressource::is_available {0} : False'.format({'name':self.name, 'date':date}))
+                return False
+        __LOG__.debug('** Ressource::is_available {0} : True'.format({'name':self.name, 'date':date}))
+        return True
+
+
+
+############################################################################
 
 class Ressource(object):
     """
     Class for handling ressources assigned to tasks
     """
-    def __init__(self, name):
+    def __init__(self, name, fullname=None):
         """
         Init a ressource
 
         Keyword arguments:
-        name -- name given to the ressource
+        name -- name given to the ressource (id)
+        fullname -- long name given to the ressource
         """
         __LOG__.debug('** Ressource::__init__ {0}'.format({'name':name}))
         self.name = name
+        if fullname is not None:
+            self.fullname = fullname
+        else:
+            self.fullname = name
+
         self.vacations = []
         return
 
@@ -163,6 +243,15 @@ class Ressource(object):
         else:
             self.vacations.append((dfrom, dto))
         return
+
+
+    def nb_elements(self):
+        """
+        Returns the number of ressources, 1 here
+        """
+        __LOG__.debug('** Ressource::nb_elements ({0})'.format({'name':self.name}))
+        return 1
+
 
     def is_available(self, date):
         """
@@ -192,7 +281,7 @@ class Task(object):
     """
     Class for manipulating Tasks
     """
-    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, ressources=None, percent_done=0, color=None):
+    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, ressources=None, percent_done=0, color=None, fullname=None):
         """
         Initialize task object. Two of start, stop or duration may be given.
         This task can rely on other task and will be completed with ressources.
@@ -200,7 +289,8 @@ class Task(object):
         If color is specified, it will be used for the task.
 
         Keyword arguments:
-        name -- name of the task
+        name -- name of the task (id)
+        fullname -- long name given to the ressource
         start -- datetime.date, first day of the task, default None
         stop -- datetime.date, last day of the task, default None
         duration -- int, duration of the task, default None
@@ -211,6 +301,11 @@ class Task(object):
         """
         __LOG__.debug('** Task::__init__ {0}'.format({'name':name, 'start':start, 'stop':stop, 'duration':duration, 'depends_of':depends_of, 'ressources':ressources, 'percent_done':percent_done}))
         self.name = name
+        if fullname is not None:
+            self.fullname = fullname
+        else:
+            self.fullname = name
+
         self.start = start
         self.stop = stop
         self.duration = duration
@@ -222,8 +317,8 @@ class Task(object):
             if e is None:
                 nonecount += 1
 
-        # check limits (2 must be set on 3)
-        if nonecount != 1:
+        # check limits (2 must be set on 4) or scheduling is defined by duration and dependencies
+        if nonecount != 1 and  (self.duration is None or depends_of is None):
             __LOG__.error('** Task {1} must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, name))
             raise ValueError('Task {1} must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, name))
 
@@ -309,7 +404,22 @@ class Task(object):
 
             return self.cache_start_date
 
-        elif self.start is None: # stop and duration fixed
+        elif self.duration is not None and self.depends_of is not None:  # duration and dependencies fixed
+            prev_task_end = self.depends_of[0].end_date()
+            for t in self.depends_of:
+                if t.end_date() > prev_task_end:
+                    __LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
+                    prev_task_end = t.end_date()
+
+            start = prev_task_end + datetime.timedelta(days=1)
+            
+            while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
+                start = start + datetime.timedelta(days=1)
+
+            # should be first day of start...
+            self.cache_start_date = start
+
+        elif self.start is None and self.stop is not None: # stop and duration fixed
             # start date not setted, calculate from end_date + depends
             current_day = self.stop
             real_duration = 0
@@ -340,6 +450,7 @@ class Task(object):
                 
                 while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
                     start = start + datetime.timedelta(days=1)
+
                 depend_start_date = start
 
                 if depend_start_date > current_day:
@@ -369,7 +480,7 @@ class Task(object):
 
         __LOG__.debug('** Task::end_date ({0})'.format(self.name))
 
-        if self.duration is None or self.start is None:
+        if self.duration is None or self.start is None and self.stop is not None:
             real_end = self.stop
             # Take care of vacations
             while real_end.weekday() in NOT_WORKED_DAYS or real_end in VACATIONS:
@@ -545,7 +656,7 @@ class Task(object):
                     opacity=0.25,
                 ))
 
-        svg.add(svgwrite.text.Text(self.name, insert=((x+2)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
+        svg.add(svgwrite.text.Text(self.fullname, insert=((x+2)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
 
         if self.ressources is not None:
             t = " / ".join(["{0}".format(r.name) for r in self.ressources])
@@ -774,14 +885,25 @@ class Project(object):
         maxx = (end_date - start_date).days 
         maxy = self.nb_elements()
 
-        dwg = svgwrite.Drawing(filename, debug=True)
-        dwg.add(self._svg_calendar(maxx, maxy, start_date, today))
+        ldwg = svgwrite.container.Group()
     
         psvg, pheight = self.svg(prev_y=1, start=start_date, end=end_date, color = self.color)
-        dwg.add(psvg)
+        ldwg.add(psvg)
         dep = self.svg_dependencies(self)
         if dep is not None:
-            dwg.add(dep)
+            ldwg.add(dep)
+
+        dwg = svgwrite.Drawing(filename, debug=True)
+        dwg.add(svgwrite.shapes.Rect(
+                    insert=(0*cm, 0*cm),
+                    size=((maxx+1)*cm, (pheight+1)*cm),
+                    fill='white',
+                    stroke_width=0,
+                    opacity=1
+                    ))
+
+        dwg.add(self._svg_calendar(maxx, pheight, start_date, today))
+        dwg.add(ldwg)
         dwg.save()
         return
 
@@ -832,7 +954,6 @@ class Project(object):
         conflicts_vacations = _flatten(conflicts_vacations)
 
 
-        #dwg = svgwrite.Drawing(filename, debug=True)
         ldwg = svgwrite.container.Group()
     
         nline = 1
@@ -841,7 +962,7 @@ class Project(object):
         for r in ressources:
             # do stuff for each ressource
             ress = svgwrite.container.Group()
-            ress.add(svgwrite.text.Text('{0}'.format(r.name), insert=(3*mm, (nline*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
+            ress.add(svgwrite.text.Text('{0}'.format(r.fullname), insert=(3*mm, (nline*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
             ldwg.add(ress)
 
             nline += 1
@@ -912,6 +1033,13 @@ class Project(object):
             nline += 1
 
         dwg = svgwrite.Drawing(filename, debug=True)
+        dwg.add(svgwrite.shapes.Rect(
+                    insert=(0*cm, 0*cm),
+                    size=((maxx+1)*cm, (nline)*cm),
+                    fill='white',
+                    stroke_width=0,
+                    opacity=1
+                    ))
         dwg.add(self._svg_calendar(maxx, nline-1, start_date, today))
         dwg.add(ldwg)
         dwg.save()
@@ -968,7 +1096,7 @@ class Project(object):
 
             prj.add(svgwrite.shapes.Rect(
                     insert=((6*level+0.8)*mm, (cy+0.5)*cm),
-                    size=(0.2*cm, (self.nb_elements()-0.6)*cm),
+                    size=(0.2*cm, (self.nb_elements()+0.4)*cm),
                     fill='purple',
                     stroke='lightgray',
                     stroke_width=0,

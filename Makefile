@@ -5,6 +5,18 @@ ARCHIVE=`$(PYTHON) setup.py --fullname`
 PYTHON=python3
 
 
+install:
+	@$(PYTHON) setup.py install
+
+archive: doc readme manifest changelog
+	@$(PYTHON) setup.py sdist
+	@echo Archive is create and named dist/$(ARCHIVE).tar.gz
+	@echo -n md5sum is :
+	@md5sum dist/$(ARCHIVE).tar.gz
+
+license:
+	@$(PYTHON) setup.py --license
+
 readme:
 	@~/.cabal/bin/pandoc -f org -t markdown_github org2gantt/README.org -o org2gantt/README.txt
 	@~/.cabal/bin/pandoc -f markdown -t rst README.md -o README.txt
@@ -19,20 +31,8 @@ test:
 	nosetests gantt
 	@(cd org2gantt && $(PYTHON) org2gantt.py  example.org -g test.py && $(PYTHON) test.py && rm test.py)
 
-install:
-	@$(PYTHON) setup.py install
-
 egg:
 	@$(PYTHON) setup.py bdist_egg	
-
-archive: doc readme manifest changelog
-	@$(PYTHON) setup.py sdist
-	@echo Archive is create and named dist/$(ARCHIVE).tar.gz
-	@echo -n md5sum is :
-	@md5sum dist/$(ARCHIVE).tar.gz
-
-license:
-	@$(PYTHON) setup.py --license
 
 register:
 	@$(PYTHON) setup.py register
@@ -40,7 +40,6 @@ register:
 
 doc:
 	@pydoc3 -w gantt/gantt.py
-#	@cd docs && make html
 
 web:
 	@cp dist/$(ARCHIVE).tar.gz web/

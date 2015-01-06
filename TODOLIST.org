@@ -1,3 +1,41 @@
-* TODOLIST
-** TODO Support common tags http://orgmode.org/worg/org-tutorials/org-taskjuggler.html
-** TODO Support repetitive task (ie SCHEDULED DATE +1w or ++1w)
+* TODO installation bug :
+- Note taken on [2015-01-06 mar. 18:19] \\
+  pandoc could be installed as a binary
+- Note taken on [2015-01-06 mar. 17:13] \\
+  Add README.txt to the distribution
+#+begin_src shell-script
+$ sudo python setup.py install
+Traceback (most recent call last):
+  File "setup.py", line 32, in <module>
+    long_description=open('README.txt').read(),
+IOError: [Errno 2] No such file or directory: 'README.txt'
+AN05392S@U1404:/media/sf_Personnel/ESPACE_KM/python-gantt
+#+end_src
+* TODO Support common tags with http://orgmode.org/worg/org-tutorials/org-taskjuggler.html
+** DONE Ressources ID
+** STARTED Group of ressources
+*** TODO for each group, check that nb of assigned task <= nb of members
+in example : tasks 11, 2, 7, 10
+** DONE Task ID
+- State "DONE"       from "TODO"       [2015-01-06 mar. 17:04]
+** TODO Dependencies
+- The ORDERED property which allows you to state that the child tasks have to be
+  completed in the order they appear (top most first).
+- The BLOCKER property which allows you to state that a task depends on either a
+  previous sibling ("previous-sibling") or any other task by stating the task_id
+  property of the predecessor
+* TODO check for orgfile consistency and error reporting
+** TODO missing mandatory properties
+- [ ] Effort
+- [ ] task_id
+- [ ] ressource_id
+- [X] scheduling / dependencies / deadline / effort
+** DONE duplicate ID on ressources
+- State "DONE"       from "TODO"       [2015-01-06 mar. 17:40]
+** DONE duplicate ID on tasks
+- State "DONE"       from "TODO"       [2015-01-06 mar. 17:40]
+* TODO Group of tasks + inheritance for members if not overided (duration, ressources, ordered)
+- Group have children
+- Task do not have children
+* TODO Support repetitive task (ie SCHEDULED DATE +1w or ++1w)
+* SOMEDAY Support repetitive vacations (ie SCHEDULED DATE +1w or ++1w, +1y)
