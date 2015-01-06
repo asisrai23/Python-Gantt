@@ -1,13 +1,15 @@
 * How to make a Gantt graph from an Org-Mode project ?
 ** Follow the structure of the [[file:example.org][example.org]] file
 *** RESSOURCES
-Ressources are affected to tasks by using them as tags. So the first word of
-each item will be the tag (Ressource1). Following charaters could be used as
-description.
+Ressources are affected to tasks by using them as tags. Ressource tag is defined 
+by the property "ressource_id".
 
 Each ressource can contain a list of vacations which can take two forms :
 - single date such as [2014-12-30 mar.]
 - a timeframe such as [2014-12-30 mar.]--[2015-01-02 ven.], last day is included
+*** Group of ressources
+Groups of ressources are defined by the property "ressource_id".
+Each ressource which is a child of a group will be included in this group.
 *** VACATIONS
 Vacations item can contain a list of vacations which can take two forms :
 - single date such as [2014-12-25 jeu.]
@@ -26,16 +28,22 @@ For the whole projects, two graphs are generated :
 - project.svg
 - project_ressources.svg
 *** Tasks
-Tasks are level 2 items. They depends from a project (level 1). Timeframe is
-delimited by from two of the following criteria :
+Tasks are level 1 or 2 items. They depends from a project (level 1). 
+Task ID is mandatory and is defined by the property "task_id".
+
+Timeframe is delimited by from two of the following criteria :
 - starting date : set by the SCHEDULED keyword followed by a date
 - duration : set as a property, keyword "Effort", duration is defined in days !
 - ending date : set by the DEADLINE keyword followed by a date
+Or by :
+- dependencies to other task : set as a property, keyword "BLOCKERS", duration
+  is defined in days !
+- duration : set as a property, keyword "Effort", duration is defined in days !
 
 Other options are possible :
 - percent done : defined as a property, keyword "PercentDone"
-- dependencies : defined as a property, keyword "Depends". It relies on the
-  tasks names. Multiples dependencies are separated by semicolons. (see [[file:example.org::*Task%204][Task 4]])
+- dependencies : defined as a property, keyword "BLOCKERS". It relies on the
+  tasks ID (tags). Multiples dependencies are separated by spaces. (see [[file:example.org::*Task%204][Task 4]])
 ** Installation of the scripts
 You will need python (v2.7 or later) and some python modules :
 - clize : https://github.com/epsy/clize

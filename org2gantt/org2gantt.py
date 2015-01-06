@@ -147,49 +147,74 @@ import gantt
 
     # Find RESSOURCES in heading
     n_ressources = []
+    ressources_id = []
     found = False
     plevel = 0
     for n in nodes:
-        if found == True and plevel == n.level:
+        if found == True and n.level > plevel:
             n_ressources.append(n)
-        elif found == True and plevel != n.level:
+        elif found == True and n.level <= plevel:
             break
-        if n.headline == "RESSOURCES":
+        if found == False and n.headline == "RESSOURCES":
             found = True
-            plevel = n.level+1
-
-
+            plevel = n.level
 
     # Generate code for ressources
     gantt_code += "\n#### Ressources \n"
-    for r in n_ressources:
-        rname = r.headline.split(' ')[0]
-        gantt_code += "r{0} = gantt.Ressource('{1}')\n".format(rname, r.headline)
+    next_level = 0
+    current_level = 0
+    current_group = None
+
+    for nr in range(len(n_ressources)):
+        r = n_ressources[nr]
+
+        rname = r.headline
+        rid = r.properties['ressource_id'].strip()
+        
+        if rid in ressources_id:
+            __LOG__.critical('** Duplicate ressource_id: [{0}]'.format(rid))
+            sys.exit(1)
+
+        ressources_id.append(rid)
+
+        if ' ' in rid:
+            __LOG__.critical('** Space in ressource_id: [{0}]'.format(rid))
+            sys.exit(1)
+
+
+        current_level = r.level
+        if nr < len(n_ressources) - 2:
+            next_level = n_ressources[nr+1].level
+
+        # Group mode
+        if current_level < next_level:
+            gantt_code += "{0} = gantt.GroupOfRessources('{1}')\n".format(rid, rname)
+            current_group = rid
+            continue
+        
+        # Ressource
+        gantt_code += "{0} = gantt.Ressource('{1}')\n".format(rid, rname)
         for line in r.body.split('\n'):
             if line.startswith('-'):
                 dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', line)
                 if len(dates) == 2:
                     start, end = dates
-                    gantt_code += "r{0}.add_vacations(dfrom={1}, dto={2})\n".format(rname, _iso_date_to_datetime(start), _iso_date_to_datetime(end))
+                    gantt_code += "{0}.add_vacations(dfrom={1}, dto={2})\n".format(rid, _iso_date_to_datetime(start), _iso_date_to_datetime(end))
                 elif len(dates) == 1:
                     start = dates[0]
-                    gantt_code += "r{0}.add_vacations(dfrom={1})\n".format(rname, _iso_date_to_datetime(start))
+                    gantt_code += "{0}.add_vacations(dfrom={1})\n".format(rid, _iso_date_to_datetime(start))
                 
             else:
-                if line != '':
-                    __LOG__.warning("Unknown task vacation line : {0}".format(line))
+                if line != '' and not line.startswith(':'):
+                    __LOG__.warning("Unknown ressource line : {0}".format(line))
 
-            if line.startswith('-'):
-                dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', line)
-                if len(dates) == 2:
-                    start, end = dates
-                elif len(dates) == 1:
-                    start = end = dates[0]
 
-                gantt_code += "r{0}.add_vacations(dfrom={1}, dto={2})\n".format(rname, _iso_date_to_datetime(start), _iso_date_to_datetime(end))
-            else:
-                if line != '':
-                    print('ERR',line)
+        if current_group is not None:
+            gantt_code += "{0}.add_ressource(ressource={1})\n".format(current_group, rid)
+
+        # end of group
+        if current_level > next_level:
+            current_group = None
 
 
     # Find VACATIONS in heading
@@ -233,7 +258,14 @@ import gantt
             prj_found = False
         elif n.level > 1 and prj_found == True and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
             ctask += 1
-            name = n.headline
+            name = n.properties['task_id'].strip()
+
+            if ' ' in name:
+                __LOG__.critical('** Space in task_id: [{0}]'.format(name))
+                sys.exit(1)
+
+
+            fullname = n.headline
             start = end = duration = None
             if n.scheduled != '':
                 start = "{0}".format(_iso_date_to_datetime(str(n.scheduled)))
@@ -243,7 +275,7 @@ import gantt
                 duration = n.properties['Effort'].replace('d', '')
 
             try:
-                depends = n.properties['Depends'].split(';')
+                depends = n.properties['BLOCKER'].split()
             except KeyError:
                 depends_of = None
             else: # no exception raised
@@ -262,16 +294,16 @@ import gantt
                 percentdone = 100
 
             if len(n.tags) > 0:
-                ress = "{0}".format(["r{0}".format(x) for x in n.tags.keys()]).replace("'", "")
+                ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
             else:
                 ress = None
-            gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, ressources={4}, depends_of={5}, percent_done={7})\n".format(ctask, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone)
+            gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, ressources={4}, depends_of={5}, percent_done={7}, fullname='{8}')\n".format(ctask, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone, fullname)
             if name in tasks_name:
-                __LOG__.error("Duplicate task name : {0}".format(name))
+                __LOG__.critical("Duplicate task id: {0}".format(name))
+                sys.exit(1)
 
             tasks_name["{0}".format(name)] = "task_{0}".format(ctask)
             gantt_code += "project_{0}.add_task(task_{1})\n".format(cproject, ctask)
-            #p1.add_task(t1)
 
 
     gantt_code += "\n#### Outputs \n"
@@ -291,9 +323,6 @@ import gantt
         print(gantt_code)
     else:
         open(gantt, 'w').write(gantt_code)
-
-
-
 
 
 
