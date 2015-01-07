@@ -181,6 +181,7 @@ import gantt
             __LOG__.critical('** Space in ressource_id: [{0}]'.format(rid))
             sys.exit(1)
 
+        new_group_this_turn = False
 
         current_level = r.level
         if nr < len(n_ressources) - 2:
@@ -190,10 +191,12 @@ import gantt
         if current_level < next_level:
             gantt_code += "{0} = gantt.GroupOfRessources('{1}')\n".format(rid, rname)
             current_group = rid
-            continue
-        
+            new_group_this_turn = True
         # Ressource
-        gantt_code += "{0} = gantt.Ressource('{1}')\n".format(rid, rname)
+        else:
+            gantt_code += "{0} = gantt.Ressource('{1}')\n".format(rid, rname)
+            
+        # Vacations in body of node
         for line in r.body.split('\n'):
             if line.startswith('-'):
                 dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', line)
@@ -209,12 +212,12 @@ import gantt
                     __LOG__.warning("Unknown ressource line : {0}".format(line))
 
 
-        if current_group is not None:
+        if new_group_this_turn == False and current_group is not None:
             gantt_code += "{0}.add_ressource(ressource={1})\n".format(current_group, rid)
 
-        # end of group
-        if current_level > next_level:
-            current_group = None
+            # end of group
+            if current_level > next_level:
+                current_group = None
 
 
     # Find VACATIONS in heading
