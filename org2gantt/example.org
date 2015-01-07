@@ -6,6 +6,12 @@
 #+DRAWERS: PROPERTIES NOTE LOGBOOK
 #+OPTIONS: ^:{}
 #+EXCLUDE_TAGS: no_gantt
+* CONFIGURATION
+:PROPERTIES:
+:start_date: [2014-12-21 dim.]
+:end_date: [2015-01-21 mer.]
+:today:    [2015-01-16 ven.]
+:END:
 * RESSOURCES
 ** Group 1
 :PROPERTIES:

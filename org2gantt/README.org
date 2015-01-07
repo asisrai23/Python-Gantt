@@ -44,6 +44,12 @@ Other options are possible :
 - percent done : defined as a property, keyword "PercentDone"
 - dependencies : defined as a property, keyword "BLOCKERS". It relies on the
   tasks ID (tags). Multiples dependencies are separated by spaces. (see [[file:example.org::*Task%204][Task 4]])
+*** CONFIGURATION
+The gantt chart timeframe can be set using the item CONFIGURATION and the
+following properties :
+- start_date : first day of the chart (default begining of project)
+- end_date : last day of the chart (default end of project)
+- today : force today date (default is today)
 ** Installation of the scripts
 You will need python (v2.7 or later) and some python modules :
 - clize : https://github.com/epsy/clize

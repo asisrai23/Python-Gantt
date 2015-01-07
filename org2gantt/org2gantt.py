@@ -145,6 +145,36 @@ import datetime
 import gantt
 """
 
+
+    # Find CONFIGURATION in heading
+    n_configuration = None
+    for n in nodes:
+        if n.headline == "CONFIGURATION":
+            n_configuration = n
+
+    planning_start_date = None
+    planning_end_date = None
+    planning_today_date = _iso_date_to_datetime(str(datetime.date.today()))
+
+    # Generate code for configuration
+    if n_configuration is not None:
+        if 'start_date' in n_configuration.properties:
+            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['start_date'])
+            if len(dates) == 1:
+                planning_start_date = _iso_date_to_datetime(dates[0])
+
+        if 'end_date' in n_configuration.properties:
+            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['end_date'])
+            if len(dates) == 1:
+                planning_end_date = _iso_date_to_datetime(dates[0])
+
+        if 'today' in n_configuration.properties:
+            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['today'])
+            if len(dates) == 1:
+                planning_today_date = _iso_date_to_datetime(dates[0])
+
+
+
     # Find RESSOURCES in heading
     n_ressources = []
     ressources_id = []
@@ -252,7 +282,7 @@ import gantt
     tasks_name = {}
     for n in nodes:
         # new project heading
-        if n.level == 1 and  not n.headline in ('RESSOURCES', 'VACATIONS') and 'no_gantt' not in n.tags:
+        if n.level == 1 and  not n.headline in ('RESSOURCES', 'VACATIONS', 'CONFIGURATION') and 'no_gantt' not in n.tags:
             cproject += 1
             gantt_code += "###### Project {0} \n".format(n.headline)
             gantt_code += "project_{0} = gantt.Project(name='{1}')\n".format(cproject, n.headline)
@@ -312,12 +342,12 @@ import gantt
     gantt_code += "\n#### Outputs \n"
     gantt_code += "project_0 = gantt.Project()\n"
     for i in range(1, cproject + 1):
-        gantt_code += "project_{0}.make_svg_for_tasks(filename='project_{0}.svg', today={1})\n".format(i, _iso_date_to_datetime(str(datetime.date.today())))
-        gantt_code += "project_{0}.make_svg_for_ressources(filename='project_{0}_ressources.svg', today={1})\n".format(i, _iso_date_to_datetime(str(datetime.date.today())))
+        gantt_code += "project_{0}.make_svg_for_tasks(filename='project_{0}.svg', today={1}, start={2}, end={3})\n".format(i, planning_today_date, planning_start_date, planning_end_date)
+        gantt_code += "project_{0}.make_svg_for_ressources(filename='project_{0}_ressources.svg', today={1}, start={2}, end={3})\n".format(i, planning_today_date, planning_start_date, planning_end_date)
         gantt_code += "project_0.add_task(project_{0})\n".format(i)
 
-    gantt_code += "project_0.make_svg_for_tasks(filename='project.svg', today={0})\n".format(_iso_date_to_datetime(str(datetime.date.today())))
-    gantt_code += "project_0.make_svg_for_ressources(filename='project_ressources.svg', today={0})\n".format(_iso_date_to_datetime(str(datetime.date.today())))
+    gantt_code += "project_0.make_svg_for_tasks(filename='project.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date)
+    gantt_code += "project_0.make_svg_for_ressources(filename='project_ressources.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date)
 
 
 
