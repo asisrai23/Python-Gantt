@@ -50,6 +50,11 @@ following properties :
 - start_date : first day of the chart (default begining of project)
 - end_date : last day of the chart (default end of project)
 - today : force today date (default is today)
+start_date and end_date could be references to today's date in the form +1d,
+-2w, +3m or -4y
+
+For ressources chart, if set, the property one_line_for_tasks puts all tasks on
+one line.
 ** Installation of the scripts
 You will need python (v2.7 or later) and some python modules :
 - clize : https://github.com/epsy/clize

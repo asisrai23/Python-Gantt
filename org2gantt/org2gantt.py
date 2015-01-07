@@ -156,21 +156,57 @@ import gantt
     planning_end_date = None
     planning_today_date = _iso_date_to_datetime(str(datetime.date.today()))
     bar_color = None
+    one_line_for_tasks = False
 
     # Generate code for configuration
     if n_configuration is not None:
         if 'bar_color' in n_configuration.properties:
             bar_color = n_configuration.properties['bar_color']
 
+        if 'one_line_for_tasks' in n_configuration.properties:
+             one_line_for_tasks = True
+
         if 'start_date' in n_configuration.properties:
+            # find date and use it
             dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['start_date'])
             if len(dates) == 1:
                 planning_start_date = _iso_date_to_datetime(dates[0])
+            # find +1m
+            elif n_configuration.properties['start_date'].startswith('-') or n_configuration.properties['start_date'].startswith('+'):
+                sign = n_configuration.properties['start_date'][0]
+                qte = int(n_configuration.properties['start_date'][1:-1])
+                what = n_configuration.properties['start_date'][-1]
+
+                sign = -1*(sign=='-') + 1*(sign=='+')
+                if what == 'd':
+                    planning_start_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(days=qte*sign)))
+                elif what == 'w':
+                    planning_start_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(weeks=qte*sign)))
+                elif what == 'm':
+                    planning_start_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(month=qte*sign)))
+                elif what == 'y':
+                    planning_start_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(years=qte*sign)))
 
         if 'end_date' in n_configuration.properties:
+            # find date and use it
             dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['end_date'])
             if len(dates) == 1:
                 planning_end_date = _iso_date_to_datetime(dates[0])
+            # find +1m
+            elif n_configuration.properties['end_date'].startswith('-') or n_configuration.properties['end_date'].startswith('+'):
+                sign = n_configuration.properties['end_date'][0]
+                qte = int(n_configuration.properties['end_date'][1:-1])
+                what = n_configuration.properties['end_date'][-1]
+
+                sign = -1*(sign=='-') + 1*(sign=='+')
+                if what == 'd':
+                    planning_end_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(days=qte*sign)))
+                elif what == 'w':
+                    planning_end_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(weeks=qte*sign)))
+                elif what == 'm':
+                    planning_end_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(month=qte*sign)))
+                elif what == 'y':
+                    planning_end_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(years=qte*sign)))
 
         if 'today' in n_configuration.properties:
             dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['today'])
@@ -347,11 +383,11 @@ import gantt
     gantt_code += "project_0 = gantt.Project(color='{0}')\n".format(bar_color)
     for i in range(1, cproject + 1):
         gantt_code += "project_{0}.make_svg_for_tasks(filename='project_{0}.svg', today={1}, start={2}, end={3})\n".format(i, planning_today_date, planning_start_date, planning_end_date)
-        gantt_code += "project_{0}.make_svg_for_ressources(filename='project_{0}_ressources.svg', today={1}, start={2}, end={3})\n".format(i, planning_today_date, planning_start_date, planning_end_date)
+        gantt_code += "project_{0}.make_svg_for_ressources(filename='project_{0}_ressources.svg', today={1}, start={2}, end={3}, one_line_for_tasks={4})\n".format(i, planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
         gantt_code += "project_0.add_task(project_{0})\n".format(i)
 
     gantt_code += "project_0.make_svg_for_tasks(filename='project.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date)
-    gantt_code += "project_0.make_svg_for_ressources(filename='project_ressources.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date)
+    gantt_code += "project_0.make_svg_for_ressources(filename='project_ressources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
 
 
 

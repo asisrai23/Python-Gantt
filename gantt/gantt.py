@@ -1024,7 +1024,7 @@ class Project(object):
             # and add vacations on the calendar
             vac = svgwrite.container.Group()
             cday = start_date
-            while cday < end_date:
+            while cday <= end_date:
                 if not r.is_available(cday):
                      vac.add(svgwrite.shapes.Rect(
                             insert=(((cday - start_date).days * 10 + 1)*mm, ((conflict_display_line)*10+1)*mm),
@@ -1140,29 +1140,33 @@ class Project(object):
         if color is None or self.color is not None:
             color = self.color
 
-        cy = prev_y
+
+        cy = prev_y + 1*(self.name != "")
+
         prj = svgwrite.container.Group()
-        if self.name != "":
-            prj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, (cy*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
 
-            prj.add(svgwrite.shapes.Rect(
-                    insert=((6*level+0.8)*mm, (cy+0.5)*cm),
-                    size=(0.2*cm, (self.nb_elements()+0.4)*cm),
-                    fill='purple',
-                    stroke='lightgray',
-                    stroke_width=0,
-                    opacity=0.5
-                    ))
-
-            cy += 1
-        
         for t in self.tasks:
             trepr, theight = t.svg(cy, start=start, end=end, color=color, level=level+1)
             if trepr is not None:
                 prj.add(trepr)
                 cy += theight
+
+        fprj = svgwrite.container.Group()
+        if self.name != "":
+            fprj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, ((prev_y)*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
+
+            fprj.add(svgwrite.shapes.Rect(
+                    insert=((6*level+0.8)*mm, (prev_y+0.5)*cm),
+                    size=(0.2*cm, ((cy-prev_y-1)+0.4)*cm),
+                    fill='purple',
+                    stroke='lightgray',
+                    stroke_width=0,
+                    opacity=0.5
+                    ))
             
-        return (prj, cy-prev_y)
+        fprj.add(prj)
+
+        return (fprj, cy-prev_y)
 
 
     def svg_dependencies(self, prj):
