@@ -155,9 +155,13 @@ import gantt
     planning_start_date = None
     planning_end_date = None
     planning_today_date = _iso_date_to_datetime(str(datetime.date.today()))
+    bar_color = None
 
     # Generate code for configuration
     if n_configuration is not None:
+        if 'bar_color' in n_configuration.properties:
+            bar_color = n_configuration.properties['bar_color']
+
         if 'start_date' in n_configuration.properties:
             dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['start_date'])
             if len(dates) == 1:
@@ -285,7 +289,7 @@ import gantt
         if n.level == 1 and  not n.headline in ('RESSOURCES', 'VACATIONS', 'CONFIGURATION') and 'no_gantt' not in n.tags:
             cproject += 1
             gantt_code += "###### Project {0} \n".format(n.headline)
-            gantt_code += "project_{0} = gantt.Project(name='{1}')\n".format(cproject, n.headline)
+            gantt_code += "project_{0} = gantt.Project(name='{1}', color='{2}')\n".format(cproject, n.headline, bar_color)
             prj_found = True
         elif n.level == 1:
             prj_found = False
@@ -340,7 +344,7 @@ import gantt
 
 
     gantt_code += "\n#### Outputs \n"
-    gantt_code += "project_0 = gantt.Project()\n"
+    gantt_code += "project_0 = gantt.Project(color='{0}')\n".format(bar_color)
     for i in range(1, cproject + 1):
         gantt_code += "project_{0}.make_svg_for_tasks(filename='project_{0}.svg', today={1}, start={2}, end={3})\n".format(i, planning_today_date, planning_start_date, planning_end_date)
         gantt_code += "project_{0}.make_svg_for_ressources(filename='project_{0}_ressources.svg', today={1}, start={2}, end={3})\n".format(i, planning_today_date, planning_start_date, planning_end_date)

@@ -819,7 +819,7 @@ class Project(object):
     """
     Class for handling projects
     """
-    def __init__(self, name="", color='#FFFF90'):
+    def __init__(self, name="", color=None):
         """
         Initialize project with a given name and color for all tasks
 
@@ -829,7 +829,11 @@ class Project(object):
         """
         self.tasks = []
         self.name = name
-        self.color = color
+        if color is None:
+            color = '#FFFF90'
+        else:
+            self.color = color
+
         self.cache_nb_elements = None
         return
 

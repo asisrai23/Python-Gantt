@@ -11,6 +11,7 @@
 :start_date: [2014-12-21 dim.]
 :end_date: [2015-01-21 mer.]
 :today:    [2015-01-16 ven.]
+:bar_color: #ff0000
 :END:
 * RESSOURCES
 ** Group 1
