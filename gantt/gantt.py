@@ -145,6 +145,7 @@ class GroupOfRessources(object):
         """
         __LOG__.debug('** GroupOfRessources::__init__ {0}'.format({'name':name}))
         self.name = name
+        self.vacations = []
         if fullname is not None:
             self.fullname = fullname
         else:
@@ -162,7 +163,26 @@ class GroupOfRessources(object):
         """
         if ressource not in self.ressources:
             self.ressources.append(ressource)
+            ressource.add_group(self)
         return
+
+
+    def add_vacations(self, dfrom, dto=None):
+        """
+        Add vacations to a ressource begining at [dfrom] to [dto] (included). If
+        [dto] is not defined, vacation will be for [dfrom] day only
+
+        Keyword arguments:
+        dfrom -- datetime.date begining of vacation
+        dto -- datetime.date end of vacation of vacation
+        """
+        __LOG__.debug('** Ressource::add_vacations {0}'.format({'name':self.name, 'dfrom':dfrom, 'dto':dto}))
+        if dto is None:
+            self.vacations.append((dfrom, dfrom))
+        else:
+            self.vacations.append((dfrom, dto))
+        return
+
 
 
     def nb_elements(self):
@@ -182,10 +202,19 @@ class GroupOfRessources(object):
         Keyword arguments:
         date -- datetime.date day to look for
         """
+        # Global VACATIONS
         if date in VACATIONS:
-            __LOG__.debug('** GroupOfRessources::is_available {0} : False'.format({'name':self.name, 'date':date}))
+            __LOG__.debug('** GroupOfRessources::is_available {0} : False (global vacation)'.format({'name':self.name, 'date':date}))
             return False
 
+        # Group vacations
+        for h in self.vacations:
+            dfrom, dto = h
+            if date >= dfrom and date <= dto:
+                __LOG__.debug('** GroupOfRessources::is_available {0} : False (group vacation)'.format({'name':self.name, 'date':date}))
+                return False
+
+        # Test if at least one ressource is avalaible
         for r in self.ressources:
             if r.is_available(date):
                 __LOG__.debug('** GroupOfRessources::is_available {0} : True {1}'.format({'name':self.name, 'date':date}, r.name))
@@ -194,13 +223,6 @@ class GroupOfRessources(object):
         __LOG__.debug('** GroupOfRessources::is_available {0} : False'.format({'name':self.name, 'date':date}))
         return False
 
-        for h in self.vacations:
-            dfrom, dto = h
-            if date >= dfrom and date <= dto:
-                __LOG__.debug('** Ressource::is_available {0} : False'.format({'name':self.name, 'date':date}))
-                return False
-        __LOG__.debug('** Ressource::is_available {0} : True'.format({'name':self.name, 'date':date}))
-        return True
 
 
 
@@ -226,6 +248,7 @@ class Ressource(object):
             self.fullname = name
 
         self.vacations = []
+        self.member_of_groups = []
         return
 
     def add_vacations(self, dfrom, dto=None):
@@ -261,10 +284,21 @@ class Ressource(object):
         Keyword arguments:
         date -- datetime.date day to look for
         """
+        # global VACATIONS
         if date in VACATIONS:
-            __LOG__.debug('** Ressource::is_available {0} : False'.format({'name':self.name, 'date':date}))
+            __LOG__.debug('** Ressource::is_available {0} : False (global vacation)'.format({'name':self.name, 'date':date}))
             return False
-            
+        
+        # GroupOfRessources vacation
+        for g in self.member_of_groups:
+            for h in g.vacations:
+                dfrom, dto = h
+                if date >= dfrom and date <= dto:
+                    __LOG__.debug('** Ressource::is_available {0} : False (Group {1})'.format({'name':self.name, 'date':date}, g.name))
+                    return False
+        
+
+        # Ressource vacation
         for h in self.vacations:
             dfrom, dto = h
             if date >= dfrom and date <= dto:
@@ -272,6 +306,18 @@ class Ressource(object):
                 return False
         __LOG__.debug('** Ressource::is_available {0} : True'.format({'name':self.name, 'date':date}))
         return True
+
+
+    def add_group(self, groupofressources):
+        """
+        Tell the ressource it belongs to a GroupOfRessources
+        
+        Keyword arguments:
+        groupofressources -- GroupOfRessources
+        """
+        if groupofressources not in self.member_of_groups:
+            self.member_of_groups.append(groupofressources)
+        return
 
 
 ############################################################################

@@ -11,6 +11,7 @@
 :PROPERTIES:
 :ressource_id: grp1
 :END:
+- [2015-01-01 jeu.]--[2015-01-31 sam.]
 *** Ressource 1
 :PROPERTIES:
 :ressource_id: ress1
