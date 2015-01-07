@@ -3,7 +3,7 @@
 VERSION=`$(PYTHON) setup.py --version`
 ARCHIVE=`$(PYTHON) setup.py --fullname`
 PYTHON=python3
-
+PANDOC=~/.cabal/bin/pandoc
 
 install:
 	@$(PYTHON) setup.py install
@@ -18,8 +18,8 @@ license:
 	@$(PYTHON) setup.py --license
 
 readme:
-	@~/.cabal/bin/pandoc -f org -t markdown_github org2gantt/README.org -o org2gantt/README.txt
-	@~/.cabal/bin/pandoc -f markdown -t rst README.md -o README.txt
+	@$(PANDOC) -f org -t markdown_github org2gantt/README.org -o org2gantt/README.txt
+	@$(PANDOC) -f markdown -t rst README.md -o README.txt
 
 changelog:
 	@hg shortlog |~/.cabal/bin/pandoc -f org -t plain > CHANGELOG
