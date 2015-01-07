@@ -8,17 +8,17 @@
 #+EXCLUDE_TAGS: no_gantt
 * CONFIGURATION
 :PROPERTIES:
-:start_date: [2014-12-21 dim.]
-:end_date: [2015-01-21 mer.]
-:today:    [2015-01-16 ven.]
-:bar_color: #ff0000
+:start_date: -1w
+:end_date: +4w
+:bar_color: #FFFF90
+:one_line_for_tasks: t
 :END:
 * RESSOURCES
 ** Group 1
 :PROPERTIES:
 :ressource_id: grp1
 :END:
-- [2015-01-01 jeu.]--[2015-01-31 sam.]
+- [2015-01-01 jeu.]--[2015-02-03 mar.]
 *** Ressource 1
 :PROPERTIES:
 :ressource_id: ress1
