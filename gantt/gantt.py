@@ -925,7 +925,7 @@ class Project(object):
         if end is None:
             end_date = self.end_date() 
         else:
-            end_date = end + datetime.timedelta(days=2)
+            end_date = end
 
 
         maxx = (end_date - start_date).days 
@@ -979,7 +979,7 @@ class Project(object):
         if end is None:
             end_date = self.end_date() 
         else:
-            end_date = end + datetime.timedelta(days=1)
+            end_date = end
 
         if ressources is None:
             ressources = self.get_ressources()
@@ -1042,7 +1042,8 @@ class Project(object):
                         nline += 1
                         
                     psvg, void = t.svg(prev_y = nline, start=start_date, end=end_date, color=self.color)
-                    ldwg.add(psvg)
+                    if psvg is not None:
+                        ldwg.add(psvg)
                     
                     cday = t.start_date()
                     while cday <= t.end_date():
