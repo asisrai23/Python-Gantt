@@ -341,6 +341,7 @@ import gantt
             prop_inherits = []
             prj_found = False
             prj_found = True
+            prev_task = None
             
             # Add task
             name, code = make_task_from_node(n)
@@ -362,6 +363,9 @@ import gantt
                  and 'no_gantt' not in n.tags \
                  and not n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
 
+            if n.level == 1:
+                prev_task = None
+            
 
             if n.level > 1 and prj_found == False:
                 __LOG__.debug(' do not keep')
@@ -402,6 +406,7 @@ import gantt
                 if len(prop_inherits) > 0:
                     ordered = prop_inherits[-1]['ordered']
                 else:
+                    prev_task = None
                     ordered = False
 
             # Inherits color            
@@ -425,6 +430,10 @@ import gantt
                  and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
 
             __LOG__.debug(' new task under project')
+
+            if n.level == 1:
+                prev_task = None
+                
 
 
             if len(prop_inherits) >= n.level:

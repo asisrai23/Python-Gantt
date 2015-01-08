@@ -150,7 +150,7 @@ SCHEDULED: <2014-12-22 lun.>
 :task_id: prj4
 :END:
 ** TODO task 41
-SCHEDULED: <2014-12-15 lun.>
+SCHEDULED: <2015-01-01 Thu>
 :PROPERTIES:
 :Effort:   2d
 :task_id: task41
@@ -174,14 +174,18 @@ SCHEDULED: <2014-12-15 lun.>
 :Effort:   4d
 :task_id: task42
 :END:
-* TODO task alone
+* t
+:PROPERTIES:
+:ORDERED: t
+:END:
+** TODO task alone
 SCHEDULED: <2014-12-25 Thu>
 :PROPERTIES:
 :Effort:   2d
 :resource_id: ress3 ress1
 :END:
-** TODO aaiuest aest
-SCHEDULED: <2014-12-25 Thu>
+*** TODO sub task alone
+SCHEDULED: <2014-12-24 Wed>
 :PROPERTIES:
 :Effort:   2d
 :resource_id: ress3 ress1

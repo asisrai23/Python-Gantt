@@ -13,8 +13,8 @@ IOError: [Errno 2] No such file or directory: 'README.txt'
 AN05392S@U1404:/media/sf_Personnel/ESPACE_KM/python-gantt
 #+end_src
 * TODO Support common tags with http://orgmode.org/worg/org-tutorials/org-taskjuggler.html
-** DONE Ressources ID
-** STARTED Group of ressources
+** DONE Resources ID
+** STARTED Group of resources
 *** TODO for each group, check that nb of assigned task <= nb of members
 in example : tasks 11, 2, 7, 10
 ** DONE Task ID
@@ -29,13 +29,13 @@ in example : tasks 11, 2, 7, 10
 ** TODO missing mandatory properties
 - [ ] Effort
 - [ ] task_id
-- [ ] ressource_id
+- [ ] resource_id
 - [X] scheduling / dependencies / deadline / effort
-** DONE duplicate ID on ressources
+** DONE duplicate ID on resources
 - State "DONE"       from "TODO"       [2015-01-06 mar. 17:40]
 ** DONE duplicate ID on tasks
 - State "DONE"       from "TODO"       [2015-01-06 mar. 17:40]
-* TODO Group of tasks + inheritance for members if not overided (duration, ressources, ordered)
+* TODO Group of tasks + inheritance for members if not overided (duration, resources, ordered)
 - Group have children
 - Task do not have children
 * TODO Support repetitive task (ie SCHEDULED DATE +1w or ++1w)

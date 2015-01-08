@@ -31,9 +31,6 @@ test:
 	nosetests gantt
 	@(cd org2gantt && $(PYTHON) org2gantt.py  example.org -g test.py && $(PYTHON) test.py && rm test.py)
 
-egg:
-	@$(PYTHON) setup.py bdist_egg	
-
 register:
 	@$(PYTHON) setup.py register
 	@$(PYTHON) setup.py sdist upload
@@ -41,7 +38,7 @@ register:
 doc:
 	@pydoc3 -w gantt/gantt.py
 
-web:
+web: archive
 	@cp dist/$(ARCHIVE).tar.gz web/
 	@m4 -DVERSION=$(VERSION) -DMD5SUM=$(shell md5sum dist/$(ARCHIVE).tar.gz |cut -d' ' -f1) -DDATE=$(shell date +%Y-%m-%d) web/index.gtm.m4 > web/index.gtm
 

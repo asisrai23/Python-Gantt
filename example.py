@@ -9,11 +9,11 @@ gantt.add_vacations(datetime.date(2014, 12, 25))
 gantt.add_vacations(datetime.date(2015, 1, 1))
 gantt.add_vacations(datetime.date(2015, 1, 13))
 
-# Create two ressources
-rANO = gantt.Ressource('ANO')
-rJLS = gantt.Ressource('JLS')
+# Create two resources
+rANO = gantt.Resource('ANO')
+rJLS = gantt.Resource('JLS')
 
-# Add vacations for one lucky ressource
+# Add vacations for one lucky resource
 rANO.add_vacations(
     dfrom=datetime.date(2014, 12, 29), 
     dto=datetime.date(2015, 1, 4) 
@@ -23,7 +23,7 @@ rANO.add_vacations(
     dto=datetime.date(2015, 1, 8) 
     )
 
-# Test if this ressource is  avalaible for some dates
+# Test if this resource is  avalaible for some dates
 print(rANO.is_available(datetime.date(2015, 1, 5)))
 print(rANO.is_available(datetime.date(2015, 1, 8)))
 print(rANO.is_available(datetime.date(2015, 1, 6)))
@@ -32,14 +32,14 @@ print(rANO.is_available(datetime.date(2015, 1, 1)))
 
 
 # Create some tasks
-t1 = gantt.Task(name='tache1', start=datetime.date(2014, 12, 25), duration=4, percent_done=44, ressources=[rANO], color="#FF8080")
-t2 = gantt.Task(name='tache2', start=datetime.date(2014, 12, 28), duration=6, ressources=[rJLS])
+t1 = gantt.Task(name='tache1', start=datetime.date(2014, 12, 25), duration=4, percent_done=44, resources=[rANO], color="#FF8080")
+t2 = gantt.Task(name='tache2', start=datetime.date(2014, 12, 28), duration=6, resources=[rJLS])
 t7 = gantt.Task(name='tache7', start=datetime.date(2014, 12, 28), duration=5, percent_done=50)
-t3 = gantt.Task(name='tache3', start=datetime.date(2014, 12, 25), duration=4, depends_of=[t1, t7, t2], ressources=[rJLS])
-t4 = gantt.Task(name='tache4', start=datetime.date(2015, 01, 01), duration=4, depends_of=t1, ressources=[rJLS])
+t3 = gantt.Task(name='tache3', start=datetime.date(2014, 12, 25), duration=4, depends_of=[t1, t7, t2], resources=[rJLS])
+t4 = gantt.Task(name='tache4', start=datetime.date(2015, 01, 01), duration=4, depends_of=t1, resources=[rJLS])
 t5 = gantt.Task(name='tache5', start=datetime.date(2014, 12, 23), duration=3)
-t6 = gantt.Task(name='tache6', start=datetime.date(2014, 12, 25), duration=4, depends_of=t7, ressources=[rANO])
-t8 = gantt.Task(name='tache8', start=datetime.date(2014, 12, 25), duration=4, depends_of=t7, ressources=[rANO, rJLS])
+t6 = gantt.Task(name='tache6', start=datetime.date(2014, 12, 25), duration=4, depends_of=t7, resources=[rANO])
+t8 = gantt.Task(name='tache8', start=datetime.date(2014, 12, 25), duration=4, depends_of=t7, resources=[rANO, rJLS])
 
 
 # Create a project
@@ -80,5 +80,5 @@ p.make_svg_for_tasks(filename='test_full2.svg', today=datetime.date(2014, 12, 31
 p.make_svg_for_tasks(filename='test.svg', today=datetime.date(2014, 12, 31), start=datetime.date(2015, 01, 3), end=datetime.date(2015, 01, 06))
 p1.make_svg_for_tasks(filename='test_p1.svg', today=datetime.date(2014, 12, 31))
 p2.make_svg_for_tasks(filename='test_p2.svg', today=datetime.date(2014, 12, 31))
-p.make_svg_for_ressources(filename='test_ressources.svg', today=datetime.date(2014, 12, 31), ressources=[rANO, rJLS])
+p.make_svg_for_resources(filename='test_resources.svg', today=datetime.date(2014, 12, 31), resources=[rANO, rJLS])
 ##########################$ /MAKE DRAW ###############
