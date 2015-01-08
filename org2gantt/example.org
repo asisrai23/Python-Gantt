@@ -8,8 +8,8 @@
 #+EXCLUDE_TAGS: no_gantt
 * CONFIGURATION
 :PROPERTIES:
-:start_date: -1w
-:end_date: +4w
+:Mstart_date: -2w
+:Mend_date: +5w
 :color: #FFFF90
 :one_line_for_tasks: t
 :END:
@@ -50,6 +50,9 @@
 - [2015-01-01 jeu.]
 - [2014-12-25 jeu.]
 * Project 1
+:PROPERTIES:
+:fORDERED: t
+:END:
 ** DONE Task 1                                                  :ress1:
 SCHEDULED: <2014-12-15 lun.>
 :PROPERTIES:
@@ -76,6 +79,7 @@ DEADLINE: <2014-12-22 lun.>
 :PROPERTIES:
 :Effort:   3d
 :task_id: task5
+:BLOCKER: task3
 :END:
 ** TODO Task 6                                                  :ress3:
 SCHEDULED: <2014-12-26 ven.> DEADLINE: <2015-01-13 mar.>
@@ -155,6 +159,9 @@ SCHEDULED: <2014-12-15 lun.>
 :task_id: task41
 :END:
 ** Project 4b
+:PROPERTIES:
+:color: #404040
+:END:
 *** TODO task 4B1
 :PROPERTIES:
 :Effort:   2d
@@ -174,6 +181,5 @@ SCHEDULED: <2014-12-15 lun.>
 SCHEDULED: <2014-12-15 lun.>
 :PROPERTIES:
 :Effort:   2d
-:task_id: taskalone
 :resource_id: ress3 ress1
 :END:

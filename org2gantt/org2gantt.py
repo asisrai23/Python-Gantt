@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.2.1'
-__last_modification__ = '2015.01.05'
+__version__ = '0.3.0'
+__last_modification__ = '2015.01.08'
 
 
 import datetime
@@ -32,6 +32,7 @@ import logging
 import os
 import sys
 import re
+import uuid
 
 ############################################################################
 
@@ -91,6 +92,7 @@ def _init_log_to_sysout(level=logging.INFO):
     logger.addHandler(fh)
     __LOG__ = logging.getLogger("org2gantt")
     return
+
 
 ############################################################################
 
@@ -182,10 +184,7 @@ import gantt
                     planning_start_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(days=qte*sign)))
                 elif what == 'w':
                     planning_start_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(weeks=qte*sign)))
-                elif what == 'm':
-                    planning_start_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(month=qte*sign)))
-                elif what == 'y':
-                    planning_start_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(years=qte*sign)))
+
 
         if 'end_date' in n_configuration.properties:
             # find date and use it
@@ -316,105 +315,160 @@ import gantt
 
     # Generate code for Projects
     gantt_code += "\n#### Projects \n"
+    # Mother of all
+    gantt_code += "project = gantt.Project(color='{0}')\n".format(bar_color)
+
     cproject = 0
     ctask = 0
     prj_found = False
-    tasks_name = {}
+    tasks_name = []
     # for inheriting project, ORDERED, color, ressources
     prop_inherits = []
     prev_task = None
-    gantt_code += "project = gantt.Project(color='{0}')\n".format(bar_color)
     for nr in range(len(nodes)):
         n = nodes[nr]
-        # new project heading
-        if n.level == 1 and  not n.headline in ('RESSOURCES', 'VACATIONS', 'CONFIGURATION') and 'no_gantt' not in n.tags:
-            gantt_code += "###### Project {0} \n".format(n.headline)
-            try:
-                name = n.properties['task_id'].strip()
-            except KeyError:
-                name = cproject
 
-            cproject += 1
-            gantt_code += "project_{0} = gantt.Project(name='{1}', color='{2}')\n".format(name, n.headline, bar_color)
-            gantt_code += "project.add_task(project_{0})\n".format(name)
-            prj_found = True
-            ordered = 'ORDERED' in n.properties
-            if 'color' in n.properties:
-                color = n.properties['color']
-            else:
-                color = None
+        __LOG__.debug('Analysing {0}'.format(n.headline))
+        
+        # it's a task / level 1
+        if n.level == 1 \
+               and  not n.headline in ('RESSOURCES', 'VACATIONS', 'CONFIGURATION') \
+               and 'no_gantt' not in n.tags \
+               and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
 
-            prop_inherits = []
-            prop_inherits.append({'ordered':ordered, 'color':color, 'projet_id':name})
+            __LOG__.debug(' task / level 1')
 
-        elif n.level == 1:
             prop_inherits = []
             prj_found = False
+            
+            # Add task
+            name, code = make_task_from_node(n)
 
-        elif n.level > 1 and prj_found == True and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
-            # new project has task under
-            if nr+1 < len(nodes) and nodes[nr+1].level > len(prop_inherits):
-                pass
-            # return to previous project
-            elif nr+1 < len(nodes) and nodes[nr+1].level < len(prop_inherits):
-                pass
-            # this is a task
-            else:
-                pass
-
-            ctask += 1
-            name = n.properties['task_id'].strip()
-
-            if ' ' in name:
-                __LOG__.critical('** Space in task_id: [{0}]'.format(name))
-                sys.exit(1)
-
-
-            fullname = n.headline
-            start = end = duration = None
-            if n.scheduled != '':
-                start = "{0}".format(_iso_date_to_datetime(str(n.scheduled)))
-            if n.deadline != '':
-                end = "{0}".format(_iso_date_to_datetime(str(n.deadline)))
-            if 'Effort' in n.properties:
-                duration = n.properties['Effort'].replace('d', '')
-
-            try:
-                depends = n.properties['BLOCKER'].split()
-            except KeyError:
-                depends_of = None
-            else: # no exception raised
-                depends_of = []
-                for d in depends:
-                    depends_of.append(tasks_name[d])
-
-            try:
-                percentdone = n.properties['PercentDone']
-            except KeyError:
-                percentdone = None
-
-            if n.todo == 'DONE':
-                if percentdone is not None:
-                    __LOG__.warning('** Task [{0}] marked as done but PercentDone is set to {1}'.format(name, percentdone))
-                percentdone = 100
-
-            # Ressources as tag
-            if len(n.tags) > 0:
-                ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
-            # Ressources as properties
-            elif 'resource_id' in n.properties:
-                ress = "{0}".format(["{0}".format(x) for x in n.properties['resource_id'].split()]).replace("'", "")
-            else:
-                ress = None
-
-
-            gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, ressources={4}, depends_of={5}, percent_done={7}, fullname='{8}')\n".format(ctask, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone, fullname)
             if name in tasks_name:
                 __LOG__.critical("Duplicate task id: {0}".format(name))
                 sys.exit(1)
+            else:
+                tasks_name.append(name)
 
-            tasks_name["{0}".format(name)] = "task_{0}".format(ctask)
-            gantt_code += "project_{0}.add_task(task_{1})\n".format(prop_inherits[-1]['projet_id'], ctask)
+            gantt_code += code
+            gantt_code += "project.add_task(task_{0})\n".format(name)
+
+        # new project heading
+        # Not a task, it's a project
+        # it should have children
+        elif n.level >= 1 \
+                 and  not n.headline in ('RESSOURCES', 'VACATIONS', 'CONFIGURATION') \
+                 and 'no_gantt' not in n.tags \
+                 and not n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
+
+
+            if n.level > 1 and prj_found == False:
+                __LOG__.debug(' do not keep')
+                continue
+
+            if len(prop_inherits) >= n.level:
+                __LOG__.debug(' go one level up')
+                prop_inherits = prop_inherits[:-1]
+
+
+            __LOG__.debug(' new project heading')
+
+            gantt_code += "###### Project {0} \n".format(n.headline)
+
+            try:
+                name = n.properties['task_id'].strip()
+            except KeyError:
+                name = str(uuid.uuid4()).replace('-', '_')
+    
+
+            __LOG__.debug('{0}'.format(prop_inherits))
+
+            gantt_code += "project_{0} = gantt.Project(name='{1}', color='{2}')\n".format(name, n.headline, bar_color)
+            try:
+                gantt_code += "project_{0}.add_task(project_{1})\n".format(prop_inherits[-1]['project_id'], name)
+                __LOG__.debug('added to sub project')
+            except KeyError:
+                gantt_code += "project.add_task(project_{0})\n".format(name)
+                __LOG__.debug('KE . project added')
+            except IndexError:
+                gantt_code += "project.add_task(project_{0})\n".format(name)
+                __LOG__.debug('IE . project added')
+
+            if n.level == 1:
+                prop_inherits = []
+
+            # Inherits ORDERED
+            if 'ORDERED' in n.properties:
+                ordered = True
+            else:
+                if len(prop_inherits) > 0:
+                    ordered = prop_inherits[-1]['ordered']
+                else:
+                    ordered = False
+
+            # Inherits color            
+            if 'color' in n.properties:
+                color = n.properties['color']
+            else:
+                if len(prop_inherits) > 0:
+                    color = prop_inherits[-1]['color']
+                else:
+                    color = None
+
+    
+            prop_inherits.append({'ordered':ordered, 'color':color, 'project_id':name})
+            prj_found = True
+
+        # It's a task
+        elif n.level >= 1 \
+                 and prj_found == True \
+                 and  not n.headline in ('RESSOURCES', 'VACATIONS', 'CONFIGURATION') \
+                 and 'no_gantt' not in n.tags \
+                 and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
+
+            assert(len(prop_inherits) > 0)
+
+            __LOG__.debug(' new task under project')
+
+
+            if len(prop_inherits) >= n.level:
+                __LOG__.debug(' go one level up')
+                prop_inherits = prop_inherits[:-1]
+
+
+            # Add task
+            name, code = make_task_from_node(n, prop_inherits[-1], prev_task)
+
+            if name in tasks_name:
+                __LOG__.critical("Duplicate task id: {0}".format(name))
+                sys.exit(1)
+            else:
+                tasks_name.append(name)
+
+            prev_task = name
+
+            gantt_code += code
+            #gantt_code += "project.add_task(task_{0})\n".format(name)
+
+            try:
+                gantt_code += "project_{0}.add_task(task_{1})\n".format(prop_inherits[-1]['project_id'], name)
+                __LOG__.debug('added to sub project')
+            except KeyError:
+                gantt_code += "project.add_task(task_{0})\n".format(name)
+                __LOG__.debug('KE . project added')
+            except IndexError:
+                gantt_code += "project.add_task(task_{0})\n".format(name)
+                __LOG__.debug('IE . project added')
+
+
+        else:
+            prj_found = False
+            prop_inherits = []
+
+            __LOG__.debug(' nothing')
+            
+            
+
 
 
     # Full project
@@ -442,6 +496,81 @@ import gantt
     __LOG__.debug("All done. Exiting.")
     
     return
+
+
+
+############################################################################
+
+def make_task_from_node(n, prop={}, prev_task=''):
+    """
+    """
+    gantt_code = ""
+
+    try:
+        name = n.properties['task_id'].strip()
+    except KeyError:
+        name = str(uuid.uuid4()).replace('-', '_')
+    
+    if ' ' in name:
+        __LOG__.critical('** Space in task_id: [{0}]'.format(name))
+        sys.exit(1)
+    
+    fullname = n.headline
+    start = end = duration = None
+    if n.scheduled != '':
+        start = "{0}".format(_iso_date_to_datetime(str(n.scheduled)))
+    if n.deadline != '':
+        end = "{0}".format(_iso_date_to_datetime(str(n.deadline)))
+    if 'Effort' in n.properties:
+        duration = n.properties['Effort'].replace('d', '')
+    
+    try:
+        depends = n.properties['BLOCKER'].split()
+    except KeyError:
+        depends_of = None
+    else: # no exception raised
+        depends_of = []
+        for d in depends:
+            depends_of.append('task_{0}'.format(d))
+
+    if 'ordered'in prop and prop['ordered'] and prev_task is not None and prev_task != '':
+        depends_of = ['task_{0}'.format(prev_task)]
+
+    
+    try:
+        percentdone = n.properties['PercentDone']
+    except KeyError:
+        percentdone = None
+    
+    if n.todo == 'DONE':
+        if percentdone is not None:
+            __LOG__.warning('** Task [{0}] marked as done but PercentDone is set to {1}'.format(name, percentdone))
+        percentdone = 100
+    
+    # Ressources as tag
+    if len(n.tags) > 0:
+        ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
+    # Ressources as properties
+    elif 'resource_id' in n.properties:
+        ress = "{0}".format(["{0}".format(x) for x in n.properties['resource_id'].split()]).replace("'", "")
+    else:
+        ress = None
+
+
+    # get color from task properties
+    if 'color' in n.properties:
+        color = "'{0}'".format(n.properties['color'])
+    # inherits color if defined 
+    elif 'color' in prop and prop['color'] is not None:
+        color = "'{0}'".format(prop['color'])
+    else:
+        color = None
+
+    
+    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, ressources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9})\n".format(name, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone, fullname, color)
+    
+    
+    return (name, gantt_code)
 
 ############################################################################
 
