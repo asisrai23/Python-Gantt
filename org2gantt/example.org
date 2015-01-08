@@ -11,47 +11,47 @@
 :Mstart_date: -2w
 :Mend_date: +5w
 :color: #FFFF90
-:one_line_for_tasks: t
+:one_line_for_tasks: nil
 :END:
-* RESSOURCES
+* RESOURCES
 ** Group 1
 :PROPERTIES:
-:ressource_id: grp1
+:resource_id: grp1
 :END:
 - [2015-01-01 jeu.]--[2015-02-03 mar.]
-*** Ressource 1
+*** Resource 1
 :PROPERTIES:
-:ressource_id: ress1
+:resource_id: ress1
 :END:
 - [2015-01-05 lun.]--[2015-01-09 ven.]
 - [2015-01-15 jeu.]--[2015-01-18 dim.]
 - [2015-01-12 lun.]
-*** Ressource 2
+*** Resource 2
 :PROPERTIES:
-:ressource_id: ress2
+:resource_id: ress2
 :END:
-** Ressource 3
+** Resource 3
 :PROPERTIES:
-:ressource_id: ress3
+:resource_id: ress3
 :END:
 ** Group 2
 :PROPERTIES:
-:ressource_id: grp2
+:resource_id: grp2
 :END:
-*** Ressource 4
+*** Resource 4
 :PROPERTIES:
-:ressource_id: ress4
+:resource_id: ress4
 :END:
-** Ressource 5
+** Resource 5
 :PROPERTIES:
-:ressource_id: ress5
+:resource_id: ress5
 :END:
 * VACATIONS
 - [2015-01-01 jeu.]
 - [2014-12-25 jeu.]
 * Project 1
 :PROPERTIES:
-:fORDERED: t
+:ORDERED: t
 :END:
 ** DONE Task 1                                                  :ress1:
 SCHEDULED: <2014-12-15 lun.>
@@ -79,7 +79,6 @@ DEADLINE: <2014-12-22 lun.>
 :PROPERTIES:
 :Effort:   3d
 :task_id: task5
-:BLOCKER: task3
 :END:
 ** TODO Task 6                                                  :ress3:
 SCHEDULED: <2014-12-26 ven.> DEADLINE: <2015-01-13 mar.>
@@ -122,14 +121,12 @@ SCHEDULED: <2014-12-22 lun.>
 :Effort:   3d
 :task_id: task10
 :END:
-
 ** TODO Task 11                                                        :ress1:
 SCHEDULED: <2014-12-22 lun.>
 :PROPERTIES:
 :Effort:   3d
 :task_id: task11
 :END:
-
 ** TODO Task 12                                                       :ress1:
 :PROPERTIES:
 :Effort:   3d
@@ -170,7 +167,7 @@ SCHEDULED: <2014-12-15 lun.>
 *** TODO task 4B2
 :PROPERTIES:
 :Effort:   2d
-:task_id: task4b2
+:task_id:  task4b2
 :END:
 ** TODO task 42
 :PROPERTIES:
@@ -178,7 +175,13 @@ SCHEDULED: <2014-12-15 lun.>
 :task_id: task42
 :END:
 * TODO task alone
-SCHEDULED: <2014-12-15 lun.>
+SCHEDULED: <2014-12-25 Thu>
+:PROPERTIES:
+:Effort:   2d
+:resource_id: ress3 ress1
+:END:
+** TODO aaiuest aest
+SCHEDULED: <2014-12-25 Thu>
 :PROPERTIES:
 :Effort:   2d
 :resource_id: ress3 ress1

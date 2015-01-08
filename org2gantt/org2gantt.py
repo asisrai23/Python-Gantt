@@ -165,7 +165,7 @@ import gantt
         if 'color' in n_configuration.properties:
             bar_color = n_configuration.properties['color']
 
-        if 'one_line_for_tasks' in n_configuration.properties:
+        if 'one_line_for_tasks' in n_configuration.properties and n_configuration.properties['one_line_for_tasks'] == 't':
              one_line_for_tasks = True
 
         if 'start_date' in n_configuration.properties:
@@ -214,56 +214,56 @@ import gantt
 
 
 
-    # Find RESSOURCES in heading
-    n_ressources = []
-    ressources_id = []
+    # Find RESOURCES in heading
+    n_resources = []
+    resources_id = []
     found = False
     plevel = 0
     for n in nodes:
         if found == True and n.level > plevel:
-            n_ressources.append(n)
+            n_resources.append(n)
         elif found == True and n.level <= plevel:
             break
-        if found == False and n.headline == "RESSOURCES":
+        if found == False and n.headline == "RESOURCES":
             found = True
             plevel = n.level
 
-    # Generate code for ressources
-    gantt_code += "\n#### Ressources \n"
+    # Generate code for resources
+    gantt_code += "\n#### Resources \n"
     next_level = 0
     current_level = 0
     current_group = None
 
-    for nr in range(len(n_ressources)):
-        r = n_ressources[nr]
+    for nr in range(len(n_resources)):
+        r = n_resources[nr]
 
         rname = r.headline
-        rid = r.properties['ressource_id'].strip()
+        rid = r.properties['resource_id'].strip()
         
-        if rid in ressources_id:
-            __LOG__.critical('** Duplicate ressource_id: [{0}]'.format(rid))
+        if rid in resources_id:
+            __LOG__.critical('** Duplicate resource_id: [{0}]'.format(rid))
             sys.exit(1)
 
-        ressources_id.append(rid)
+        resources_id.append(rid)
 
         if ' ' in rid:
-            __LOG__.critical('** Space in ressource_id: [{0}]'.format(rid))
+            __LOG__.critical('** Space in resource_id: [{0}]'.format(rid))
             sys.exit(1)
 
         new_group_this_turn = False
 
         current_level = r.level
-        if nr < len(n_ressources) - 2:
-            next_level = n_ressources[nr+1].level
+        if nr < len(n_resources) - 2:
+            next_level = n_resources[nr+1].level
 
         # Group mode
         if current_level < next_level:
-            gantt_code += "{0} = gantt.GroupOfRessources('{1}')\n".format(rid, rname)
+            gantt_code += "{0} = gantt.GroupOfResources('{1}')\n".format(rid, rname)
             current_group = rid
             new_group_this_turn = True
-        # Ressource
+        # Resource
         else:
-            gantt_code += "{0} = gantt.Ressource('{1}')\n".format(rid, rname)
+            gantt_code += "{0} = gantt.Resource('{1}')\n".format(rid, rname)
             
         # Vacations in body of node
         for line in r.body.split('\n'):
@@ -278,11 +278,11 @@ import gantt
                 
             else:
                 if line != '' and not line.startswith(':'):
-                    __LOG__.warning("Unknown ressource line : {0}".format(line))
+                    __LOG__.warning("Unknown resource line : {0}".format(line))
 
 
         if new_group_this_turn == False and current_group is not None:
-            gantt_code += "{0}.add_ressource(ressource={1})\n".format(current_group, rid)
+            gantt_code += "{0}.add_resource(resource={1})\n".format(current_group, rid)
 
             # end of group
             if current_level > next_level:
@@ -322,7 +322,7 @@ import gantt
     ctask = 0
     prj_found = False
     tasks_name = []
-    # for inheriting project, ORDERED, color, ressources
+    # for inheriting project, ORDERED, color, resources
     prop_inherits = []
     prev_task = None
     for nr in range(len(nodes)):
@@ -332,7 +332,7 @@ import gantt
         
         # it's a task / level 1
         if n.level == 1 \
-               and  not n.headline in ('RESSOURCES', 'VACATIONS', 'CONFIGURATION') \
+               and  not n.headline in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
                and 'no_gantt' not in n.tags \
                and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
 
@@ -340,6 +340,7 @@ import gantt
 
             prop_inherits = []
             prj_found = False
+            prj_found = True
             
             # Add task
             name, code = make_task_from_node(n)
@@ -357,7 +358,7 @@ import gantt
         # Not a task, it's a project
         # it should have children
         elif n.level >= 1 \
-                 and  not n.headline in ('RESSOURCES', 'VACATIONS', 'CONFIGURATION') \
+                 and  not n.headline in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
                  and 'no_gantt' not in n.tags \
                  and not n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
 
@@ -386,19 +387,16 @@ import gantt
             gantt_code += "project_{0} = gantt.Project(name='{1}', color='{2}')\n".format(name, n.headline, bar_color)
             try:
                 gantt_code += "project_{0}.add_task(project_{1})\n".format(prop_inherits[-1]['project_id'], name)
-                __LOG__.debug('added to sub project')
             except KeyError:
                 gantt_code += "project.add_task(project_{0})\n".format(name)
-                __LOG__.debug('KE . project added')
             except IndexError:
                 gantt_code += "project.add_task(project_{0})\n".format(name)
-                __LOG__.debug('IE . project added')
 
             if n.level == 1:
                 prop_inherits = []
 
             # Inherits ORDERED
-            if 'ORDERED' in n.properties:
+            if 'ORDERED' in n.properties and n.properties['ORDERED'] == 't':
                 ordered = True
             else:
                 if len(prop_inherits) > 0:
@@ -422,11 +420,9 @@ import gantt
         # It's a task
         elif n.level >= 1 \
                  and prj_found == True \
-                 and  not n.headline in ('RESSOURCES', 'VACATIONS', 'CONFIGURATION') \
+                 and  not n.headline in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
                  and 'no_gantt' not in n.tags \
                  and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
-
-            assert(len(prop_inherits) > 0)
 
             __LOG__.debug(' new task under project')
 
@@ -437,7 +433,11 @@ import gantt
 
 
             # Add task
-            name, code = make_task_from_node(n, prop_inherits[-1], prev_task)
+            if len(prop_inherits) > 0:
+                name, code = make_task_from_node(n, prop_inherits[-1], prev_task)
+            else:
+                name, code = make_task_from_node(n, [], prev_task)
+
 
             if name in tasks_name:
                 __LOG__.critical("Duplicate task id: {0}".format(name))
@@ -452,14 +452,10 @@ import gantt
 
             try:
                 gantt_code += "project_{0}.add_task(task_{1})\n".format(prop_inherits[-1]['project_id'], name)
-                __LOG__.debug('added to sub project')
             except KeyError:
                 gantt_code += "project.add_task(task_{0})\n".format(name)
-                __LOG__.debug('KE . project added')
             except IndexError:
                 gantt_code += "project.add_task(task_{0})\n".format(name)
-                __LOG__.debug('IE . project added')
-
 
         else:
             prj_found = False
@@ -476,11 +472,11 @@ import gantt
     #gantt_code += "project_0 = gantt.Project(color='{0}')\n".format(bar_color)
     # for i in range(1, cproject + 1):
     #     gantt_code += "project_{0}.make_svg_for_tasks(filename='project_{0}.svg', today={1}, start={2}, end={3})\n".format(i, planning_today_date, planning_start_date, planning_end_date)
-    #     gantt_code += "project_{0}.make_svg_for_ressources(filename='project_{0}_ressources.svg', today={1}, start={2}, end={3}, one_line_for_tasks={4})\n".format(i, planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
+    #     gantt_code += "project_{0}.make_svg_for_resources(filename='project_{0}_resources.svg', today={1}, start={2}, end={3}, one_line_for_tasks={4})\n".format(i, planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
         #gantt_code += "project_0.add_task(project_{0})\n".format(i)
 
     gantt_code += "project.make_svg_for_tasks(filename='project.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date)
-    gantt_code += "project.make_svg_for_ressources(filename='project_ressources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
+    gantt_code += "project.make_svg_for_resources(filename='project_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
 
 
 
@@ -547,10 +543,10 @@ def make_task_from_node(n, prop={}, prev_task=''):
             __LOG__.warning('** Task [{0}] marked as done but PercentDone is set to {1}'.format(name, percentdone))
         percentdone = 100
     
-    # Ressources as tag
+    # Resources as tag
     if len(n.tags) > 0:
         ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
-    # Ressources as properties
+    # Resources as properties
     elif 'resource_id' in n.properties:
         ress = "{0}".format(["{0}".format(x) for x in n.properties['resource_id'].split()]).replace("'", "")
     else:
@@ -567,7 +563,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         color = None
 
     
-    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, ressources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9})\n".format(name, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone, fullname, color)
+    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9})\n".format(name, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone, fullname, color)
     
     
     return (name, gantt_code)

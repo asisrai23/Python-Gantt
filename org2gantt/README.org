@@ -27,6 +27,22 @@ For each project, two SVG will be generated :
 For the whole projects, two graphs are generated :
 - project.svg
 - project_ressources.svg
+
+Projects can have some properties :
+- the "ORDERED" property which allows you to state that the child tasks have to be
+  completed in the order they appear (top most first).
+- the "color" property for defining a color for tasks in this project
+- the "task_id" property which will be the ID for the project. It must be uniq
+  If not set, an uuid will be generated.
+
+Example :
+#+begin_src
+  :PROPERTIES:
+  :ORDERED: t
+  :color: #ff8080
+  :task_id: project_id
+  :END:
+#+end_src
 *** Tasks
 Tasks are level 1 or 2 items. They depends from a project (level 1). 
 Task ID is mandatory and is defined by the property "task_id".
@@ -36,17 +52,33 @@ Timeframe is delimited by from two of the following criteria :
 - duration : set as a property, keyword "Effort", duration is defined in days !
 - ending date : set by the DEADLINE keyword followed by a date
 Or by :
-- dependencies to other task : set as a property, keyword "BLOCKERS", duration
-  is defined in days !
+- dependencies to other task : set as a property, keyword "BLOCKERS" or tags.
 - duration : set as a property, keyword "Effort", duration is defined in days !
 
 Other options are possible :
 - percent done : defined as a property, keyword "PercentDone"
-- dependencies : defined as a property, keyword "BLOCKERS". It relies on the
-  tasks ID (tags). Multiples dependencies are separated by spaces. (see [[file:example.org::*Task%204][Task 4]])
+- dependencies : could be defined as a property, keyword "BLOCKERS". Multiples
+  dependencies are separated by spaces.
+- the "color" property for defining a color for this task
+- the "task_id" property which will be the ID for this task. It must be uniq. If
+  not set, an uuid will be generated.
+
 
 Ressources are allocated to tasks either using tags (:ressourceid:) or by 
-using the property "resource_id".
+using the property "ressource_id".
+
+Example :
+#+begin_src
+  ** TODO Task  :grp1:
+  SCHEDULED: <2014-12-21 dim.>
+  :PROPERTIES:
+  :Effort:   6d
+  :task_id: task2
+  :BLOCKER: task1 task0
+  :PercentDone: 40
+  :color: #ff8080
+  :END:
+#+end_src
 *** CONFIGURATION
 The gantt chart timeframe can be set using the item CONFIGURATION and the
 following properties :
@@ -54,10 +86,20 @@ following properties :
 - end_date : last day of the chart (default end of project)
 - today : force today date (default is today)
 start_date and end_date could be references to today's date in the form +1d,
--2w, +3m or -4y
++2w or -3w.
 
-For ressources chart, if set, the property one_line_for_tasks puts all tasks on
+For ressources chart, if set to "t", the property one_line_for_tasks puts all tasks on
 one line.
+
+Exemple :
+#+begin_src
+:PROPERTIES:
+:start_date: -5d
+:end_date: +5w
+:color: #FFFF90
+:one_line_for_tasks: t
+:END:
+#+end_src
 ** Installation of the scripts
 You will need python (v2.7 or later) and some python modules :
 - clize : https://github.com/epsy/clize
