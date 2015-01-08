@@ -919,6 +919,11 @@ class Project(object):
         start -- datetime.date of first day to draw
         end -- datetime.date of last day to draw
         """
+        if len(self.tasks) == 0:
+            __LOG__.warning('** Empty project : {0}'.format(self.name))
+            return
+
+
         self._reset_coord()
 
         if start is None:
@@ -973,7 +978,13 @@ class Project(object):
         ressources -- list of Ressource to check, default all
         one_line_for_tasks -- use only one line to display all tasks ?
         """
+
+        if len(self.tasks) == 0:
+            __LOG__.warning('** Empty project : {0}'.format(self.name))
+            return
+
         self._reset_coord()
+
 
         if start is None:
             start_date = self.start_date()    
@@ -1104,6 +1115,10 @@ class Project(object):
         """
         Returns first day of the project
         """
+        if len(self.tasks) == 0:
+            __LOG__.warning('** Empty project : {0}'.format(self.name))
+            return datetime.date(9999, 1, 1)
+        
         first = self.tasks[0].start_date()
         for t in self.tasks:
             if t.start_date() < first:
@@ -1115,6 +1130,10 @@ class Project(object):
         """
         Returns last day of the project
         """
+        if len(self.tasks) == 0:
+            __LOG__.warning('** Empty project : {0}'.format(self.name))
+            return datetime.date(1970, 1, 1)
+
         last = self.tasks[0].end_date()
         for t in self.tasks:
             if t.end_date() > last:
