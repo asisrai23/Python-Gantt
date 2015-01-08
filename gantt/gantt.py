@@ -72,13 +72,21 @@ def add_vacations(start_date, end_date=None):
     start_date -- datetime.date begining of vacation
     end_date -- datetime.date end of vacation of vacation
     """
+    __LOG__.debug('** add_vacations {0}'.format({'start_date':start_date, 'end_date':end_date}))
+
     global VACATIONS
+    
     if end_date is None:
-        VACATIONS.append(start_date)
-    else:
-        while start_date <= end_date:               
+        if start_date not in VACATIONS:
             VACATIONS.append(start_date)
+    else:
+        while start_date <= end_date:
+            if start_date not in VACATIONS:
+                VACATIONS.append(start_date)
+                
             start_date += datetime.timedelta(days=1)
+
+    __LOG__.debug('** add_vacations {0}'.format({'start_date':start_date, 'end_date':end_date, 'vac':VACATIONS}))
 
     return
 
@@ -456,7 +464,7 @@ class Task(object):
 
             return self.cache_start_date
 
-        elif self.duration is not None and self.depends_of is not None:  # duration and dependencies fixed
+        elif self.duration is not None and self.depends_of is not None and self.stop is None :  # duration and dependencies fixed
             prev_task_end = self.depends_of[0].end_date()
             for t in self.depends_of:
                 if t.end_date() > prev_task_end:
@@ -499,6 +507,7 @@ class Task(object):
                     #return prev_task_end
                 else:
                     start = current_day
+
                 
                 while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
                     start = start + datetime.timedelta(days=1)
@@ -1312,8 +1321,8 @@ if __name__ == '__main__':
     # non regression test
     doctest.testmod()
 else:
-    #_init_log_to_sysout(level=logging.DEBUG)
-    _init_log_to_sysout(level=logging.WARNING)
+    _init_log_to_sysout(level=logging.DEBUG)
+    #_init_log_to_sysout(level=logging.WARNING)
 
 
 #<EOF>######################################################################

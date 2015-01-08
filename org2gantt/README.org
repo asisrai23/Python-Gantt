@@ -1,32 +1,32 @@
 * How to make a Gantt graph from an Org-Mode project ?
 ** Follow the structure of the [[file:example.org][example.org]] file
-*** RESSOURCES
-Ressources are affected to tasks by using them as tags. Ressource tag is defined 
-by the property "ressource_id".
+*** RESOURCES
+Resources are affected to tasks by using them as tags. Resource tag is defined 
+by the property "resource_id".
 
-Each ressource can contain a list of vacations which can take two forms :
+Each resource can contain a list of vacations which can take two forms :
 - single date such as [2014-12-30 mar.]
 - a timeframe such as [2014-12-30 mar.]--[2015-01-02 ven.], last day is included
-*** Group of ressources
-Groups of ressources are defined by the property "ressource_id".
-Each ressource which is a child of a group will be included in this group.
+*** Group of resources
+Groups of resources are defined by the property "resource_id".
+Each resource which is a child of a group will be included in this group.
 *** VACATIONS
 Vacations item can contain a list of vacations which can take two forms :
 - single date such as [2014-12-25 jeu.]
 - a timeframe such as [2014-12-25 jeu.]--[2015-01-01 jeu.], last day is included
-Those vacations are for all ressources.
+Those vacations are for all resources.
 *** Projects
-Projects are level 1 items other than RESSOURCES or VACATIONS. If they are
+Projects are level 1 items other than RESOURCES or VACATIONS. If they are
 tagged with the :no_gantt: tag, project will not be included.
 
 For each project, two SVG will be generated :
 - PROJECTNAME.svg : it contains the Gantt graph for the project
-- PROJECTNAME_ressources.svg : it contains the graph for the ressources
+- PROJECTNAME_resources.svg : it contains the graph for the resources
   affectation.
 
 For the whole projects, two graphs are generated :
 - project.svg
-- project_ressources.svg
+- project_resources.svg
 
 Projects can have some properties :
 - the "ORDERED" property which allows you to state that the child tasks have to be
@@ -64,8 +64,8 @@ Other options are possible :
   not set, an uuid will be generated.
 
 
-Ressources are allocated to tasks either using tags (:ressourceid:) or by 
-using the property "ressource_id".
+Resources are allocated to tasks either using tags (:resourceid:) or by 
+using the property "resource_id".
 
 Example :
 #+begin_src
@@ -88,7 +88,7 @@ following properties :
 start_date and end_date could be references to today's date in the form +1d,
 +2w or -3w.
 
-For ressources chart, if set to "t", the property one_line_for_tasks puts all tasks on
+For resources chart, if set to "t", the property one_line_for_tasks puts all tasks on
 one line.
 
 Exemple :
@@ -145,11 +145,11 @@ it...
   python example_gantt.py
 #+end_src
 You should have now have those files :
-- project_1_ressources.svg
+- project_1_resources.svg
 - project_1.svg
-- project_2_ressources.svg
+- project_2_resources.svg
 - project_2.svg
-- project_ressources.svg
+- project_resources.svg
 - project.svg
 There could be some warnings, read them, it should be easy to understand.
 ** Interpretate the graphs
@@ -160,17 +160,17 @@ There could be some warnings, read them, it should be easy to understand.
 **** Tasks
 - Each task is represented by an horizontal bar
 - Name of the task is on the upper left
-- Affected ressources are on the bottom left
+- Affected resources are on the bottom left
 - Dependencies between tasks are represented by dashed lines
 - If the task has a upper left blueish square, the means that begining date has
   been influenced by constraints (vacations, dependencies...)
 - If the task has a upper right blueish square, the means that ending date has
   been influenced by constraints (vacations, dependencies...)
-*** Ressource graph
-- For each ressource, a line contains all tasks affected for this ressource
+*** Resource graph
+- For each resource, a line contains all tasks affected for this resource
 - On the line above, there are some markers :
-  - green half square when this ressources is on vacations
-  - red half square when this ressources is overcharged (more than one task at a
+  - green half square when this resources is on vacations
+  - red half square when this resources is overcharged (more than one task at a
     time). In the example, task 2 and 7 are overlapping on days 22/12 and 23/12.
 ** Licence: GPL v3 or any later version
 ** Author : Alexandre Norman (norman at xael.org)
