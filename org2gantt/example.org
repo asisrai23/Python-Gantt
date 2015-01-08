@@ -10,7 +10,7 @@
 :PROPERTIES:
 :start_date: -1w
 :end_date: +4w
-:bar_color: #FFFF90
+:color: #FFFF90
 :one_line_for_tasks: t
 :END:
 * RESSOURCES
@@ -91,6 +91,9 @@ SCHEDULED: <2015-01-10 lun.>
 :task_id: task4
 :END:
 * Project 2
+:PROPERTIES:
+:task_id: prj2
+:END:
 ** TODO Task 7                                                  :ress2:
 DEADLINE: <2014-12-24 mer.> 
 :PROPERTIES:
@@ -138,4 +141,39 @@ SCHEDULED: <2014-12-22 lun.>
 :Effort:   3d
 :BLOCKER: task12
 :task_id: task13
+:END:
+* Project 4 :ress2:
+:PROPERTIES:
+:ORDERED: t
+:color: #ff8080
+:task_id: prj4
+:END:
+** TODO task 41
+SCHEDULED: <2014-12-15 lun.>
+:PROPERTIES:
+:Effort:   2d
+:task_id: task41
+:END:
+** Project 4b
+*** TODO task 4B1
+:PROPERTIES:
+:Effort:   2d
+:task_id: task4b1
+:END:
+*** TODO task 4B2
+:PROPERTIES:
+:Effort:   2d
+:task_id: task4b2
+:END:
+** TODO task 42
+:PROPERTIES:
+:Effort:   4d
+:task_id: task42
+:END:
+* TODO task alone
+SCHEDULED: <2014-12-15 lun.>
+:PROPERTIES:
+:Effort:   2d
+:task_id: taskalone
+:resource_id: ress3 ress1
 :END:

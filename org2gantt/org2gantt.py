@@ -160,8 +160,8 @@ import gantt
 
     # Generate code for configuration
     if n_configuration is not None:
-        if 'bar_color' in n_configuration.properties:
-            bar_color = n_configuration.properties['bar_color']
+        if 'color' in n_configuration.properties:
+            bar_color = n_configuration.properties['color']
 
         if 'one_line_for_tasks' in n_configuration.properties:
              one_line_for_tasks = True
@@ -320,16 +320,48 @@ import gantt
     ctask = 0
     prj_found = False
     tasks_name = {}
-    for n in nodes:
+    # for inheriting project, ORDERED, color, ressources
+    prop_inherits = []
+    prev_task = None
+    gantt_code += "project = gantt.Project(color='{0}')\n".format(bar_color)
+    for nr in range(len(nodes)):
+        n = nodes[nr]
         # new project heading
         if n.level == 1 and  not n.headline in ('RESSOURCES', 'VACATIONS', 'CONFIGURATION') and 'no_gantt' not in n.tags:
-            cproject += 1
             gantt_code += "###### Project {0} \n".format(n.headline)
-            gantt_code += "project_{0} = gantt.Project(name='{1}', color='{2}')\n".format(cproject, n.headline, bar_color)
+            try:
+                name = n.properties['task_id'].strip()
+            except KeyError:
+                name = cproject
+
+            cproject += 1
+            gantt_code += "project_{0} = gantt.Project(name='{1}', color='{2}')\n".format(name, n.headline, bar_color)
+            gantt_code += "project.add_task(project_{0})\n".format(name)
             prj_found = True
+            ordered = 'ORDERED' in n.properties
+            if 'color' in n.properties:
+                color = n.properties['color']
+            else:
+                color = None
+
+            prop_inherits = []
+            prop_inherits.append({'ordered':ordered, 'color':color, 'projet_id':name})
+
         elif n.level == 1:
+            prop_inherits = []
             prj_found = False
+
         elif n.level > 1 and prj_found == True and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
+            # new project has task under
+            if nr+1 < len(nodes) and nodes[nr+1].level > len(prop_inherits):
+                pass
+            # return to previous project
+            elif nr+1 < len(nodes) and nodes[nr+1].level < len(prop_inherits):
+                pass
+            # this is a task
+            else:
+                pass
+
             ctask += 1
             name = n.properties['task_id'].strip()
 
@@ -366,28 +398,35 @@ import gantt
                     __LOG__.warning('** Task [{0}] marked as done but PercentDone is set to {1}'.format(name, percentdone))
                 percentdone = 100
 
+            # Ressources as tag
             if len(n.tags) > 0:
                 ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
+            # Ressources as properties
+            elif 'resource_id' in n.properties:
+                ress = "{0}".format(["{0}".format(x) for x in n.properties['resource_id'].split()]).replace("'", "")
             else:
                 ress = None
+
+
             gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, ressources={4}, depends_of={5}, percent_done={7}, fullname='{8}')\n".format(ctask, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone, fullname)
             if name in tasks_name:
                 __LOG__.critical("Duplicate task id: {0}".format(name))
                 sys.exit(1)
 
             tasks_name["{0}".format(name)] = "task_{0}".format(ctask)
-            gantt_code += "project_{0}.add_task(task_{1})\n".format(cproject, ctask)
+            gantt_code += "project_{0}.add_task(task_{1})\n".format(prop_inherits[-1]['projet_id'], ctask)
 
 
+    # Full project
     gantt_code += "\n#### Outputs \n"
-    gantt_code += "project_0 = gantt.Project(color='{0}')\n".format(bar_color)
-    for i in range(1, cproject + 1):
-        gantt_code += "project_{0}.make_svg_for_tasks(filename='project_{0}.svg', today={1}, start={2}, end={3})\n".format(i, planning_today_date, planning_start_date, planning_end_date)
-        gantt_code += "project_{0}.make_svg_for_ressources(filename='project_{0}_ressources.svg', today={1}, start={2}, end={3}, one_line_for_tasks={4})\n".format(i, planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
-        gantt_code += "project_0.add_task(project_{0})\n".format(i)
+    #gantt_code += "project_0 = gantt.Project(color='{0}')\n".format(bar_color)
+    # for i in range(1, cproject + 1):
+    #     gantt_code += "project_{0}.make_svg_for_tasks(filename='project_{0}.svg', today={1}, start={2}, end={3})\n".format(i, planning_today_date, planning_start_date, planning_end_date)
+    #     gantt_code += "project_{0}.make_svg_for_ressources(filename='project_{0}_ressources.svg', today={1}, start={2}, end={3}, one_line_for_tasks={4})\n".format(i, planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
+        #gantt_code += "project_0.add_task(project_{0})\n".format(i)
 
-    gantt_code += "project_0.make_svg_for_tasks(filename='project.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date)
-    gantt_code += "project_0.make_svg_for_ressources(filename='project_ressources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
+    gantt_code += "project.make_svg_for_tasks(filename='project.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date)
+    gantt_code += "project.make_svg_for_ressources(filename='project_ressources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
 
 
 
