@@ -858,7 +858,7 @@ class Project(object):
         self.tasks = []
         self.name = name
         if color is None:
-            color = '#FFFF90'
+            self.color = '#FFFF90'
         else:
             self.color = color
 

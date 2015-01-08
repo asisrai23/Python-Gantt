@@ -51,7 +51,7 @@
 - [2014-12-25 jeu.]
 * Project 1
 :PROPERTIES:
-:ORDERED: t
+:ORDERED: nil
 :END:
 ** DONE Task 1                                                  :ress1:
 SCHEDULED: <2014-12-15 lun.>
