@@ -238,8 +238,11 @@ import gantt
         r = n_resources[nr]
 
         rname = r.headline
-        rid = r.properties['resource_id'].strip()
-        
+        try:
+            rid = r.properties['resource_id'].strip()
+        except KeyError:
+            rid = 'r_'+str(uuid.uuid4()).replace('-', '_')
+
         if rid in resources_id:
             __LOG__.critical('** Duplicate resource_id: [{0}]'.format(rid))
             sys.exit(1)
@@ -277,7 +280,7 @@ import gantt
                     gantt_code += "{0}.add_vacations(dfrom={1})\n".format(rid, _iso_date_to_datetime(start))
                 
             else:
-                if line != '' and not line.startswith(':'):
+                if line != '' and not line.strip().startswith(':'):
                     __LOG__.warning("Unknown resource line : {0}".format(line))
 
 
@@ -528,15 +531,18 @@ def make_task_from_node(n, prop={}, prev_task=''):
         end = "{0}".format(_iso_date_to_datetime(str(n.deadline)))
     if 'Effort' in n.properties:
         duration = n.properties['Effort'].replace('d', '')
-    
-    try:
-        depends = n.properties['BLOCKER'].split()
-    except KeyError:
-        depends_of = None
-    else: # no exception raised
-        depends_of = []
-        for d in depends:
-            depends_of.append('task_{0}'.format(d))
+
+    if 'BLOCKER' in n.properties and n.properties['BLOCKER'].strip() == 'previous-sibling':
+        depends_of = ['task_{0}'.format(prev_task)]
+    else:
+        try:
+            depends = n.properties['BLOCKER'].split()
+        except KeyError:
+            depends_of = None
+        else: # no exception raised
+            depends_of = []
+            for d in depends:
+                depends_of.append('task_{0}'.format(d))
 
     if 'ordered'in prop and prop['ordered'] and prev_task is not None and prev_task != '':
         depends_of = ['task_{0}'.format(prev_task)]
@@ -556,8 +562,8 @@ def make_task_from_node(n, prop={}, prev_task=''):
     if len(n.tags) > 0:
         ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
     # Resources as properties
-    elif 'resource_id' in n.properties:
-        ress = "{0}".format(["{0}".format(x) for x in n.properties['resource_id'].split()]).replace("'", "")
+    elif 'allocate' in n.properties:
+        ress = "{0}".format(["{0}".format(x) for x in n.properties['allocate'].replace(",", " ").split()]).replace("'", "")
     else:
         ress = None
 

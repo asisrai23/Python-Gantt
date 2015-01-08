@@ -182,7 +182,7 @@ SCHEDULED: <2015-01-01 Thu>
 SCHEDULED: <2014-12-25 Thu>
 :PROPERTIES:
 :Effort:   2d
-:resource_id: ress3 ress1
+:allocate: ress3 ress1
 :END:
 *** TODO sub task alone
 SCHEDULED: <2014-12-24 Wed>

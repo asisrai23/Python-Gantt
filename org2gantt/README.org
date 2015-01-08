@@ -65,7 +65,7 @@ Other options are possible :
 
 
 Resources are allocated to tasks either using tags (:resourceid:) or by 
-using the property "resource_id".
+using the property "allocate".
 
 Example :
 #+begin_src
