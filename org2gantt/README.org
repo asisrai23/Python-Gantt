@@ -44,6 +44,9 @@ Other options are possible :
 - percent done : defined as a property, keyword "PercentDone"
 - dependencies : defined as a property, keyword "BLOCKERS". It relies on the
   tasks ID (tags). Multiples dependencies are separated by spaces. (see [[file:example.org::*Task%204][Task 4]])
+
+Ressources are allocated to tasks either using tags (:ressourceid:) or by 
+using the property "resource_id".
 *** CONFIGURATION
 The gantt chart timeframe can be set using the item CONFIGURATION and the
 following properties :
