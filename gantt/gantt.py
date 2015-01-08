@@ -29,8 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.2.1'
-__last_modification__ = '2015.01.05'
+__version__ = '0.3.0'
+__last_modification__ = '2015.01.08'
 
 import datetime
 import logging
@@ -64,7 +64,7 @@ VACATIONS = []
 
 def add_vacations(start_date, end_date=None):
     """
-    Add vacations to a ressource begining at [start_date] to [end_date]
+    Add vacations to a resource begining at [start_date] to [end_date]
     (included). If [end_date] is not defined, vacation will be for [start_date]
     day only
 
@@ -131,19 +131,19 @@ def _flatten(l, ltypes=(list, tuple)):
     return ltype(l)
 
 ############################################################################
-class GroupOfRessources(object):
+class GroupOfResources(object):
     """
-    Class for grouping ressources
+    Class for grouping resources
     """
     def __init__(self, name, fullname=None):
         """
-        Init a group of ressource ressource
+        Init a group of resource resource
 
         Keyword arguments:
-        name -- name given to the ressource (id)
-        fullname -- long name given to the ressource
+        name -- name given to the resource (id)
+        fullname -- long name given to the resource
         """
-        __LOG__.debug('** GroupOfRessources::__init__ {0}'.format({'name':name}))
+        __LOG__.debug('** GroupOfResources::__init__ {0}'.format({'name':name}))
         self.name = name
         self.vacations = []
         if fullname is not None:
@@ -151,32 +151,32 @@ class GroupOfRessources(object):
         else:
             self.fullname = name
 
-        self.ressources = []
+        self.resources = []
         return
 
-    def add_ressource(self, ressource):
+    def add_resource(self, resource):
         """
-        Add a ressource to the group of ressources
+        Add a resource to the group of resources
 
         Keyword arguments:
-        ressource -- Ressource object
+        resource -- Resource object
         """
-        if ressource not in self.ressources:
-            self.ressources.append(ressource)
-            ressource.add_group(self)
+        if resource not in self.resources:
+            self.resources.append(resource)
+            resource.add_group(self)
         return
 
 
     def add_vacations(self, dfrom, dto=None):
         """
-        Add vacations to a ressource begining at [dfrom] to [dto] (included). If
+        Add vacations to a resource begining at [dfrom] to [dto] (included). If
         [dto] is not defined, vacation will be for [dfrom] day only
 
         Keyword arguments:
         dfrom -- datetime.date begining of vacation
         dto -- datetime.date end of vacation of vacation
         """
-        __LOG__.debug('** Ressource::add_vacations {0}'.format({'name':self.name, 'dfrom':dfrom, 'dto':dto}))
+        __LOG__.debug('** Resource::add_vacations {0}'.format({'name':self.name, 'dfrom':dfrom, 'dto':dto}))
         if dto is None:
             self.vacations.append((dfrom, dfrom))
         else:
@@ -187,40 +187,40 @@ class GroupOfRessources(object):
 
     def nb_elements(self):
         """
-        Returns the number of ressources
+        Returns the number of resources
         """
-        __LOG__.debug('** GroupOfRessources::nb_elements ({0})'.format({'name':self.name}))
-        return len(self.ressources)
+        __LOG__.debug('** GroupOfResources::nb_elements ({0})'.format({'name':self.name}))
+        return len(self.resources)
 
 
 
     def is_available(self, date):
         """
-        Returns True if any ressource is available at given date, False if not.
-        Availibility is taken from the global VACATIONS and ressource's ones.
+        Returns True if any resource is available at given date, False if not.
+        Availibility is taken from the global VACATIONS and resource's ones.
 
         Keyword arguments:
         date -- datetime.date day to look for
         """
         # Global VACATIONS
         if date in VACATIONS:
-            __LOG__.debug('** GroupOfRessources::is_available {0} : False (global vacation)'.format({'name':self.name, 'date':date}))
+            __LOG__.debug('** GroupOfResources::is_available {0} : False (global vacation)'.format({'name':self.name, 'date':date}))
             return False
 
         # Group vacations
         for h in self.vacations:
             dfrom, dto = h
             if date >= dfrom and date <= dto:
-                __LOG__.debug('** GroupOfRessources::is_available {0} : False (group vacation)'.format({'name':self.name, 'date':date}))
+                __LOG__.debug('** GroupOfResources::is_available {0} : False (group vacation)'.format({'name':self.name, 'date':date}))
                 return False
 
-        # Test if at least one ressource is avalaible
-        for r in self.ressources:
+        # Test if at least one resource is avalaible
+        for r in self.resources:
             if r.is_available(date):
-                __LOG__.debug('** GroupOfRessources::is_available {0} : True {1}'.format({'name':self.name, 'date':date}, r.name))
+                __LOG__.debug('** GroupOfResources::is_available {0} : True {1}'.format({'name':self.name, 'date':date}, r.name))
                 return True
 
-        __LOG__.debug('** GroupOfRessources::is_available {0} : False'.format({'name':self.name, 'date':date}))
+        __LOG__.debug('** GroupOfResources::is_available {0} : False'.format({'name':self.name, 'date':date}))
         return False
 
 
@@ -228,19 +228,19 @@ class GroupOfRessources(object):
 
 ############################################################################
 
-class Ressource(object):
+class Resource(object):
     """
-    Class for handling ressources assigned to tasks
+    Class for handling resources assigned to tasks
     """
     def __init__(self, name, fullname=None):
         """
-        Init a ressource
+        Init a resource
 
         Keyword arguments:
-        name -- name given to the ressource (id)
-        fullname -- long name given to the ressource
+        name -- name given to the resource (id)
+        fullname -- long name given to the resource
         """
-        __LOG__.debug('** Ressource::__init__ {0}'.format({'name':name}))
+        __LOG__.debug('** Resource::__init__ {0}'.format({'name':name}))
         self.name = name
         if fullname is not None:
             self.fullname = fullname
@@ -253,14 +253,14 @@ class Ressource(object):
 
     def add_vacations(self, dfrom, dto=None):
         """
-        Add vacations to a ressource begining at [dfrom] to [dto] (included). If
+        Add vacations to a resource begining at [dfrom] to [dto] (included). If
         [dto] is not defined, vacation will be for [dfrom] day only
 
         Keyword arguments:
         dfrom -- datetime.date begining of vacation
         dto -- datetime.date end of vacation of vacation
         """
-        __LOG__.debug('** Ressource::add_vacations {0}'.format({'name':self.name, 'dfrom':dfrom, 'dto':dto}))
+        __LOG__.debug('** Resource::add_vacations {0}'.format({'name':self.name, 'dfrom':dfrom, 'dto':dto}))
         if dto is None:
             self.vacations.append((dfrom, dfrom))
         else:
@@ -270,53 +270,53 @@ class Ressource(object):
 
     def nb_elements(self):
         """
-        Returns the number of ressources, 1 here
+        Returns the number of resources, 1 here
         """
-        __LOG__.debug('** Ressource::nb_elements ({0})'.format({'name':self.name}))
+        __LOG__.debug('** Resource::nb_elements ({0})'.format({'name':self.name}))
         return 1
 
 
     def is_available(self, date):
         """
-        Returns True if the ressource is available at given date, False if not.
-        Availibility is taken from the global VACATIONS and ressource's ones.
+        Returns True if the resource is available at given date, False if not.
+        Availibility is taken from the global VACATIONS and resource's ones.
 
         Keyword arguments:
         date -- datetime.date day to look for
         """
         # global VACATIONS
         if date in VACATIONS:
-            __LOG__.debug('** Ressource::is_available {0} : False (global vacation)'.format({'name':self.name, 'date':date}))
+            __LOG__.debug('** Resource::is_available {0} : False (global vacation)'.format({'name':self.name, 'date':date}))
             return False
         
-        # GroupOfRessources vacation
+        # GroupOfResources vacation
         for g in self.member_of_groups:
             for h in g.vacations:
                 dfrom, dto = h
                 if date >= dfrom and date <= dto:
-                    __LOG__.debug('** Ressource::is_available {0} : False (Group {1})'.format({'name':self.name, 'date':date}, g.name))
+                    __LOG__.debug('** Resource::is_available {0} : False (Group {1})'.format({'name':self.name, 'date':date}, g.name))
                     return False
         
 
-        # Ressource vacation
+        # Resource vacation
         for h in self.vacations:
             dfrom, dto = h
             if date >= dfrom and date <= dto:
-                __LOG__.debug('** Ressource::is_available {0} : False'.format({'name':self.name, 'date':date}))
+                __LOG__.debug('** Resource::is_available {0} : False'.format({'name':self.name, 'date':date}))
                 return False
-        __LOG__.debug('** Ressource::is_available {0} : True'.format({'name':self.name, 'date':date}))
+        __LOG__.debug('** Resource::is_available {0} : True'.format({'name':self.name, 'date':date}))
         return True
 
 
-    def add_group(self, groupofressources):
+    def add_group(self, groupofresources):
         """
-        Tell the ressource it belongs to a GroupOfRessources
+        Tell the resource it belongs to a GroupOfResources
         
         Keyword arguments:
-        groupofressources -- GroupOfRessources
+        groupofresources -- GroupOfResources
         """
-        if groupofressources not in self.member_of_groups:
-            self.member_of_groups.append(groupofressources)
+        if groupofresources not in self.member_of_groups:
+            self.member_of_groups.append(groupofresources)
         return
 
 
@@ -327,25 +327,25 @@ class Task(object):
     """
     Class for manipulating Tasks
     """
-    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, ressources=None, percent_done=0, color=None, fullname=None):
+    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, resources=None, percent_done=0, color=None, fullname=None):
         """
         Initialize task object. Two of start, stop or duration may be given.
-        This task can rely on other task and will be completed with ressources.
+        This task can rely on other task and will be completed with resources.
         If percent done is given, a progress bar will be included on the task.
         If color is specified, it will be used for the task.
 
         Keyword arguments:
         name -- name of the task (id)
-        fullname -- long name given to the ressource
+        fullname -- long name given to the resource
         start -- datetime.date, first day of the task, default None
         stop -- datetime.date, last day of the task, default None
         duration -- int, duration of the task, default None
         depends_of -- list of Task which are parents of thi one, default None
-        ressources -- list of Ressources assigned to the task, default None
+        resources -- list of Resources assigned to the task, default None
         percent_done -- int, percent of achievment, default 0
         color -- string, html color, default None
         """
-        __LOG__.debug('** Task::__init__ {0}'.format({'name':name, 'start':start, 'stop':stop, 'duration':duration, 'depends_of':depends_of, 'ressources':ressources, 'percent_done':percent_done}))
+        __LOG__.debug('** Task::__init__ {0}'.format({'name':name, 'start':start, 'stop':stop, 'duration':duration, 'depends_of':depends_of, 'resources':resources, 'percent_done':percent_done}))
         self.name = name
         if fullname is not None:
             self.fullname = fullname
@@ -375,7 +375,7 @@ class Task(object):
         else:
             self.depends_of = None
 
-        self.ressources = ressources
+        self.resources = resources
         self.percent_done = percent_done
         self.drawn_x_begin_coord = None
         self.drawn_x_end_coord = None
@@ -402,7 +402,10 @@ class Task(object):
                 start = self.start
                 while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
                     start = start + datetime.timedelta(days=1)
-                
+
+                if start > self.start:
+                    __LOG__.warning('** Due to vacations, Task {0}, will not start on date {1} but {2}'.format(self.name, self.start, start))
+
                 self.cache_start_date = start
                 return self.cache_start_date
             else:
@@ -420,6 +423,9 @@ class Task(object):
 
                 while prev_task_end.weekday() in NOT_WORKED_DAYS or prev_task_end in VACATIONS:
                     prev_task_end = prev_task_end + datetime.timedelta(days=1)
+
+                if prev_task_end > self.start:
+                    __LOG__.warning('** Due to dependencies, Task {0}, will not start on date {1} but {2}'.format(self.name, self.start, prev_task_end))
 
                 self.cache_start_date = prev_task_end
                 return self.cache_start_date
@@ -520,7 +526,7 @@ class Task(object):
         Returns the last day of the task, either the one which was given at task
         creation or the one calculated after checking dependencies
         """
-        # Should take care of ressources vacations ?
+        # Should take care of resources vacations ?
         if self.cache_end_date is not None:
             return self.cache_end_date
 
@@ -531,9 +537,31 @@ class Task(object):
             # Take care of vacations
             while real_end.weekday() in NOT_WORKED_DAYS or real_end in VACATIONS:
                 real_end -= datetime.timedelta(days=1)
+
+            if real_end <= self.start_date():
+                current_day = self.start_date()
+                real_duration = 0
+                duration = self.duration   
+                while duration > 1 or (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
+                    if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
+                        real_duration = real_duration + 1
+                        duration -= 1
+                    else:
+                        real_duration = real_duration + 1
+        
+                    current_day = self.start_date() + datetime.timedelta(days=real_duration)
+        
+                self.cache_end_date = self.start_date() + datetime.timedelta(days=real_duration)
+                __LOG__.warning('** task {0} will not be finished on time : end_date is changed from {1} to {2}'.format(self.name, self.stop, self.cache_end_date))
+                return self.cache_end_date
+                    
+
             self.cache_end_date = real_end
             if real_end != self.stop:
-                __LOG__.warning('** ending date for task {0} is changed from {1} to {2}'.format(self.name, self.stop, self.cache_end_date))
+                __LOG__.warning('** task {0} will not be finished on time : end_date is changed from {1} to {2}'.format(self.name, self.stop, self.cache_end_date))
+                #__LOG__.warning('** ending date for task {0} is changed from {1} to {2}'.format(self.name, self.stop, self.cache_end_date))
+
+
                 
             return self.cache_end_date
 
@@ -704,8 +732,8 @@ class Task(object):
 
         svg.add(svgwrite.text.Text(self.fullname, insert=((x+2)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
 
-        if self.ressources is not None:
-            t = " / ".join(["{0}".format(r.name) for r in self.ressources])
+        if self.resources is not None:
+            t = " / ".join(["{0}".format(r.name) for r in self.resources])
             svg.add(svgwrite.text.Text("{0}".format(t), insert=((x+2)*mm, (y + 8.5)*mm), fill='purple', stroke='black', stroke_width=0, font_family="Verdana", font_size="10"))
 
 
@@ -784,30 +812,30 @@ class Task(object):
         return False
 
 
-    def get_ressources(self):
+    def get_resources(self):
         """
-        Returns Ressources used in the task
+        Returns Resources used in the task
         """
-        return self.ressources
+        return self.resources
 
 
 
-    def check_conflicts_between_task_and_ressources_vacations(self):
+    def check_conflicts_between_task_and_resources_vacations(self):
         """
         Displays a warning for each conflict between tasks and vacation of
-        ressources affected to the task
+        resources affected to the task
 
-        And returns a dictionnary for ressource vacation conflicts
+        And returns a dictionnary for resource vacation conflicts
         """
         conflicts = []
-        if self.get_ressources() is None:
+        if self.get_resources() is None:
             return conflicts
-        for r in self.get_ressources():
+        for r in self.get_resources():
             cday = self.start_date()
             while cday < self.end_date():
                 if not r.is_available(cday):
-                    conflicts.append({'ressource':r.name,'date':cday, 'task':self.name})
-                    __LOG__.warning('** Caution ressource {0} is affected on task {2} during vacations on day {1}'.format(r.name, cday, self.name))
+                    conflicts.append({'resource':r.name,'date':cday, 'task':self.name})
+                    __LOG__.warning('** Caution resource {0} is affected on task {2} during vacations on day {1}'.format(r.name, cday, self.name))
                 cday += datetime.timedelta(days=1)
         return conflicts
 
@@ -962,20 +990,20 @@ class Project(object):
         dwg.save()
         return
 
-    def make_svg_for_ressources(self, filename, today=None, start=None, end=None, ressources=None, one_line_for_tasks=False):
+    def make_svg_for_resources(self, filename, today=None, start=None, end=None, resources=None, one_line_for_tasks=False):
         """
-        Draw ressources affectation and output it to filename. If start or end are
+        Draw resources affectation and output it to filename. If start or end are
         given, use them as reference, otherwise use project first and last day
 
         And returns to a dictionnary of dictionnaries for vacation and task
-        conflicts for ressources
+        conflicts for resources
 
         Keyword arguments:
         filename -- string, filename to save to
         today -- datetime.date of day marked as a reference
         start -- datetime.date of first day to draw
         end -- datetime.date of last day to draw
-        ressources -- list of Ressource to check, default all
+        resources -- list of Resource to check, default all
         one_line_for_tasks -- use only one line to display all tasks ?
         """
 
@@ -996,21 +1024,21 @@ class Project(object):
         else:
             end_date = end
 
-        if ressources is None:
-            ressources = self.get_ressources()
+        if resources is None:
+            resources = self.get_resources()
 
         maxx = (end_date - start_date).days 
-        maxy = len(ressources) * 2
+        maxy = len(resources) * 2
 
         if maxy == 0:
-            # No ressources
+            # No resources
             return {}
 
 
-        # detect conflicts between ressources and holidays
+        # detect conflicts between resources and holidays
         conflicts_vacations = []
         for t in self.get_tasks():
-            conflicts_vacations.append(t.check_conflicts_between_task_and_ressources_vacations())
+            conflicts_vacations.append(t.check_conflicts_between_task_and_resources_vacations())
 
         conflicts_vacations = _flatten(conflicts_vacations)
 
@@ -1020,8 +1048,8 @@ class Project(object):
         nline = 1
         conflicts_tasks = []
         conflict_display_line = 1
-        for r in ressources:
-            # do stuff for each ressource
+        for r in resources:
+            # do stuff for each resource
             ress = svgwrite.container.Group()
             ress.add(svgwrite.text.Text('{0}'.format(r.fullname), insert=(3*mm, (nline*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
             ldwg.add(ress)
@@ -1052,7 +1080,7 @@ class Project(object):
             affected_days = {}
             conflicts = svgwrite.container.Group()
             for t in self.get_tasks():
-                if t.get_ressources() is not None and r in t.get_ressources():
+                if t.get_resources() is not None and r in t.get_resources():
                     if not one_line_for_tasks:
                         nline += 1
                         
@@ -1063,7 +1091,7 @@ class Project(object):
                     cday = t.start_date()
                     while cday <= t.end_date():
                         if cday in affected_days:
-                            conflicts_tasks.append({'ressource':r.name, 'tasks':affected_days[cday], 'day':cday, 'task':t.name })
+                            conflicts_tasks.append({'resource':r.name, 'tasks':affected_days[cday], 'day':cday, 'task':t.name })
                             __LOG__.warning('** Conflict between tasks for {0} on date {1} tasks : {2} vs {3}'.format(r.name, cday, ",".join(affected_days[cday]), t.name))
 
                             vac.add(svgwrite.shapes.Rect(
@@ -1240,13 +1268,13 @@ class Project(object):
         return False
 
 
-    def get_ressources(self):
+    def get_resources(self):
         """
-        Returns Ressources used in the project
+        Returns Resources used in the project
         """
         rlist = []
         for t in self.tasks:
-            r = t.get_ressources()
+            r = t.get_resources()
             if r is not None:
                 rlist.append(r)
 
