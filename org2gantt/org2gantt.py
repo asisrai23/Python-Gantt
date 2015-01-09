@@ -151,7 +151,7 @@ import gantt
     # Find CONFIGURATION in heading
     n_configuration = None
     for n in nodes:
-        if n.headline == "CONFIGURATION":
+        if n.headline.strip() == "CONFIGURATION":
             n_configuration = n
 
     planning_start_date = None
@@ -224,7 +224,7 @@ import gantt
             n_resources.append(n)
         elif found == True and n.level <= plevel:
             break
-        if found == False and n.headline == "RESOURCES":
+        if found == False and n.headline.strip() == "RESOURCES":
             found = True
             plevel = n.level
 
@@ -237,7 +237,7 @@ import gantt
     for nr in range(len(n_resources)):
         r = n_resources[nr]
 
-        rname = r.headline
+        rname = r.headline.strip().replace("'","_")
         try:
             rid = r.properties['resource_id'].strip()
         except KeyError:
@@ -295,7 +295,7 @@ import gantt
     # Find VACATIONS in heading
     n_vacations = None
     for n in nodes:
-        if n.headline == "VACATIONS":
+        if n.headline.strip() == "VACATIONS":
             n_vacations = n
 
     # Generate code for vacations
@@ -335,7 +335,7 @@ import gantt
         
         # it's a task / level 1
         if n.level == 1 \
-               and  not n.headline in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
+               and  not n.headline.strip() in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
                and 'no_gantt' not in n.tags \
                and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
 
@@ -362,12 +362,13 @@ import gantt
         # Not a task, it's a project
         # it should have children
         elif n.level >= 1 \
-                 and  not n.headline in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
+                 and  not n.headline.strip() in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
                  and 'no_gantt' not in n.tags \
                  and not n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
 
             if n.level == 1:
                 prev_task = None
+                prop_inherits = []
             
 
             if n.level > 1 and prj_found == False:
@@ -381,7 +382,7 @@ import gantt
 
             __LOG__.debug(' new project heading')
 
-            gantt_code += "###### Project {0} \n".format(n.headline)
+            gantt_code += "###### Project {0} \n".format(n.headline.strip())
 
             try:
                 name = n.properties['task_id'].strip()
@@ -391,7 +392,7 @@ import gantt
 
             __LOG__.debug('{0}'.format(prop_inherits))
 
-            gantt_code += "project_{0} = gantt.Project(name='{1}', color='{2}')\n".format(name, n.headline, bar_color)
+            gantt_code += "project_{0} = gantt.Project(name='{1}', color='{2}')\n".format(name, n.headline.strip().replace("'", '_'), bar_color)
             try:
                 gantt_code += "project_{0}.add_task(project_{1})\n".format(prop_inherits[-1]['project_id'], name)
             except KeyError:
@@ -428,7 +429,7 @@ import gantt
         # It's a task
         elif n.level >= 1 \
                  and prj_found == True \
-                 and  not n.headline in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
+                 and  not n.headline.strip() in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
                  and 'no_gantt' not in n.tags \
                  and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
 
@@ -436,6 +437,7 @@ import gantt
 
             if n.level == 1:
                 prev_task = None
+                prop_inherits = []
                 
 
 
@@ -516,6 +518,8 @@ def make_task_from_node(n, prop={}, prev_task=''):
 
     try:
         name = n.properties['task_id'].strip()
+        if name == '':
+            name = str(uuid.uuid4()).replace('-', '_')
     except KeyError:
         name = str(uuid.uuid4()).replace('-', '_')
     
@@ -523,7 +527,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         __LOG__.critical('** Space in task_id: [{0}]'.format(name))
         sys.exit(1)
     
-    fullname = n.headline
+    fullname = n.headline.strip().replace("'", '_')
     start = end = duration = None
     if n.scheduled != '':
         start = "{0}".format(_iso_date_to_datetime(str(n.scheduled)))
@@ -547,6 +551,8 @@ def make_task_from_node(n, prop={}, prev_task=''):
     if 'ordered'in prop and prop['ordered'] and prev_task is not None and prev_task != '':
         depends_of = ['task_{0}'.format(prev_task)]
 
+    if len(depends_of) == 0:
+        depends_of = None
     
     try:
         percentdone = n.properties['PercentDone']
@@ -554,10 +560,10 @@ def make_task_from_node(n, prop={}, prev_task=''):
         percentdone = None
     
     if n.todo == 'DONE':
-        if percentdone is not None:
+        if percentdone is not None or percentdone != '100':
             __LOG__.warning('** Task [{0}] marked as done but PercentDone is set to {1}'.format(name, percentdone))
         percentdone = 100
-    
+
     # Resources as tag
     if len(n.tags) > 0:
         ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
@@ -572,8 +578,10 @@ def make_task_from_node(n, prop={}, prev_task=''):
     if 'color' in n.properties:
         color = "'{0}'".format(n.properties['color'])
     # inherits color if defined 
-    elif 'color' in prop and prop['color'] is not None:
+    elif n.todo != 'DONE' and 'color' in prop and prop['color'] is not None:
         color = "'{0}'".format(prop['color'])
+    elif n.todo == 'DONE':
+        color = "'#90FF90'"
     else:
         color = None
 

@@ -29,8 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.0'
-__last_modification__ = '2015.01.08'
+__version__ = '0.3.1'
+__last_modification__ = '2015.01.09'
 
 import datetime
 import logging
@@ -1103,14 +1103,15 @@ class Project(object):
                             conflicts_tasks.append({'resource':r.name, 'tasks':affected_days[cday], 'day':cday, 'task':t.name })
                             __LOG__.warning('** Conflict between tasks for {0} on date {1} tasks : {2} vs {3}'.format(r.name, cday, ",".join(affected_days[cday]), t.name))
 
-                            vac.add(svgwrite.shapes.Rect(
-                                    insert=(((cday - start_date).days * 10 + 1 + 4)*mm, ((conflict_display_line)*10+1)*mm),
-                                    size=(4*mm, 8*mm),
-                                    fill="#AA0000",
-                                    stroke="#AA0000",
-                                    stroke_width=1,
-                                    opacity=0.65,
-                                    ))
+                            if cday >= start and cday <= end :
+                                vac.add(svgwrite.shapes.Rect(
+                                        insert=(((cday - start_date).days * 10 + 1 + 4)*mm, ((conflict_display_line)*10+1)*mm),
+                                        size=(4*mm, 8*mm),
+                                        fill="#AA0000",
+                                        stroke="#AA0000",
+                                        stroke_width=1,
+                                        opacity=0.65,
+                                        ))
 
                         try:
                             affected_days[cday].append(t.name)
@@ -1209,16 +1210,21 @@ class Project(object):
 
         fprj = svgwrite.container.Group()
         if self.name != "":
-            fprj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, ((prev_y)*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
+            if ((self.start_date() >= start and self.end_date() <= end) 
+                or (self.start_date() >= start and (self.end_date() <= end or self.start_date() <= end))) or level == 1: 
+            
+        #if self.name != "" and (((self.start_date() >= start and self.end_date() <= end) or (self.start_date() >= start and (self.end_date() <= end or self.start_date() >= end))) or level == 1): 
+        #if self.name != "" and theight > 0 and trepr is not None:
+                fprj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, ((prev_y)*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
 
-            fprj.add(svgwrite.shapes.Rect(
-                    insert=((6*level+0.8)*mm, (prev_y+0.5)*cm),
-                    size=(0.2*cm, ((cy-prev_y-1)+0.4)*cm),
-                    fill='purple',
-                    stroke='lightgray',
-                    stroke_width=0,
-                    opacity=0.5
-                    ))
+                fprj.add(svgwrite.shapes.Rect(
+                        insert=((6*level+0.8)*mm, (prev_y+0.5)*cm),
+                        size=(0.2*cm, ((cy-prev_y-1)+0.4)*cm),
+                        fill='purple',
+                        stroke='lightgray',
+                        stroke_width=0,
+                        opacity=0.5
+                        ))
             
         fprj.add(prj)
 
@@ -1321,8 +1327,8 @@ if __name__ == '__main__':
     # non regression test
     doctest.testmod()
 else:
-    _init_log_to_sysout(level=logging.DEBUG)
-    #_init_log_to_sysout(level=logging.WARNING)
+    #_init_log_to_sysout(level=logging.DEBUG)
+    _init_log_to_sysout(level=logging.WARNING)
 
 
 #<EOF>######################################################################

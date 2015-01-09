@@ -8,8 +8,8 @@
 #+EXCLUDE_TAGS: no_gantt
 * CONFIGURATION
 :PROPERTIES:
-:Mstart_date: -2w
-:Mend_date: +5w
+:start_date: -2w
+:end_date: +5w
 :color: #FFFF90
 :one_line_for_tasks: nil
 :END:
