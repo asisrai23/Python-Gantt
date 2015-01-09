@@ -29,9 +29,16 @@ manifest: readme changelog
 
 test:
 	nosetests gantt
-	@(cd org2gantt && $(PYTHON) org2gantt.py  example.org -g test.py && $(PYTHON) test.py && rm test.py)
 
-register:
+	$(PYTHON) org2gantt/org2gantt.py  org2gantt/example.org  -g test.py 
+	$(PYTHON) test.py
+	rm test.py
+
+conformity:
+	pyflakes org2gantt/org2gantt.py
+	pyflakes gantt/gantt.py
+
+register: test archive
 	@$(PYTHON) setup.py register
 	@$(PYTHON) setup.py sdist upload
 

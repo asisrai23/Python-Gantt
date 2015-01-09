@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8-unix -*-
+# -*- coding: utf-8 -*-
 
 """
 gantt.py - version and date, see below
@@ -92,7 +92,7 @@ def add_vacations(start_date, end_date=None):
 
 ############################################################################
 
-def _init_log_to_sysout(level=logging.INFO):
+def init_log_to_sysout(level=logging.INFO):
     """
     debugging facilities
     """
@@ -736,7 +736,7 @@ class Task(object):
                     fill="#F08000",
                     stroke=color,
                     stroke_width=1,
-                    opacity=0.55,
+                    opacity=0.35,
                 ))
 
         svg.add(svgwrite.text.Text(self.fullname, insert=((x+2)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
@@ -925,7 +925,12 @@ class Project(object):
                     opacity=0.8
                     ))
             vlines.add(svgwrite.text.Text('{2}.{0:02}/{1:02}'.format(jour.day, jour.month, cal[jour.weekday()][0]), insert=((x*10+1)*mm, 9*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="8"))
+
             daytext = []
+
+            if jour.day == 1 and jour.month == 1:
+                vlines.add(svgwrite.text.Text('{0}'.format(jour.year), insert=((x*10+1)*mm, 3*mm), fill='#800000', stroke='#800000', stroke_width=0, font_family="Verdana", font_size="12"))
+            
             if jour.weekday() == 0:
                 daytext.append('W:{0:02}'.format(jour.isocalendar()[1]))
 
@@ -973,6 +978,10 @@ class Project(object):
         else:
             end_date = end
 
+
+        if start_date > end_date:
+            __LOG__.critical('start date {0} > end_date {1}'.format(start_date, end_date))
+            sys.exit(1)
 
         maxx = (end_date - start_date).days 
 
@@ -1032,6 +1041,12 @@ class Project(object):
         else:
             end_date = end
 
+
+        if start_date > end_date:
+            __LOG__.critical('start date {0} > end_date {1}'.format(start_date, end_date))
+            sys.exit(1)
+
+
         if resources is None:
             resources = self.get_resources()
 
@@ -1075,7 +1090,7 @@ class Project(object):
             vac = svgwrite.container.Group()
             cday = start_date
             while cday <= end_date:
-                if not r.is_available(cday):
+                if cday.weekday() not in NOT_WORKED_DAYS and cday not in VACATIONS and not r.is_available(cday):
                      vac.add(svgwrite.shapes.Rect(
                             insert=(((cday - start_date).days * 10 + 1)*mm, ((conflict_display_line)*10+1)*mm),
                             size=(4*mm, 8*mm),
@@ -1100,11 +1115,11 @@ class Project(object):
                     
                     cday = t.start_date()
                     while cday <= t.end_date():
-                        if cday in affected_days:
+                        if cday in affected_days and cday.weekday() not in NOT_WORKED_DAYS  and cday not in VACATIONS:
                             conflicts_tasks.append({'resource':r.name, 'tasks':affected_days[cday], 'day':cday, 'task':t.name })
                             __LOG__.warning('** Conflict between tasks for {0} on date {1} tasks : {2} vs {3}'.format(r.name, cday, ",".join(affected_days[cday]), t.name))
 
-                            if cday >= start and cday <= end :
+                            if cday >= start_date and cday <= end_date:
                                 vac.add(svgwrite.shapes.Rect(
                                         insert=(((cday - start_date).days * 10 + 1 + 4)*mm, ((conflict_display_line)*10+1)*mm),
                                         size=(4*mm, 8*mm),
@@ -1213,8 +1228,10 @@ class Project(object):
 
         fprj = svgwrite.container.Group()
         if self.name != "":
+            # if ((self.start_date() >= start and self.end_date() <= end) 
+            #     or (self.start_date() >= start and (self.end_date() <= end or self.start_date() <= end))) or level == 1: 
             if ((self.start_date() >= start and self.end_date() <= end) 
-                or (self.start_date() >= start and (self.end_date() <= end or self.start_date() <= end))) or level == 1: 
+                or ((self.end_date() >=start and self.start_date() <= end))) or level == 1: 
                 fprj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, ((prev_y)*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
 
                 fprj.add(svgwrite.shapes.Rect(
@@ -1329,8 +1346,8 @@ if __name__ == '__main__':
     # non regression test
     doctest.testmod()
 else:
-    #_init_log_to_sysout(level=logging.DEBUG)
-    _init_log_to_sysout(level=logging.WARNING)
+    #init_log_to_sysout(level=logging.DEBUG)
+    init_log_to_sysout(level=logging.WARNING)
 
 
 #<EOF>######################################################################
