@@ -98,7 +98,6 @@ def _init_log_to_sysout(level=logging.INFO):
 
 @clize.clize(
     alias = {
-        'org': ('o',),
         'debug': ('d',),
         'gantt': ('g',),
         },
