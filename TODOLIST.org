@@ -40,3 +40,4 @@ in example : tasks 11, 2, 7, 10
 - Task do not have children
 * TODO Support repetitive task (ie SCHEDULED DATE +1w or ++1w)
 * SOMEDAY Support repetitive vacations (ie SCHEDULED DATE +1w or ++1w, +1y)
+* TODO Bugs : Empty lines in project when not on screen
