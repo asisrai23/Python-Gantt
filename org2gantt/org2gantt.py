@@ -56,7 +56,6 @@ def __show_version__(name, **kwargs):
     """
     Show version
     """
-    import os
     print("{0} version {1}".format(os.path.basename(name), __version__))
     return True
 
@@ -145,7 +144,14 @@ def __main__(org, gantt='', debug=False):
 import datetime
 import gantt
 """
-
+    # Get all todo items
+    LISTE_TODOS = {'TODO':None, 'DONE':None}
+    with open(org) as f:
+        for line in f.readlines():
+            if line[:10] == '#+SEQ_TODO':
+                kwlist = re.findall('([A-Z]+)\(', line)
+                for kw in kwlist:
+                    LISTE_TODOS[kw] = None
 
     # Find CONFIGURATION in heading
     n_configuration = None
@@ -156,15 +162,17 @@ import gantt
     planning_start_date = None
     planning_end_date = None
     planning_today_date = _iso_date_to_datetime(str(datetime.date.today()))
-    bar_color = None
+    bar_color = {'TODO':'#FFFF90'}
     one_line_for_tasks = False
 
     # Generate code for configuration
     if n_configuration is not None:
-        if 'color' in n_configuration.properties:
-            bar_color = n_configuration.properties['color']
+        for t in LISTE_TODOS:
+            if 'color_{0}'.format(t) in n_configuration.properties:
+                bar_color[t] = n_configuration.properties['color_{0}'.format(t)].strip()
 
-        if 'one_line_for_tasks' in n_configuration.properties and n_configuration.properties['one_line_for_tasks'] == 't':
+
+        if 'one_line_for_tasks' in n_configuration.properties and n_configuration.properties['one_line_for_tasks'].strip() == 't':
              one_line_for_tasks = True
 
         if 'start_date' in n_configuration.properties:
@@ -318,10 +326,8 @@ import gantt
     # Generate code for Projects
     gantt_code += "\n#### Projects \n"
     # Mother of all
-    gantt_code += "project = gantt.Project(color='{0}')\n".format(bar_color)
+    gantt_code += "project = gantt.Project(color='{0}')\n".format(bar_color['TODO'])
 
-    cproject = 0
-    ctask = 0
     prj_found = False
     tasks_name = []
     # for inheriting project, ORDERED, color, resources
@@ -336,7 +342,7 @@ import gantt
         if n.level == 1 \
                and  not n.headline.strip() in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
                and 'no_gantt' not in n.tags \
-               and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
+               and n.todo in LISTE_TODOS:
 
             __LOG__.debug(' task / level 1')
 
@@ -363,7 +369,7 @@ import gantt
         elif n.level >= 1 \
                  and  not n.headline.strip() in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
                  and 'no_gantt' not in n.tags \
-                 and not n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
+                 and not n.todo in LISTE_TODOS:
 
             if n.level == 1:
                 prev_task = None
@@ -391,7 +397,11 @@ import gantt
 
             __LOG__.debug('{0}'.format(prop_inherits))
 
-            gantt_code += "project_{0} = gantt.Project(name='{1}', color='{2}')\n".format(name, n.headline.strip().replace("'", '_'), bar_color)
+            if bar_color['TODO'] is not None:
+                gantt_code += "project_{0} = gantt.Project(name='{1}', color='{2}')\n".format(name, n.headline.strip().replace("'", '_'), bar_color['TODO'])
+            else:
+                gantt_code += "project_{0} = gantt.Project(name='{1}', color=None)\n".format(name, n.headline.strip().replace("'", '_'))
+                
             try:
                 gantt_code += "project_{0}.add_task(project_{1})\n".format(prop_inherits[-1]['project_id'], name)
             except KeyError:
@@ -412,16 +422,16 @@ import gantt
                     prev_task = None
                     ordered = False
 
+            color = bar_color
             # Inherits color            
             if 'color' in n.properties:
-                color = n.properties['color']
+                color['TODO'] = n.properties['color']
             else:
                 if len(prop_inherits) > 0:
-                    color = prop_inherits[-1]['color']
+                    color['TODO'] = prop_inherits[-1]['color']['TODO']
                 else:
-                    color = None
+                    color['TODO'] = bar_color['TODO']
 
-    
             prop_inherits.append({'ordered':ordered, 'color':color, 'project_id':name})
             prj_found = True
 
@@ -430,7 +440,7 @@ import gantt
                  and prj_found == True \
                  and  not n.headline.strip() in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
                  and 'no_gantt' not in n.tags \
-                 and n.todo in ('TODO', 'STARTED', 'HOLD', 'DONE', 'WAITING'):
+                 and n.todo in LISTE_TODOS:
 
             __LOG__.debug(' new task under project')
 
@@ -482,11 +492,6 @@ import gantt
 
     # Full project
     gantt_code += "\n#### Outputs \n"
-    #gantt_code += "project_0 = gantt.Project(color='{0}')\n".format(bar_color)
-    # for i in range(1, cproject + 1):
-    #     gantt_code += "project_{0}.make_svg_for_tasks(filename='project_{0}.svg', today={1}, start={2}, end={3})\n".format(i, planning_today_date, planning_start_date, planning_end_date)
-    #     gantt_code += "project_{0}.make_svg_for_resources(filename='project_{0}_resources.svg', today={1}, start={2}, end={3}, one_line_for_tasks={4})\n".format(i, planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
-        #gantt_code += "project_0.add_task(project_{0})\n".format(i)
 
     gantt_code += "project.make_svg_for_tasks(filename='project.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date)
     gantt_code += "project.make_svg_for_resources(filename='project_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
@@ -572,15 +577,22 @@ def make_task_from_node(n, prop={}, prev_task=''):
     else:
         ress = None
 
-
+    ## BUG
     # get color from task properties
     if 'color' in n.properties:
-        color = "'{0}'".format(n.properties['color'])
-    # inherits color if defined 
-    elif n.todo != 'DONE' and 'color' in prop and prop['color'] is not None:
-        color = "'{0}'".format(prop['color'])
-    elif n.todo == 'DONE':
-        color = "'#90FF90'"
+        color = "'{0}'".format(n.properties['color'].strip())
+        # inherits color if defined
+    elif 'color' in prop and prop['color'] is not None and n.todo in prop['color'] and  prop['color'][n.todo] is not None:
+        color = "'{0}'".format(prop['color'][n.todo])
+        
+    # elif n.todo != 'DONE' and 'color' in prop and prop['color'] is not None:
+    #     color = "'{0}'".format(prop['color'])
+    # elif n.todo == 'DONE':
+    #     color = "'{0}'".format(prop['color_done'])
+    # elif n.todo == 'STARTED':
+    #     color = "'{0}'".format(prop['color_started'])
+    # elif n.todo == 'CANCELED':
+    #     color = "'{0}'".format(prop['color_canceled'])
     else:
         color = None
 
@@ -592,10 +604,6 @@ def make_task_from_node(n, prop={}, prev_task=''):
 
 ############################################################################
 
-
-
-
-__all__ = ['org2gantt']
 
 
 # MAIN -------------------
