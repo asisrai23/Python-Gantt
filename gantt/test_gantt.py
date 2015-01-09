@@ -11,7 +11,7 @@ from nose import with_setup
 
 
 def setup():
-    gantt._init_log_to_sysout(level=logging.CRITICAL)
+    gantt.init_log_to_sysout(level=logging.CRITICAL)
     return
 
 

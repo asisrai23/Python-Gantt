@@ -1,3 +1,8 @@
+#+TITLE: TODOLIST
+#+STARTUP: overview logdone hidestars
+#+DRAWERS: PROPERTIES NOTE LOGBOOK
+#+OPTIONS: ^:{}
+#+SEQ_TODO: TODO(t) STARTED(s) WAITING(w) SOMEDAY(y) | DONE(d) CANCELED(c)
 * DONE installation bug :
 - State "DONE"       from "TODO"       [2015-01-07 Wed 19:22]
 - Note taken on [2015-01-06 mar. 18:19] \\
@@ -12,19 +17,26 @@ Traceback (most recent call last):
 IOError: [Errno 2] No such file or directory: 'README.txt'
 AN05392S@U1404:/media/sf_Personnel/ESPACE_KM/python-gantt
 #+end_src
+* DONE Group of tasks + inheritance for members if not overided (duration, resources, ordered)
+CLOSED: [2015-01-09 Fri 23:08]
+- Group have children
+- Task do not have children
+* DONE Bugs : Empty lines in project when not on screen
+- State "DONE"       from "TODO"       [2015-01-09 Fri 22:41]
 * TODO Support common tags with http://orgmode.org/worg/org-tutorials/org-taskjuggler.html
 ** DONE Resources ID
-** STARTED Group of resources
-*** TODO for each group, check that nb of assigned task <= nb of members
-in example : tasks 11, 2, 7, 10
 ** DONE Task ID
 - State "DONE"       from "TODO"       [2015-01-06 mar. 17:04]
-** TODO Dependencies
+** DONE Dependencies
+- State "DONE"       from "TODO"       [2015-01-09 Fri 22:40]
 - The ORDERED property which allows you to state that the child tasks have to be
   completed in the order they appear (top most first).
 - The BLOCKER property which allows you to state that a task depends on either a
   previous sibling ("previous-sibling") or any other task by stating the task_id
   property of the predecessor
+** STARTED Group of resources
+*** TODO for each group, check that nb of assigned task <= nb of members
+in example : tasks 11, 2, 7, 10
 * TODO check for orgfile consistency and error reporting
 ** TODO missing mandatory properties
 - [ ] Effort
@@ -35,9 +47,6 @@ in example : tasks 11, 2, 7, 10
 - State "DONE"       from "TODO"       [2015-01-06 mar. 17:40]
 ** DONE duplicate ID on tasks
 - State "DONE"       from "TODO"       [2015-01-06 mar. 17:40]
-* TODO Group of tasks + inheritance for members if not overided (duration, resources, ordered)
-- Group have children
-- Task do not have children
 * TODO Support repetitive task (ie SCHEDULED DATE +1w or ++1w)
+* TODO make a function to get if a resource or a resource in a group is available on a timeframe
 * SOMEDAY Support repetitive vacations (ie SCHEDULED DATE +1w or ++1w, +1y)
-* TODO Bugs : Empty lines in project when not on screen

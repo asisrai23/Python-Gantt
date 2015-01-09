@@ -1,17 +1,23 @@
 #-*- mode: org; coding: utf-8-unix -*-
 * Configuration OrgMode										  :no_gantt:
 #+TITLE: example.org
-#+STARTUP: overview logdone hidestars
+#+STARTUP: content logdone hidestars
 #+TAGS: ress1(1) ress2(2) ress3(3) grp1(g)
 #+DRAWERS: PROPERTIES NOTE LOGBOOK
 #+OPTIONS: ^:{}
 #+EXCLUDE_TAGS: no_gantt
+#+SEQ_TODO: TODO(t) STARTED(s) WAITING(w) | DONE(d) CANCELED(c)
 * CONFIGURATION
 :PROPERTIES:
-:start_date: -2w
-:end_date: +5w
-:color: #FFFF90
+:start_date: -3w
+:end_date: +3w
+:today: [2015-01-01 Thu]
 :one_line_for_tasks: nil
+:color_TODO: #FFFF90
+:color_DONE: #90FF90
+:color_STARTED: #FFA0FF
+:color_CANCELED: #FF9090
+:color_WAITING: #FFFF00
 :END:
 * RESOURCES
 ** Group 1
@@ -146,7 +152,7 @@ SCHEDULED: <2014-12-22 lun.>
 * Project 4 :ress2:
 :PROPERTIES:
 :ORDERED: t
-:color: #ff8080
+:color: #ff80Ff
 :task_id: prj4
 :END:
 ** TODO task 41
@@ -155,9 +161,9 @@ SCHEDULED: <2015-01-01 Thu>
 :Effort:   2d
 :task_id: task41
 :END:
-** Project 4b
+** Project 4b :ress1:
 :PROPERTIES:
-:color: #404040
+:color: #4040ff
 :END:
 *** TODO task 4B1
 :PROPERTIES:
@@ -174,7 +180,7 @@ SCHEDULED: <2015-01-01 Thu>
 :Effort:   4d
 :task_id: task42
 :END:
-* t
+* Sub tasks                                                           :ress1:
 :PROPERTIES:
 :ORDERED: t
 :END:
@@ -188,5 +194,4 @@ SCHEDULED: <2014-12-25 Thu>
 SCHEDULED: <2014-12-24 Wed>
 :PROPERTIES:
 :Effort:   2d
-:resource_id: ress3 ress1
 :END:

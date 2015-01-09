@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8-unix -*-
+# -*- coding: utf-8 -*-
 """
 org2gantt.py - version and date, see below
 
@@ -27,6 +27,7 @@ __version__ = '0.3.0'
 __last_modification__ = '2015.01.08'
 
 
+import copy
 import datetime
 import logging
 import os
@@ -95,10 +96,102 @@ def _init_log_to_sysout(level=logging.INFO):
 
 ############################################################################
 
+def make_task_from_node(n, prop={}, prev_task=''):
+    """
+    """
+    __LOG__.debug('make_task_from_node ({0})'.format({'n':n.headline, 'prop':prop, 'prev_task':prev_task}))
+    gantt_code = ''
+
+    try:
+        name = n.properties['task_id'].strip()
+        if name == '':
+            name = str(uuid.uuid4()).replace('-', '_')
+    except KeyError:
+        name = str(uuid.uuid4()).replace('-', '_')
+    
+    if ' ' in name:
+        __LOG__.critical('** Space in task_id: [{0}]'.format(name))
+        sys.exit(1)
+    
+    fullname = n.headline.strip().replace("'", '_')
+    start = end = duration = None
+    if n.scheduled != '':
+        start = "{0}".format(_iso_date_to_datetime(str(n.scheduled)))
+    if n.deadline != '':
+        end = "{0}".format(_iso_date_to_datetime(str(n.deadline)))
+    if 'Effort' in n.properties:
+        duration = n.properties['Effort'].replace('d', '')
+
+    if 'BLOCKER' in n.properties and n.properties['BLOCKER'].strip() == 'previous-sibling':
+        depends_of = ['task_{0}'.format(prev_task)]
+    else:
+        try:
+            depends = n.properties['BLOCKER'].split()
+        except KeyError:
+            depends_of = None
+        else: # no exception raised
+            depends_of = []
+            for d in depends:
+                depends_of.append('task_{0}'.format(d))
+
+    if 'ordered'in prop and prop['ordered'] and prev_task is not None and prev_task != '':
+        depends_of = ['task_{0}'.format(prev_task)]
+
+    if depends_of is not None and len(depends_of) == 0:
+        depends_of = None
+    
+    try:
+        percentdone = n.properties['PercentDone']
+    except KeyError:
+        percentdone = None
+    
+    if n.todo == 'DONE':
+        if percentdone is not None or percentdone != '100':
+            __LOG__.warning('** Task [{0}] marked as done but PercentDone is set to {1}'.format(name, percentdone))
+        percentdone = 100
+
+    # Resources as tag
+    if len(n.tags) > 0:
+        ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
+    # Resources as properties
+    elif 'allocate' in n.properties:
+        ress = "{0}".format(["{0}".format(x) for x in n.properties['allocate'].replace(",", " ").split()]).replace("'", "")
+    else:
+        try:
+            ress = prop['resources']
+        except KeyError:
+            ress = None
+        except TypeError:
+            ress = None
+
+
+    # get color from task properties
+    if 'color' in n.properties:
+        color = "'{0}'".format(n.properties['color'].strip())
+
+    # inherits color if defined
+    elif 'color' in prop and prop['color'] is not None and n.todo in prop['color'] and  prop['color'][n.todo] is not None:
+        color = "'{0}'".format(prop['color'][n.todo])
+        
+    else:
+        color = None
+
+    
+    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9})\n".format(name, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone, fullname, color)
+    
+    
+    return (name, gantt_code)
+
+
+############################################################################
+
 @clize.clize(
     alias = {
         'debug': ('d',),
         'gantt': ('g',),
+        'start_date': ('s',),
+        'end_date': ('e',),
+        'today': ('t',),
         },
     extra = (
         clize.make_flag(
@@ -108,13 +201,19 @@ def _init_log_to_sysout(level=logging.INFO):
             ),
         )
     )
-def __main__(org, gantt='', debug=False):
+def __main__(org, gantt='', start_date='', end_date='', today='', debug=False):
     """
     org2gantt.py
     
     org: org-mode filename
 
     gantt: output python-gantt filename (default sysout)
+
+    start_date: force start date for output
+
+    end_date: force end date for output
+
+    today: force today date
     
     debug: debug
 
@@ -123,9 +222,19 @@ def __main__(org, gantt='', debug=False):
 
     Written by : Alexandre Norman <norman at xael.org>
     """
+
+    gantt_code = """#!/usr/bin/env python3
+# -*- coding: utf-8-unix -*-
+
+import datetime
+import gantt
+"""
+
     global __LOG__
     if debug:
         _init_log_to_sysout(logging.DEBUG)
+        gantt_code += "\nimport logging\ngantt.init_log_to_sysout(logging.DEBUG)\n"
+
     else:
         _init_log_to_sysout()
 
@@ -138,12 +247,6 @@ def __main__(org, gantt='', debug=False):
 
     __LOG__.debug('_analyse_nodes ({0})'.format({'nodes':nodes}))
 
-    gantt_code = """#!/usr/bin/env python3
-# -*- coding: utf-8-unix -*-
-
-import datetime
-import gantt
-"""
     # Get all todo items
     LISTE_TODOS = {'TODO':None, 'DONE':None}
     with open(org) as f:
@@ -162,6 +265,7 @@ import gantt
     planning_start_date = None
     planning_end_date = None
     planning_today_date = _iso_date_to_datetime(str(datetime.date.today()))
+    my_today = datetime.date.today()
     bar_color = {'TODO':'#FFFF90'}
     one_line_for_tasks = False
 
@@ -175,7 +279,23 @@ import gantt
         if 'one_line_for_tasks' in n_configuration.properties and n_configuration.properties['one_line_for_tasks'].strip() == 't':
              one_line_for_tasks = True
 
-        if 'start_date' in n_configuration.properties:
+        if today != '':
+            planning_today_date = _iso_date_to_datetime(today)
+            y, m, d = today.split('-')
+            my_today = datetime.date(int(y), int(m), int(d))
+
+        elif 'today' in n_configuration.properties:
+            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['today'])
+            if len(dates) == 1:
+                planning_today_date = _iso_date_to_datetime(dates[0])
+                y, m, d = dates[0].split('-')
+                my_today = datetime.date(int(y), int(m), int(d))
+
+        if start_date != '':
+            y, m, d = start_date.split('-')
+            planning_start_date = _iso_date_to_datetime(start_date)
+
+        elif 'start_date' in n_configuration.properties:
             # find date and use it
             dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['start_date'])
             if len(dates) == 1:
@@ -188,12 +308,16 @@ import gantt
 
                 sign = -1*(sign=='-') + 1*(sign=='+')
                 if what == 'd':
-                    planning_start_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(days=qte*sign)))
+                    planning_start_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(days=qte*sign)))
                 elif what == 'w':
-                    planning_start_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(weeks=qte*sign)))
+                    planning_start_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(weeks=qte*sign)))
 
 
-        if 'end_date' in n_configuration.properties:
+        if end_date != '':
+            y, m, d = end_date.split('-')
+            planning_end_date = _iso_date_to_datetime(end_date)
+
+        elif 'end_date' in n_configuration.properties:
             # find date and use it
             dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['end_date'])
             if len(dates) == 1:
@@ -206,18 +330,14 @@ import gantt
 
                 sign = -1*(sign=='-') + 1*(sign=='+')
                 if what == 'd':
-                    planning_end_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(days=qte*sign)))
-                elif what == 'w':
-                    planning_end_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(weeks=qte*sign)))
-                elif what == 'm':
-                    planning_end_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(month=qte*sign)))
-                elif what == 'y':
-                    planning_end_date = _iso_date_to_datetime(str(datetime.date.today() + datetime.timedelta(years=qte*sign)))
+                    planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(days=qte*sign)))
+                elif what == 'w':                                 
+                    planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(weeks=qte*sign)))
+                elif what == 'm':                                 
+                    planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(month=qte*sign)))
+                elif what == 'y':                                 
+                    planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(years=qte*sign)))
 
-        if 'today' in n_configuration.properties:
-            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['today'])
-            if len(dates) == 1:
-                planning_today_date = _iso_date_to_datetime(dates[0])
 
 
 
@@ -347,10 +467,9 @@ import gantt
             __LOG__.debug(' task / level 1')
 
             prop_inherits = []
-            prj_found = False
             prj_found = True
             prev_task = None
-            
+
             # Add task
             name, code = make_task_from_node(n)
 
@@ -372,9 +491,9 @@ import gantt
                  and not n.todo in LISTE_TODOS:
 
             if n.level == 1:
+                __LOG__.debug('** cleanup prop_inherits')
                 prev_task = None
                 prop_inherits = []
-            
 
             if n.level > 1 and prj_found == False:
                 __LOG__.debug(' do not keep')
@@ -422,7 +541,7 @@ import gantt
                     prev_task = None
                     ordered = False
 
-            color = bar_color
+            color = copy.deepcopy(bar_color)
             # Inherits color            
             if 'color' in n.properties:
                 color['TODO'] = n.properties['color']
@@ -432,8 +551,27 @@ import gantt
                 else:
                     color['TODO'] = bar_color['TODO']
 
-            prop_inherits.append({'ordered':ordered, 'color':color, 'project_id':name})
+
+            # Inherits resources
+            # Resources as tag
+            if len(n.tags) > 0:
+                ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
+                # Resources as properties
+            elif 'allocate' in n.properties:
+                ress = "{0}".format(["{0}".format(x) for x in n.properties['allocate'].replace(",", " ").split()]).replace("'", "")
+            else:
+                try:
+                    ress = prop_inherits[-1]['resources']
+                except KeyError:
+                    ress = None
+                except IndexError:
+                    ress = None
+
+
+            prop_inherits.append({'ordered':ordered, 'color':color, 'project_id':name, 'resources':ress})
             prj_found = True
+
+
 
         # It's a task
         elif n.level >= 1 \
@@ -442,18 +580,23 @@ import gantt
                  and 'no_gantt' not in n.tags \
                  and n.todo in LISTE_TODOS:
 
-            __LOG__.debug(' new task under project')
+            __LOG__.debug(' new task under project {0}'.format(n.headline))
 
             if n.level == 1:
                 prev_task = None
                 prop_inherits = []
-                
+                __LOG__.debug(' clean prop_inherits')
 
+                
+            if n.level > 1 and len(prop_inherits) < n.level - 1:
+                __LOG__.critical('pb in structure : task "{0}" do not belong to a project but a task - possible inheritance problem'.format(n.headline))
+                
 
             if len(prop_inherits) >= n.level:
                 __LOG__.debug(' go one level up')
                 prop_inherits = prop_inherits[:-1]
 
+            __LOG__.debug(' bar_color {0}'.format(bar_color))
 
             # Add task
             if len(prop_inherits) > 0:
@@ -512,95 +655,6 @@ import gantt
     return
 
 
-
-############################################################################
-
-def make_task_from_node(n, prop={}, prev_task=''):
-    """
-    """
-    gantt_code = ""
-
-    try:
-        name = n.properties['task_id'].strip()
-        if name == '':
-            name = str(uuid.uuid4()).replace('-', '_')
-    except KeyError:
-        name = str(uuid.uuid4()).replace('-', '_')
-    
-    if ' ' in name:
-        __LOG__.critical('** Space in task_id: [{0}]'.format(name))
-        sys.exit(1)
-    
-    fullname = n.headline.strip().replace("'", '_')
-    start = end = duration = None
-    if n.scheduled != '':
-        start = "{0}".format(_iso_date_to_datetime(str(n.scheduled)))
-    if n.deadline != '':
-        end = "{0}".format(_iso_date_to_datetime(str(n.deadline)))
-    if 'Effort' in n.properties:
-        duration = n.properties['Effort'].replace('d', '')
-
-    if 'BLOCKER' in n.properties and n.properties['BLOCKER'].strip() == 'previous-sibling':
-        depends_of = ['task_{0}'.format(prev_task)]
-    else:
-        try:
-            depends = n.properties['BLOCKER'].split()
-        except KeyError:
-            depends_of = None
-        else: # no exception raised
-            depends_of = []
-            for d in depends:
-                depends_of.append('task_{0}'.format(d))
-
-    if 'ordered'in prop and prop['ordered'] and prev_task is not None and prev_task != '':
-        depends_of = ['task_{0}'.format(prev_task)]
-
-    if len(depends_of) == 0:
-        depends_of = None
-    
-    try:
-        percentdone = n.properties['PercentDone']
-    except KeyError:
-        percentdone = None
-    
-    if n.todo == 'DONE':
-        if percentdone is not None or percentdone != '100':
-            __LOG__.warning('** Task [{0}] marked as done but PercentDone is set to {1}'.format(name, percentdone))
-        percentdone = 100
-
-    # Resources as tag
-    if len(n.tags) > 0:
-        ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
-    # Resources as properties
-    elif 'allocate' in n.properties:
-        ress = "{0}".format(["{0}".format(x) for x in n.properties['allocate'].replace(",", " ").split()]).replace("'", "")
-    else:
-        ress = None
-
-    ## BUG
-    # get color from task properties
-    if 'color' in n.properties:
-        color = "'{0}'".format(n.properties['color'].strip())
-        # inherits color if defined
-    elif 'color' in prop and prop['color'] is not None and n.todo in prop['color'] and  prop['color'][n.todo] is not None:
-        color = "'{0}'".format(prop['color'][n.todo])
-        
-    # elif n.todo != 'DONE' and 'color' in prop and prop['color'] is not None:
-    #     color = "'{0}'".format(prop['color'])
-    # elif n.todo == 'DONE':
-    #     color = "'{0}'".format(prop['color_done'])
-    # elif n.todo == 'STARTED':
-    #     color = "'{0}'".format(prop['color_started'])
-    # elif n.todo == 'CANCELED':
-    #     color = "'{0}'".format(prop['color_canceled'])
-    else:
-        color = None
-
-    
-    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9})\n".format(name, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone, fullname, color)
-    
-    
-    return (name, gantt_code)
 
 ############################################################################
 

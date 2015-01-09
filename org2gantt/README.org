@@ -1,3 +1,5 @@
+#+TITLE: README.org
+#+STARTUP: showeverything logdone hidestars
 * How to make a Gantt graph from an Org-Mode project ?
 ** Follow the structure of the [[file:example.org][example.org]] file
 *** RESOURCES
@@ -84,19 +86,32 @@ The gantt chart timeframe can be set using the item CONFIGURATION and the
 following properties :
 - start_date : first day of the chart (default begining of project)
 - end_date : last day of the chart (default end of project)
-- today : force today date (default is today)
-start_date and end_date could be references to today's date in the form +1d,
-+2w or -3w.
+- today : force today date (default is today)  (iso format yyyy-mm-dd)
+start_date and end_date could be references to today's date in the form -1d,
++2w or be a date (iso format yyyy-mm-dd)
 
 For resources chart, if set to "t", the property one_line_for_tasks puts all tasks on
 one line.
 
+TODO keywords must be defined by using #+SEQ_TODO. Otherwise only "TODO" and
+"DONE" are defined.
+
+For each keyword, a specific color could be defined by using the
+"color_{KEYWORD}" property.
+
 Exemple :
 #+begin_src
+#+SEQ_TODO: TODO(t) STARTED(s) WAITING(w) | DONE(d) CANCELED(c)
 :PROPERTIES:
 :start_date: -5d
 :end_date: +5w
-:color: #FFFF90
+:today: [2015-01-01 Thu]
+:one_line_for_tasks: nil
+:color_TODO: #FFFF90
+:color_DONE: #90FF90
+:color_STARTED: #FFA0FF
+:color_CANCELED: #FF9090
+:color_WAITING: #FFFF00
 :one_line_for_tasks: t
 :END:
 #+end_src
@@ -109,9 +124,9 @@ and of course those scripts :
 - org2gantt.py : to transform org mode project file in my source code for my
   python gantt generator
 - gantt.py : to transform gantt source code in SVG.
-You can download them from http://xael.org/norman/python/org2gantt/org2gantt.tar.gz
+You can download them from http://xael.org/norman/python/python-gantt/
 ** Running the scripts
-*** Transform org-mode file [[file:example.org][example.org]] in [[file:example_gantt.py::#!/usr/bin/env%20python3][example_gantt.py]]
+*** Transform org-mode file [[file:example.org][example.org]] in [[../example.py][example.py]]
 #+begin_src sh
   python org2gantt.py example.org -g example_gantt.py
 #+end_src
@@ -119,27 +134,30 @@ You can check help for options :
 #+begin_src sh
   python org2gantt.py -h
 #+end_src
-#+begin_src
+#+begin_src sh
   Usage: org2gantt.py [OPTIONS] org
   
   org2gantt.py
   
   Positional arguments:
-    org, o   org-mode filename
+    org   org-mode filename
   
   Options:
-    -g, --gantt=STR   output python-gantt filename (default
-                      sysout)(default: )
-    -d, --debug       debug
-    -h, --help        Show this help
-    -v, --version     Show the version
+    -g, --gantt=STR        output python-gantt filename (default
+                           sysout)(default: )
+    -s, --start-date=STR   force start date for output(default: )
+    -e, --end-date=STR     force end date for output(default: )
+    -t, --today=STR        force today date(default: )
+    -d, --debug            debug
+    -h, --help             Show this help
+    -v, --version          Show the version
   
   Example : python org2gantt.py TEST.org
   
   Written by : Alexandre Norman <norman at xael.org>
 #+end_src
 *** Make SVG
-If the [[file:example_gantt.py::#!/usr/bin/env%20python3][example_gantt.py]] was generated, it should be straitaway : just launch
+If the  [[../example.py][example.py]] was generated, it should be straightaway : just launch
 it...
 #+begin_src sh
   python example_gantt.py
