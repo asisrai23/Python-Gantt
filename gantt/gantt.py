@@ -975,7 +975,6 @@ class Project(object):
 
 
         maxx = (end_date - start_date).days 
-        maxy = self.nb_elements()
 
         ldwg = svgwrite.container.Group()
     
