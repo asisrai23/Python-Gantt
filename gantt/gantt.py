@@ -736,7 +736,7 @@ class Task(object):
                     fill="#F08000",
                     stroke=color,
                     stroke_width=1,
-                    opacity=0.25,
+                    opacity=0.55,
                 ))
 
         svg.add(svgwrite.text.Text(self.fullname, insert=((x+2)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
@@ -933,7 +933,7 @@ class Project(object):
                 daytext.append('{0}'.format(jour.strftime("%B")[:3]))
 
             if len(daytext) > 0:
-                vlines.add(svgwrite.text.Text(' / '.join(daytext), insert=((x*10+2)*mm, 6*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="12"))
+                vlines.add(svgwrite.text.Text(' / '.join(daytext), insert=((x*10+1)*mm, 6*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="12"))
 
         vlines.add(svgwrite.shapes.Line(start=(maxx*cm, 1*cm), end=(maxx*cm, (maxy+1)*cm)))
 
@@ -1063,11 +1063,14 @@ class Project(object):
             ress.add(svgwrite.text.Text('{0}'.format(r.fullname), insert=(3*mm, (nline*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
             ldwg.add(ress)
 
+            conflict_display_line = nline
             nline += 1
-            if not one_line_for_tasks:
-                conflict_display_line = nline
-            else:
-                conflict_display_line = nline - 1
+
+            # nline += 1
+            # if not one_line_for_tasks:
+            #     conflict_display_line = nline 
+            # else:
+            #     conflict_display_line = nline - 1
 
             # and add vacations on the calendar
             vac = svgwrite.container.Group()
@@ -1090,12 +1093,11 @@ class Project(object):
             conflicts = svgwrite.container.Group()
             for t in self.get_tasks():
                 if t.get_resources() is not None and r in t.get_resources():
-                    if not one_line_for_tasks:
-                        nline += 1
-                        
                     psvg, void = t.svg(prev_y = nline, start=start_date, end=end_date, color=self.color)
                     if psvg is not None:
                         ldwg.add(psvg)
+                        if not one_line_for_tasks:
+                            nline += 1
                     
                     cday = t.start_date()
                     while cday <= t.end_date():
@@ -1124,13 +1126,15 @@ class Project(object):
             if not one_line_for_tasks:
                 ldwg.add(
                     svgwrite.shapes.Line(
-                        start=((0)*cm, (nline+1)*cm), 
-                        end=((maxx+1)*cm, (nline+1)*cm), 
+                        start=((0)*cm, (nline)*cm), 
+                        end=((maxx+1)*cm, (nline)*cm), 
                         stroke='black',
-                        stroke_dasharray='5,3',
                         ))
                 
-            nline += 1
+            # nline += 1
+            if one_line_for_tasks:
+                nline += 1
+
 
         dwg = svgwrite.Drawing(filename, debug=True)
         dwg.add(svgwrite.shapes.Rect(
@@ -1212,9 +1216,6 @@ class Project(object):
         if self.name != "":
             if ((self.start_date() >= start and self.end_date() <= end) 
                 or (self.start_date() >= start and (self.end_date() <= end or self.start_date() <= end))) or level == 1: 
-            
-        #if self.name != "" and (((self.start_date() >= start and self.end_date() <= end) or (self.start_date() >= start and (self.end_date() <= end or self.start_date() >= end))) or level == 1): 
-        #if self.name != "" and theight > 0 and trepr is not None:
                 fprj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, ((prev_y)*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
 
                 fprj.add(svgwrite.shapes.Rect(
@@ -1225,7 +1226,9 @@ class Project(object):
                         stroke_width=0,
                         opacity=0.5
                         ))
-            
+            else:
+                cy -= 1
+
         fprj.add(prj)
 
         return (fprj, cy-prev_y)
