@@ -224,7 +224,7 @@ def __main__(org, gantt='', start_date='', end_date='', today='', debug=False):
     """
 
     gantt_code = """#!/usr/bin/env python3
-# -*- coding: utf-8-unix -*-
+# -*- coding: utf-8 -*-
 
 import datetime
 import gantt

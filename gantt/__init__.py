@@ -1,4 +1,5 @@
-# -*- coding: utf-8-unix -*-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 """
 python-gantt - 2015.01.04
