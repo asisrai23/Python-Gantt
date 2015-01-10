@@ -23,6 +23,8 @@ CLOSED: [2015-01-09 Fri 23:08]
 - Task do not have children
 * DONE Bugs : Empty lines in project when not on screen
 - State "DONE"       from "TODO"       [2015-01-09 Fri 22:41]
+* DONE :no_gantt: tag inheritance
+CLOSED: [2015-01-10 Sat 10:20]
 * TODO Support common tags with http://orgmode.org/worg/org-tutorials/org-taskjuggler.html
 ** DONE Resources ID
 ** DONE Task ID
@@ -37,7 +39,6 @@ CLOSED: [2015-01-09 Fri 23:08]
 ** STARTED Group of resources
 *** TODO for each group, check that nb of assigned task <= nb of members
 in example : tasks 11, 2, 7, 10
-* TODO :no_gantt: tag inheritance
 * TODO check for orgfile consistency and error reporting
 ** TODO missing mandatory properties
 - [ ] Effort
