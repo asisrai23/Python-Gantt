@@ -481,7 +481,6 @@ import gantt
 
             gantt_code += code
             gantt_code += "project.add_task(task_{0})\n".format(name)
-
         # new project heading
         # Not a task, it's a project
         # it should have children

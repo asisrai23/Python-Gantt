@@ -3,6 +3,7 @@
 #+TITLE: example.org
 #+STARTUP: content logdone hidestars
 #+TAGS: ress1(1) ress2(2) ress3(3) grp1(g)
+#+TAGS: no_gantt(0)
 #+DRAWERS: PROPERTIES NOTE LOGBOOK
 #+OPTIONS: ^:{}
 #+EXCLUDE_TAGS: no_gantt
