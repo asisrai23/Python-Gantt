@@ -162,7 +162,7 @@ SCHEDULED: <2015-01-01 Thu>
 :Effort:   2d
 :task_id: task41
 :END:
-** Project 4b :ress1:
+** Project 4b                                                        :ress1:
 :PROPERTIES:
 :color: #4040ff
 :END:
