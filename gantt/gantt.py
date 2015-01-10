@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
 __version__ = '0.3.1'
-__last_modification__ = '2015.01.09'
+__last_modification__ = '2015.01.10'
 
 import datetime
 import logging
@@ -160,6 +160,8 @@ class GroupOfResources(object):
             self.fullname = name
 
         self.resources = []
+
+        self.tasks = []
         return
 
     def add_resource(self, resource):
@@ -232,6 +234,65 @@ class GroupOfResources(object):
         return False
 
 
+    def add_task(self, task):
+        """
+        Tell the resource that we have assigned a task
+
+        Keyword arguments:
+        task -- Task object
+        """
+        if task not in self.tasks:
+            self.tasks.append(task)
+        return
+
+
+    def search_for_task_conflicts(self, all_tasks = False):
+        """
+        Returns a dictionnary of all days (datetime.date) containing for each
+        overcharged day the list of task for this day.
+
+        It examines all resources member and group tasks.
+
+        Keyword arguments:
+        all_tasks -- if True return all tasks for all days, not just overcharged days
+        """
+        # Get for each resource
+        affected_days = {}
+        for r in self.resources:
+            ad = r.search_for_task_conflicts(all_tasks = True)
+            for d in ad:
+                try:
+                    affected_days[d].append(ad[d])
+                except KeyError:
+                    affected_days[d] = [ ad[d] ]
+
+        # inspect project
+        for t in self.tasks:
+            cday = t.start_date()
+            while cday <= t.end_date():
+                if cday.weekday() not in NOT_WORKED_DAYS:
+                    try:
+                        affected_days[cday].append(t.fullname)
+                    except KeyError:
+                        affected_days[cday] = [t.fullname]
+                  
+                cday += datetime.timedelta(days=1)
+
+
+        # compile everything
+        overcharged_days = {}
+        ke = list(affected_days.keys())
+        ke.sort()
+        for d in ke:
+            affected_days[d] = _flatten(affected_days[d])
+            if all_tasks:
+                overcharged_days[d] = affected_days[d]
+
+            elif len(affected_days[d]) > self.nb_elements():
+                overcharged_days[d] = affected_days[d]
+                __LOG__.warning('** GroupOfResources "{2}" has more than {3} tasks on day {0} / {1}'.format(d, affected_days[d], self.name, self.nb_elements()))
+                
+        return overcharged_days
 
 
 ############################################################################
@@ -257,6 +318,8 @@ class Resource(object):
 
         self.vacations = []
         self.member_of_groups = []
+
+        self.tasks = []
         return
 
     def add_vacations(self, dfrom, dto=None):
@@ -328,6 +391,55 @@ class Resource(object):
         return
 
 
+    def add_task(self, task):
+        """
+        Tell the resource that we have assigned a task
+
+        Keyword arguments:
+        task -- Task object
+        """
+        if task not in self.tasks:
+            self.tasks.append(task)
+        return
+
+
+    def search_for_task_conflicts(self, all_tasks=False):
+        """
+        Returns a dictionnary of all days (datetime.date) containing for each
+        overcharged day the list of task for this day.
+
+        Keyword arguments:
+        all_tasks -- if True return all tasks for all days, not just overcharged days
+        """
+        affected_days = {}
+        for t in self.tasks:
+            cday = t.start_date()
+            while cday <= t.end_date():
+                if cday.weekday() not in NOT_WORKED_DAYS:
+                    try:
+                        affected_days[cday].append(t.fullname)
+                    except KeyError:
+                        affected_days[cday] = [t.fullname]
+                    
+                cday += datetime.timedelta(days=1)
+
+        # return all
+        if all_tasks:
+            return affected_days
+
+        # compile only overcharge
+        overcharged_days = {}
+        ke = list(affected_days.keys())
+        ke.sort()
+        for d in ke:
+            if len(affected_days[d]) > 1:
+                overcharged_days[d] = affected_days[d]
+                __LOG__.warning('** Resource "{2}" has more than one task on day {0} / {1}'.format(d, affected_days[d], self.name))
+                
+        return overcharged_days
+            
+
+
 ############################################################################
 
 
@@ -373,8 +485,8 @@ class Task(object):
 
         # check limits (2 must be set on 4) or scheduling is defined by duration and dependencies
         if nonecount != 1 and  (self.duration is None or depends_of is None):
-            __LOG__.error('** Task {1} must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, name))
-            raise ValueError('Task {1} must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, name))
+            __LOG__.error('** Task "{1}" must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, fullname))
+            raise ValueError('Task "{1}" must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, fullname))
 
         if type(depends_of) is type([]):
             self.depends_of = depends_of
@@ -390,6 +502,13 @@ class Task(object):
         self.drawn_y_coord = None
         self.cache_start_date = None
         self.cache_end_date = None
+
+        # tell each resource we have
+        # assigned a new task
+        if resources is not None:
+            for r in resources:
+                r.add_task(self)
+
         return
 
 
@@ -412,7 +531,7 @@ class Task(object):
                     start = start + datetime.timedelta(days=1)
 
                 if start > self.start:
-                    __LOG__.warning('** Due to vacations, Task {0}, will not start on date {1} but {2}'.format(self.name, self.start, start))
+                    __LOG__.warning('** Due to vacations, Task "{0}", will not start on date {1} but {2}'.format(self.fullname, self.start, start))
 
                 self.cache_start_date = start
                 return self.cache_start_date
@@ -433,7 +552,7 @@ class Task(object):
                     prev_task_end = prev_task_end + datetime.timedelta(days=1)
 
                 if prev_task_end > self.start:
-                    __LOG__.warning('** Due to dependencies, Task {0}, will not start on date {1} but {2}'.format(self.name, self.start, prev_task_end))
+                    __LOG__.warning('** Due to dependencies, Task "{0}", will not start on date {1} but {2}'.format(self.fullname, self.start, prev_task_end))
 
                 self.cache_start_date = prev_task_end
                 return self.cache_start_date
@@ -456,7 +575,7 @@ class Task(object):
                     depend_start_date = start
 
                     if depend_start_date > current_day:
-                        __LOG__.error("** Due to dependencies, Task {0}, could not be finished on time (should start as last on {1} but will start on {2})".format(self.name, current_day, depend_start_date))
+                        __LOG__.error('** Due to dependencies, Task "{0}", could not be finished on time (should start as last on {1} but will start on {2})'.format(self.fullname, current_day, depend_start_date))
                     self.cache_start_date = depend_start_date           
             else:
                 # should be first day of start...
@@ -515,7 +634,7 @@ class Task(object):
                 depend_start_date = start
 
                 if depend_start_date > current_day:
-                    __LOG__.error("** Due to dependencies, Task {0}, could not be finished on time (should start as last on {1} but will start on {2})".format(self.name, current_day, depend_start_date))
+                    __LOG__.error('** Due to dependencies, Task "{0}", could not be finished on time (should start as last on {1} but will start on {2})'.format(self.fullname, current_day, depend_start_date))
                     self.cache_start_date = depend_start_date           
                 else:
                     # should be first day of start...
@@ -526,7 +645,7 @@ class Task(object):
 
 
         if self.cache_start_date != self.start:
-            __LOG__.warning('** starting date for task {0} is changed from {1} to {2}'.format(self.name, self.start, self.cache_start_date))
+            __LOG__.warning('** starting date for task "{0}" is changed from {1} to {2}'.format(self.fullname, self.start, self.cache_start_date))
         return self.cache_start_date
 
 
@@ -561,14 +680,13 @@ class Task(object):
                     current_day = self.start_date() + datetime.timedelta(days=real_duration)
         
                 self.cache_end_date = self.start_date() + datetime.timedelta(days=real_duration)
-                __LOG__.warning('** task {0} will not be finished on time : end_date is changed from {1} to {2}'.format(self.name, self.stop, self.cache_end_date))
+                __LOG__.warning('** task "{0}" will not be finished on time : end_date is changed from {1} to {2}'.format(self.fullname, self.stop, self.cache_end_date))
                 return self.cache_end_date
                     
 
             self.cache_end_date = real_end
             if real_end != self.stop:
-                __LOG__.warning('** task {0} will not be finished on time : end_date is changed from {1} to {2}'.format(self.name, self.stop, self.cache_end_date))
-                #__LOG__.warning('** ending date for task {0} is changed from {1} to {2}'.format(self.name, self.stop, self.cache_end_date))
+                __LOG__.warning('** task "{0}" will not be finished on time : end_date is changed from {1} to {2}'.format(self.fullname, self.stop, self.cache_end_date))
 
 
                 
@@ -841,10 +959,10 @@ class Task(object):
             return conflicts
         for r in self.get_resources():
             cday = self.start_date()
-            while cday < self.end_date():
-                if not r.is_available(cday):
+            while cday <= self.end_date():
+                if cday.weekday() not in NOT_WORKED_DAYS and not r.is_available(cday):
                     conflicts.append({'resource':r.name,'date':cday, 'task':self.name})
-                    __LOG__.warning('** Caution resource {0} is affected on task {2} during vacations on day {1}'.format(r.name, cday, self.name))
+                    __LOG__.warning('** Caution resource "{0}" is affected on task "{2}" during vacations on day {1}'.format(r.name, cday, self.fullname))
                 cday += datetime.timedelta(days=1)
         return conflicts
 
@@ -1077,19 +1195,18 @@ class Project(object):
             ress.add(svgwrite.text.Text('{0}'.format(r.fullname), insert=(3*mm, (nline*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
             ldwg.add(ress)
 
+
+            overcharged_days = r.search_for_task_conflicts()
+
+
             conflict_display_line = nline
             nline += 1
 
-            # nline += 1
-            # if not one_line_for_tasks:
-            #     conflict_display_line = nline 
-            # else:
-            #     conflict_display_line = nline - 1
-
-            # and add vacations on the calendar
             vac = svgwrite.container.Group()
+            conflicts = svgwrite.container.Group()
             cday = start_date
             while cday <= end_date:
+                # Vacations
                 if cday.weekday() not in NOT_WORKED_DAYS and cday not in VACATIONS and not r.is_available(cday):
                      vac.add(svgwrite.shapes.Rect(
                             insert=(((cday - start_date).days * 10 + 1)*mm, ((conflict_display_line)*10+1)*mm),
@@ -1099,12 +1216,23 @@ class Project(object):
                             stroke_width=1,
                             opacity=0.65,
                             ))
+
+                # Overcharge
+                if cday.weekday() not in NOT_WORKED_DAYS and cday not in VACATIONS and cday in overcharged_days:
+                    conflicts.add(svgwrite.shapes.Rect(
+                        insert=(((cday - start_date).days * 10 + 1 + 4)*mm, ((conflict_display_line)*10+1)*mm),
+                        size=(4*mm, 8*mm),
+                        fill="#AA0000",
+                        stroke="#AA0000",
+                        stroke_width=1,
+                        opacity=0.65,
+                        ))
+                
                 cday += datetime.timedelta(days=1)
 
             ldwg.add(vac)
+            ldwg.add(conflicts)
 
-            affected_days = {}
-            conflicts = svgwrite.container.Group()
             for t in self.get_tasks():
                 if t.get_resources() is not None and r in t.get_resources():
                     psvg, void = t.svg(prev_y = nline, start=start_date, end=end_date, color=self.color)
@@ -1112,31 +1240,8 @@ class Project(object):
                         ldwg.add(psvg)
                         if not one_line_for_tasks:
                             nline += 1
-                    
-                    cday = t.start_date()
-                    while cday <= t.end_date():
-                        if cday in affected_days and cday.weekday() not in NOT_WORKED_DAYS  and cday not in VACATIONS:
-                            conflicts_tasks.append({'resource':r.name, 'tasks':affected_days[cday], 'day':cday, 'task':t.name })
-                            __LOG__.warning('** Conflict between tasks for {0} on date {1} tasks : {2} vs {3}'.format(r.name, cday, ",".join(affected_days[cday]), t.name))
 
-                            if cday >= start_date and cday <= end_date:
-                                vac.add(svgwrite.shapes.Rect(
-                                        insert=(((cday - start_date).days * 10 + 1 + 4)*mm, ((conflict_display_line)*10+1)*mm),
-                                        size=(4*mm, 8*mm),
-                                        fill="#AA0000",
-                                        stroke="#AA0000",
-                                        stroke_width=1,
-                                        opacity=0.65,
-                                        ))
 
-                        try:
-                            affected_days[cday].append(t.name)
-                        except KeyError:
-                            affected_days[cday] = [t.name]
-
-                        cday += datetime.timedelta(days=1)
-
-            ldwg.add(conflicts)
             if not one_line_for_tasks:
                 ldwg.add(
                     svgwrite.shapes.Line(
