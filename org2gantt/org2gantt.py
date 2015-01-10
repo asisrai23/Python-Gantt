@@ -453,6 +453,7 @@ import gantt
     # for inheriting project, ORDERED, color, resources
     prop_inherits = []
     prev_task = None
+    no_gantt_level = None
     for nr in range(len(nodes)):
         n = nodes[nr]
 
@@ -469,6 +470,7 @@ import gantt
             prop_inherits = []
             prj_found = True
             prev_task = None
+            no_gantt_level = None
 
             # Add task
             name, code = make_task_from_node(n)
@@ -481,6 +483,14 @@ import gantt
 
             gantt_code += code
             gantt_code += "project.add_task(task_{0})\n".format(name)
+        elif 'no_gantt' in n.tags:
+            if no_gantt_level is not None and no_gantt_level > n.level:
+                no_gantt_level = n.level
+                __LOG__.debug('no_gantt_tag {0}'.format(n.level))
+            elif no_gantt_level is None:
+                no_gantt_level = n.level
+                __LOG__.debug('no_gantt_tag {0}'.format(n.level))
+
         # new project heading
         # Not a task, it's a project
         # it should have children
@@ -488,6 +498,13 @@ import gantt
                  and  not n.headline.strip() in ('RESOURCES', 'VACATIONS', 'CONFIGURATION') \
                  and 'no_gantt' not in n.tags \
                  and not n.todo in LISTE_TODOS:
+
+            if no_gantt_level is not None and n.level > no_gantt_level:
+                __LOG__.debug('no_gantt_tag {0}/{1}'.format(n.level, no_gantt_level))
+                continue
+            else:
+                __LOG__.debug('remove no_gantt_tag {0}/{1}'.format(n.level, no_gantt_level))
+                no_gantt_level = None
 
             if n.level == 1:
                 __LOG__.debug('** cleanup prop_inherits')
@@ -585,6 +602,13 @@ import gantt
                 prev_task = None
                 prop_inherits = []
                 __LOG__.debug(' clean prop_inherits')
+
+            if no_gantt_level is not None and n.level > no_gantt_level:
+                __LOG__.debug('no_gantt_tag {0}/{1}'.format(n.level, no_gantt_level))
+                continue
+            else:
+                __LOG__.debug('remove no_gantt_tag {0}/{1}'.format(n.level, no_gantt_level))
+                no_gantt_level = None
 
                 
             if n.level > 1 and len(prop_inherits) < n.level - 1:
