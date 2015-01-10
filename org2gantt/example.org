@@ -41,6 +41,7 @@
 :PROPERTIES:
 :resource_id: ress3
 :END:
+- [2014-12-17 Wed]--[2014-12-22 Mon]
 ** Group 2
 :PROPERTIES:
 :resource_id: grp2
@@ -186,13 +187,13 @@ SCHEDULED: <2015-01-01 Thu>
 :ORDERED: t
 :END:
 ** TODO task alone
-SCHEDULED: <2014-12-25 Thu>
+SCHEDULED: <2014-12-17 Wed>
 :PROPERTIES:
 :Effort:   2d
 :allocate: ress3 ress1
 :END:
-*** TODO sub task alone
-SCHEDULED: <2014-12-24 Wed>
+*** TODO sub task alone                                             :ress2:
+SCHEDULED: <2014-12-29 Mon>
 :PROPERTIES:
-:Effort:   2d
+:Effort:   3d
 :END:
