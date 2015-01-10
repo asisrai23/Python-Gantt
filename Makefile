@@ -8,7 +8,7 @@ PANDOC=~/.cabal/bin/pandoc
 install:
 	@$(PYTHON) setup.py install
 
-archive: doc readme manifest changelog
+archive: doc readme changelog
 	@$(PYTHON) setup.py sdist
 	@echo Archive is create and named dist/$(ARCHIVE).tar.gz
 	@echo -n md5sum is :
@@ -24,8 +24,6 @@ readme:
 changelog:
 	@hg shortlog |~/.cabal/bin/pandoc -f org -t plain > CHANGELOG
 
-manifest: readme changelog
-	@$(PYTHON) setup.py sdist --manifest-only
 
 test:
 	nosetests gantt
@@ -37,6 +35,9 @@ test:
 conformity:
 	pyflakes org2gantt/org2gantt.py
 	pyflakes gantt/gantt.py
+	flake8 org2gantt/org2gantt.py
+	flake8 gantt/gantt.py
+
 
 register: test archive
 	@$(PYTHON) setup.py register

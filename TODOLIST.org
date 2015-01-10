@@ -37,6 +37,7 @@ CLOSED: [2015-01-09 Fri 23:08]
 ** STARTED Group of resources
 *** TODO for each group, check that nb of assigned task <= nb of members
 in example : tasks 11, 2, 7, 10
+* TODO :no_gantt: tag inheritance
 * TODO check for orgfile consistency and error reporting
 ** TODO missing mandatory properties
 - [ ] Effort
