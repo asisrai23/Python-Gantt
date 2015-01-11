@@ -177,10 +177,12 @@ def make_task_from_node(n, prop={}, prev_task=''):
         color = None
 
     
-    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9})\n".format(name, name, start, duration, ress, str(depends_of).replace("'", ""), end, percentdone, fullname, color)
+    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9})\n".format(name, name, start, duration, ress, None, end, percentdone, fullname, color)
+
+    # store dependencies for later
+    dependencies = str(depends_of).replace("'", "")
     
-    
-    return (name, gantt_code)
+    return (name, gantt_code, dependencies)
 
 
 ############################################################################
@@ -454,6 +456,7 @@ import gantt
     prop_inherits = []
     prev_task = None
     no_gantt_level = None
+    late_dependencies = []
     for nr in range(len(nodes)):
         n = nodes[nr]
 
@@ -473,7 +476,8 @@ import gantt
             no_gantt_level = None
 
             # Add task
-            name, code = make_task_from_node(n)
+            name, code, dependencies = make_task_from_node(n)
+            late_dependencies.append([name, dependencies])
 
             if name in tasks_name:
                 __LOG__.critical("Duplicate task id: {0}".format(name))
@@ -623,9 +627,11 @@ import gantt
 
             # Add task
             if len(prop_inherits) > 0:
-                name, code = make_task_from_node(n, prop_inherits[-1], prev_task)
+                name, code, dependencies = make_task_from_node(n, prop_inherits[-1], prev_task)
+                late_dependencies.append([name, dependencies])
             else:
-                name, code = make_task_from_node(n, [], prev_task)
+                name, code, dependencies = make_task_from_node(n, [], prev_task)
+                late_dependencies.append([name, dependencies])
 
 
             if name in tasks_name:
@@ -652,8 +658,11 @@ import gantt
 
             __LOG__.debug(' nothing')
             
-            
 
+    gantt_code += "\n#### Dependencies \n"
+    # Late dependencies
+    for name, dep in late_dependencies:
+        gantt_code += "task_{0}.add_depends(depends_of={1})\n".format(name, dep)
 
 
     # Full project

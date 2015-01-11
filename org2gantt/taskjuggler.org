@@ -2,7 +2,7 @@
 #+PROPERTY: allocate_ALL dev doc test
 #+COLUMNS: %30ITEM(Task) %Effort %allocate %BLOCKER %ORDERED
 
-* Accounting Software                                        :taskjuggler_project:
+* Accounting Software          
 
 ** Milestones
 *** TODO Project start
@@ -89,7 +89,7 @@ SCHEDULED: <2015-01-09 Fri>
    :allocate: doc
    :END:
 
-* RESOURCES                                         :taskjuggler_resource:
+* RESOURCES                    
 ** Developers
    :PROPERTIES:
    :resource_id: dev
