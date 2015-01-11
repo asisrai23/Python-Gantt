@@ -460,7 +460,7 @@ class Task(object):
         start -- datetime.date, first day of the task, default None
         stop -- datetime.date, last day of the task, default None
         duration -- int, duration of the task, default None
-        depends_of -- list of Task which are parents of thi one, default None
+        depends_of -- list of Task which are parents of this one, default None
         resources -- list of Resources assigned to the task, default None
         percent_done -- int, percent of achievment, default 0
         color -- string, html color, default None
@@ -486,7 +486,8 @@ class Task(object):
         # check limits (2 must be set on 4) or scheduling is defined by duration and dependencies
         if nonecount != 1 and  (self.duration is None or depends_of is None):
             __LOG__.error('** Task "{1}" must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, fullname))
-            raise ValueError('Task "{1}" must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, fullname))
+            # Bug ? may be defined later
+            #raise ValueError('Task "{1}" must be defined by two of three limits ({0})'.format({'start':self.start, 'stop':self.stop, 'duration':self.duration}, fullname))
 
         if type(depends_of) is type([]):
             self.depends_of = depends_of
@@ -508,6 +509,28 @@ class Task(object):
         if resources is not None:
             for r in resources:
                 r.add_task(self)
+
+        return
+
+
+    def add_depends(self, depends_of):
+        """
+        Adds dependency to a task
+
+        Keyword arguments:
+        depends_of -- list of Task which are parents of this one
+        """
+        if type(depends_of) is type([]):
+            if self.depends_of is None:
+                self.depends_of = depends_of
+            else:
+                for d in depends_of:
+                    self.depends_of.append(d)
+        else:
+            if self.depends_of is None:
+                self.depends_of = depends_of
+            else:
+                self.depends_of.append(depends_of)
 
         return
 

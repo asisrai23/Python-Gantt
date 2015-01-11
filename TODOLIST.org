@@ -25,7 +25,8 @@ CLOSED: [2015-01-09 Fri 23:08]
 - State "DONE"       from "TODO"       [2015-01-09 Fri 22:41]
 * DONE :no_gantt: tag inheritance
 CLOSED: [2015-01-10 Sat 10:20]
-* TODO Support common tags with http://orgmode.org/worg/org-tutorials/org-taskjuggler.html
+* DONE Support common tags with http://orgmode.org/worg/org-tutorials/org-taskjuggler.html
+CLOSED: [2015-01-11 Sun 10:26]
 ** DONE Resources ID
 ** DONE Task ID
 - State "DONE"       from "TODO"       [2015-01-06 mar. 17:04]
@@ -36,8 +37,10 @@ CLOSED: [2015-01-10 Sat 10:20]
 - The BLOCKER property which allows you to state that a task depends on either a
   previous sibling ("previous-sibling") or any other task by stating the task_id
   property of the predecessor
-** STARTED Group of resources
-*** TODO for each group, check that nb of assigned task <= nb of members
+** DONE Group of resources
+CLOSED: [2015-01-11 Sun 10:25]
+*** DONE for each group, check that nb of assigned task <= nb of members
+CLOSED: [2015-01-11 Sun 10:25]
 in example : tasks 11, 2, 7, 10
 * TODO check for orgfile consistency and error reporting
 ** TODO missing mandatory properties
@@ -49,6 +52,9 @@ in example : tasks 11, 2, 7, 10
 - State "DONE"       from "TODO"       [2015-01-06 mar. 17:40]
 ** DONE duplicate ID on tasks
 - State "DONE"       from "TODO"       [2015-01-06 mar. 17:40]
-* TODO Support repetitive task (ie SCHEDULED DATE +1w or ++1w)
 * TODO make a function to get if a resource or a resource in a group is available on a timeframe
+maybe a shell ? or option for the generated script ?
 * SOMEDAY Support repetitive vacations (ie SCHEDULED DATE +1w or ++1w, +1y)
+* DONE disconnect blocker assignation from task creation
+CLOSED: [2015-01-11 Sun 10:49]
+in order to have a task defined after.
