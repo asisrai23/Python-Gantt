@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
 __version__ = '0.3.0'
-__last_modification__ = '2015.01.08'
+__last_modification__ = '2015.01.11'
 
 
 import copy
@@ -82,6 +82,10 @@ __LOG__ = None
 
 def _init_log_to_sysout(level=logging.INFO):
     """
+    Init global variable __LOG__ used for logging purpose
+
+    Keyword arguments:
+    level -- logging level (from logging.debug to logging.critical)
     """
     global __LOG__
     logger = logging.getLogger("org2gantt")
@@ -98,6 +102,15 @@ def _init_log_to_sysout(level=logging.INFO):
 
 def make_task_from_node(n, prop={}, prev_task=''):
     """
+    Returns (name, gantt_code, dependencies) where :
+    name -- the name of the task
+    gantt_code -- the python_gant code for generating the task
+    dependencies -- the python_gant code for generation dependencies
+
+    Keyword arguments:
+    n -- node (as Orgnode node)
+    prop -- dictionnary of inherited properties
+    prev_task -- name of previous task (used if ORDERED is set)
     """
     __LOG__.debug('make_task_from_node ({0})'.format({'n':n.headline, 'prop':prop, 'prev_task':prev_task}))
     gantt_code = ''
@@ -191,6 +204,8 @@ def make_task_from_node(n, prop={}, prev_task=''):
     alias = {
         'debug': ('d',),
         'gantt': ('g',),
+        'svg': ('S',),
+        'resource': ('r',),
         'start_date': ('s',),
         'end_date': ('e',),
         'today': ('t',),
@@ -203,17 +218,21 @@ def make_task_from_node(n, prop={}, prev_task=''):
             ),
         )
     )
-def __main__(org, gantt='', start_date='', end_date='', today='', debug=False):
+def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, resource='', svg='project'):
     """
     org2gantt.py
     
     org: org-mode filename
 
-    gantt: output python-gantt filename (default sysout)
+    gantt: output python-gantt filename (if not specified, code is directly executed)
 
-    start_date: force start date for output
+    svg: svg base name for files output
 
-    end_date: force end date for output
+    resource: check resource availibility between start_date and end_date
+
+    start_date: force start date for output or used for checking resource availibility
+
+    end_date: force end date for output or used for checking resource availibility
 
     today: force today date
     
@@ -665,17 +684,24 @@ import gantt
         gantt_code += "task_{0}.add_depends(depends_of={1})\n".format(name, dep)
 
 
-    # Full project
-    gantt_code += "\n#### Outputs \n"
+    if resource == '':
+        # Full project
+        gantt_code += "\n#### Outputs \n"
 
-    gantt_code += "project.make_svg_for_tasks(filename='project.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date)
-    gantt_code += "project.make_svg_for_resources(filename='project_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks)
 
+        gantt_code += "project.make_svg_for_tasks(filename='{3}.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date, svg)
+        gantt_code += "project.make_svg_for_resources(filename='{4}_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks, svg)
+
+    else:
+        gantt_code += "\n#### Check resource availibility \n"
+        gantt_code += "print({0}.is_vacant(from_date={1}, to_date={2}))\n".format(resource, planning_start_date, planning_end_date)
+        
 
 
     # write Gantt code
     if gantt == '':
-        print(gantt_code)
+        import gantt
+        exec(gantt_code)
     else:
         open(gantt, 'w').write(gantt_code)
 
