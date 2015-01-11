@@ -29,8 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.1'
-__last_modification__ = '2015.01.10'
+__version__ = '0.3.6'
+__last_modification__ = '2015.01.11'
 
 import datetime
 import logging
@@ -94,7 +94,10 @@ def add_vacations(start_date, end_date=None):
 
 def init_log_to_sysout(level=logging.INFO):
     """
-    debugging facilities
+    Init global variable __LOG__ used for logging purpose
+
+    Keyword arguments:
+    level -- logging level (from logging.debug to logging.critical)
     """
     global __LOG__
     logger = logging.getLogger("Gantt")
@@ -295,6 +298,24 @@ class GroupOfResources(object):
         return overcharged_days
 
 
+
+    def is_vacant(self, from_date, to_date):
+        """
+        Check if any resource from the group is unallocated between for a given timeframe.
+        Returns a list of available ressource name.
+        
+        Keyword arguments:
+        from_date -- first day
+        to_date --  last day
+        """
+        availables = []
+        for r in self.resources:
+            if len(r.is_vacant(from_date, to_date)) >0:
+                availables.append(r.name)
+                
+        return availables
+
+
 ############################################################################
 
 class Resource(object):
@@ -439,6 +460,29 @@ class Resource(object):
         return overcharged_days
             
 
+
+    def is_vacant(self, from_date, to_date):
+        """
+        Check if the resource is unallocated between for a given timeframe.
+        Returns True if the resource is free, False otherwise
+        
+        Keyword arguments:
+        from_date -- first day
+        to_date --  last day
+        """
+        non_vacant_days = self.search_for_task_conflicts(all_tasks=True)
+        cday = from_date
+        while cday <= to_date:
+            if cday.weekday() not in NOT_WORKED_DAYS:
+                if not self.is_available(cday):
+                    __LOG__.debug('** Ressource "{0}" is not available on day {1} (vacation)'.format(self.name, cday))
+                    return []
+                if cday in non_vacant_days:
+                    __LOG__.debug('** Ressource "{0}" is not available on day {1} (other task : {2})'.format(self.name, cday, non_vacant_days[cday]))
+                    return []
+
+            cday += datetime.timedelta(days=1)
+        return [self.name]
 
 ############################################################################
 
