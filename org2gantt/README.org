@@ -136,25 +136,28 @@ You can check help for options :
 #+end_src
 #+begin_src sh
   Usage: org2gantt.py [OPTIONS] org
-  
+
   org2gantt.py
-  
+
   Positional arguments:
     org   org-mode filename
-  
+
   Options:
-    -g, --gantt=STR        output python-gantt filename (default
-                           sysout)(default: )
-    -s, --start-date=STR   force start date for output(default: )
-    -e, --end-date=STR     force end date for output(default: )
+    -g, --gantt=STR        output python-gantt filename (if not
+                           specified, code is directly
+                           executed)(default: )
+    -s, --start-date=STR   force start date for output or used for
+                           checking resource availibility(default: )
+    -e, --end-date=STR     force end date for output or used for
+                           checking resource availibility(default: )
     -t, --today=STR        force today date(default: )
     -d, --debug            debug
+    -r, --resource=STR     check resource availibility between
+                           start_date and end_date(default: )
+    -S, --svg=STR          svg base name for files output(default:
+                           project)
     -h, --help             Show this help
     -v, --version          Show the version
-  
-  Example : python org2gantt.py TEST.org
-  
-  Written by : Alexandre Norman <norman at xael.org>
 #+end_src
 *** Make SVG
 If the  [[../example.py][example.py]] was generated, it should be straightaway : just launch
