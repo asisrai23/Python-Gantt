@@ -230,11 +230,11 @@ def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, r
 
     resource: check resource availibility between start_date and end_date
 
-    start_date: force start date for output or used for checking resource availibility
+    start_date: force start date for output or used for checking resource availibility (format : 'yyyy-mm-dd')
 
-    end_date: force end date for output or used for checking resource availibility
+    end_date: force end date for output or used for checking resource availibility (format : 'yyyy-mm-dd')
 
-    today: force today date
+    today: force today date (format : 'yyyy-mm-dd')
     
     debug: debug
 
