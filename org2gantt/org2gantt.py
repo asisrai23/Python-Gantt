@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.0'
-__last_modification__ = '2015.01.11'
+__version__ = '0.3.7'
+__last_modification__ = '2015.01.12'
 
 
 import copy

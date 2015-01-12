@@ -40,8 +40,8 @@ conformity:
 
 
 register: test archive
-	@$(PYTHON) setup.py register
-	@$(PYTHON) setup.py sdist upload
+	$(PYTHON) setup.py register
+	$(PYTHON) setup.py sdist upload --identity="Alexandre Norman" --sign --quiet
 
 doc:
 	@pydoc3 -w gantt/gantt.py

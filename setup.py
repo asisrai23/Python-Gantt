@@ -13,6 +13,8 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.txt'), encoding='utf-8') as f:
     long_description = f.read()
 
+
+
 setup (
     name = 'gantt',
     version = '0.3.7',
@@ -44,4 +46,8 @@ setup (
         'svgwrite>=1.1.6',
         'clize>=2.0',
         ],
+    zip_safe = True, 
     )
+
+
+
