@@ -1102,9 +1102,9 @@ class Project(object):
             jour = start_date + datetime.timedelta(days=x)
             if not today is None and today == jour:
                 vlines.add(svgwrite.shapes.Rect(
-                    insert=((x+0.4)*cm, 1.5*cm),
-                    size=(0.2*cm, (0.5+maxy)*cm),
-                    fill='lightblue',
+                    insert=((x+0.4)*cm, 2*cm),
+                    size=(0.2*cm, (maxy)*cm),
+                    fill='#76e9ff',
                     stroke='lightgray',
                     stroke_width=0,
                     opacity=0.8
@@ -1134,6 +1134,10 @@ class Project(object):
 
 
         hlines = dwg.add(svgwrite.container.Group(id='hlines', stroke='lightgray'))
+
+        dwg.add(svgwrite.shapes.Line(start=((0)*cm, (2)*cm), end=((maxx+1)*cm, (2)*cm), stroke='black'))
+        dwg.add(svgwrite.shapes.Line(start=((0)*cm, (maxy+2)*cm), end=((maxx+1)*cm, (maxy+2)*cm), stroke='black'))
+
         for y in range(2, maxy+3):
             hlines.add(svgwrite.shapes.Line(start=(0*cm, y*cm), end=(maxx*cm, y*cm)))
 
