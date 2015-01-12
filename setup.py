@@ -16,7 +16,7 @@ with open(path.join(here, 'README.txt'), encoding='utf-8') as f:
 
 
 setup (
-    name = 'gantt',
+    name = 'python-gantt',
     version = '0.3.7',
     author = 'Alexandre Norman',
     author_email = 'norman@xael.org',

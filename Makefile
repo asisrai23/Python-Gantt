@@ -39,14 +39,14 @@ conformity:
 	flake8 gantt/gantt.py
 
 
-register: test archive
+register: test
 	$(PYTHON) setup.py register
 	$(PYTHON) setup.py sdist upload --identity="Alexandre Norman" --sign --quiet
 
 doc:
 	@pydoc3 -w gantt/gantt.py
 
-web: archive
+web:
 	@cp dist/$(ARCHIVE).tar.gz web/
 	@m4 -DVERSION=$(VERSION) -DMD5SUM=$(shell md5sum dist/$(ARCHIVE).tar.gz |cut -d' ' -f1) -DDATE=$(shell date +%Y-%m-%d) web/index.gtm.m4 > web/index.gtm
 
