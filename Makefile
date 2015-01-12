@@ -39,15 +39,21 @@ conformity:
 	flake8 gantt/gantt.py
 
 
+pipregister:
+	python2.7 setup.py register
+
 register: test
-	$(PYTHON) setup.py register
-	$(PYTHON) setup.py sdist upload --identity="Alexandre Norman" --sign --quiet
+	python2.7 setup.py sdist upload --identity="Alexandre Norman" --sign --quiet
 
 doc:
 	@pydoc3 -w gantt/gantt.py
 
-web:
-	@cp dist/$(ARCHIVE).tar.gz web/
-	@m4 -DVERSION=$(VERSION) -DMD5SUM=$(shell md5sum dist/$(ARCHIVE).tar.gz |cut -d' ' -f1) -DDATE=$(shell date +%Y-%m-%d) web/index.gtm.m4 > web/index.gtm
+web:	test
+	cp dist/$(ARCHIVE).tar.gz web/
+	m4 -DVERSION=$(VERSION) -DMD5SUM=$(shell md5sum dist/$(ARCHIVE).tar.gz |cut -d' ' -f1) -DDATE=$(shell date +%Y-%m-%d) web/index.gtm.m4 > web/index.gtm
+	(cd web_upper ; make all)
+	convert project.svg web/project.png 
+	convert project_resources.svg web/project_resources.png 
+	(cd web ; ncftp python-gantt)
 
 .PHONY: web
