@@ -1089,10 +1089,10 @@ class Project(object):
 
         vlines = dwg.add(svgwrite.container.Group(id='vlines', stroke='lightgray'))
         for x in range(maxx):
-            vlines.add(svgwrite.shapes.Line(start=(x*cm, 1*cm), end=(x*cm, (maxy+1)*cm)))
+            vlines.add(svgwrite.shapes.Line(start=(x*cm, 2*cm), end=(x*cm, (maxy+2)*cm)))
             if (start_date + datetime.timedelta(days=x)).weekday() in NOT_WORKED_DAYS or (start_date + datetime.timedelta(days=x)) in VACATIONS:
                 vlines.add(svgwrite.shapes.Rect(
-                    insert=(x*cm, 1*cm),
+                    insert=(x*cm, 2*cm),
                     size=(1*cm, maxy*cm),
                     fill='gray',
                     stroke='lightgray',
@@ -1102,34 +1102,39 @@ class Project(object):
             jour = start_date + datetime.timedelta(days=x)
             if not today is None and today == jour:
                 vlines.add(svgwrite.shapes.Rect(
-                    insert=((x+0.4)*cm, 0.5*cm),
+                    insert=((x+0.4)*cm, 1.5*cm),
                     size=(0.2*cm, (0.5+maxy)*cm),
                     fill='lightblue',
                     stroke='lightgray',
                     stroke_width=0,
                     opacity=0.8
                     ))
-            vlines.add(svgwrite.text.Text('{2}.{0:02}/{1:02}'.format(jour.day, jour.month, cal[jour.weekday()][0]), insert=((x*10+1)*mm, 9*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="8"))
+            #vlines.add(svgwrite.text.Text('{2}.{0:02}/{1:02}'.format(jour.day, jour.month, cal[jour.weekday()][0]), insert=((x*10+1)*mm, 9*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="8"))
 
-            daytext = []
+            # Current day
+            vlines.add(svgwrite.text.Text('{1} {0:02}'.format(jour.day, cal[jour.weekday()][0]), insert=((x*10+1)*mm, 19*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="12"))
 
+
+            # Year
             if jour.day == 1 and jour.month == 1:
-                vlines.add(svgwrite.text.Text('{0}'.format(jour.year), insert=((x*10+1)*mm, 3*mm), fill='#800000', stroke='#800000', stroke_width=0, font_family="Verdana", font_size="12"))
-            
-            if jour.weekday() == 0:
-                daytext.append('W:{0:02}'.format(jour.isocalendar()[1]))
+                vlines.add(svgwrite.text.Text('{0}'.format(jour.year), insert=((x*10+1)*mm, 5*mm), fill='#400000', stroke='#400000', stroke_width=0, font_family="Verdana", font_size="20", font_weight="bold"))
 
+
+            # Month name
             if jour.day == 1:
-                daytext.append('{0}'.format(jour.strftime("%B")[:3]))
+                #daytext.append('{0}'.format(jour.strftime("%B")[:3]))
+                vlines.add(svgwrite.text.Text('{0}'.format(jour.strftime("%B")), insert=((x*10+1)*mm, 10*mm), fill='#800000', stroke='#800000', stroke_width=0, font_family="Verdana", font_size="18", font_weight="bold"))
 
-            if len(daytext) > 0:
-                vlines.add(svgwrite.text.Text(' / '.join(daytext), insert=((x*10+1)*mm, 6*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="12"))
+
+            # Week number
+            if jour.weekday() == 0:
+                vlines.add(svgwrite.text.Text('{0:02}'.format(jour.isocalendar()[1]), insert=((x*10+1)*mm, 15*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="16", font_weight="bold"))
 
         vlines.add(svgwrite.shapes.Line(start=(maxx*cm, 1*cm), end=(maxx*cm, (maxy+1)*cm)))
 
 
         hlines = dwg.add(svgwrite.container.Group(id='hlines', stroke='lightgray'))
-        for y in range(1, maxy+2):
+        for y in range(2, maxy+3):
             hlines.add(svgwrite.shapes.Line(start=(0*cm, y*cm), end=(maxx*cm, y*cm)))
 
         return dwg
@@ -1172,7 +1177,7 @@ class Project(object):
 
         ldwg = svgwrite.container.Group()
     
-        psvg, pheight = self.svg(prev_y=1, start=start_date, end=end_date, color = self.color)
+        psvg, pheight = self.svg(prev_y=2, start=start_date, end=end_date, color = self.color)
         ldwg.add(psvg)
         dep = self.svg_dependencies(self)
         if dep is not None:
@@ -1181,7 +1186,7 @@ class Project(object):
         dwg = svgwrite.Drawing(filename, debug=True)
         dwg.add(svgwrite.shapes.Rect(
                     insert=(0*cm, 0*cm),
-                    size=((maxx+1)*cm, (pheight+1)*cm),
+                    size=((maxx+1)*cm, (pheight+3)*cm),
                     fill='white',
                     stroke_width=0,
                     opacity=1
@@ -1252,8 +1257,17 @@ class Project(object):
 
 
         ldwg = svgwrite.container.Group()
+
+        if not one_line_for_tasks:
+            ldwg.add(
+                svgwrite.shapes.Line(
+                    start=((0)*cm, (2)*cm), 
+                    end=((maxx+1)*cm, (2)*cm), 
+                    stroke='black',
+                    ))
+
     
-        nline = 1
+        nline = 2
         conflicts_tasks = []
         conflict_display_line = 1
         for r in resources:
@@ -1325,12 +1339,12 @@ class Project(object):
         dwg = svgwrite.Drawing(filename, debug=True)
         dwg.add(svgwrite.shapes.Rect(
                     insert=(0*cm, 0*cm),
-                    size=((maxx+1)*cm, (nline)*cm),
+                    size=((maxx+1)*cm, (nline+1)*cm),
                     fill='white',
                     stroke_width=0,
                     opacity=1
                     ))
-        dwg.add(self._svg_calendar(maxx, nline-1, start_date, today))
+        dwg.add(self._svg_calendar(maxx, nline-2, start_date, today))
         dwg.add(ldwg)
         dwg.save()
         return {
