@@ -189,6 +189,9 @@ def make_task_from_node(n, prop={}, prev_task=''):
     else:
         color = None
 
+    if start is None and end is None and (duration is None or duration==''):
+        __LOG__.critical('** Task {0}/{1} is not defined by start, stop or duration -> aborting'.format(name, fullname))
+        return None
     
     gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9})\n".format(name, name, start, duration, ress, None, end, percentdone, fullname, color)
 
@@ -495,7 +498,10 @@ import gantt
             no_gantt_level = None
 
             # Add task
-            name, code, dependencies = make_task_from_node(n)
+            nt = make_task_from_node(n)
+            if nt is None:
+                continue
+            name, code, dependencies = nt
             late_dependencies.append([name, dependencies])
 
             if name in tasks_name:
@@ -646,10 +652,16 @@ import gantt
 
             # Add task
             if len(prop_inherits) > 0:
-                name, code, dependencies = make_task_from_node(n, prop_inherits[-1], prev_task)
+                nt = make_task_from_node(n, prop_inherits[-1], prev_task)
+                if nt is None:
+                    continue
+                name, code, dependencies = nt
                 late_dependencies.append([name, dependencies])
             else:
-                name, code, dependencies = make_task_from_node(n, [], prev_task)
+                nt = make_task_from_node(n, [], prev_task)
+                if nt is None:
+                    continue
+                name, code, dependencies = nt
                 late_dependencies.append([name, dependencies])
 
 
