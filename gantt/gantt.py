@@ -1296,8 +1296,8 @@ class Project(object):
                      vac.add(svgwrite.shapes.Rect(
                             insert=(((cday - start_date).days * 10 + 1)*mm, ((conflict_display_line)*10+1)*mm),
                             size=(4*mm, 8*mm),
-                            fill="#00AA00",
-                            stroke="#00AA00",
+                            fill="#008000",
+                            stroke="#008000",
                             stroke_width=1,
                             opacity=0.65,
                             ))

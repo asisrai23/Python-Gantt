@@ -77,6 +77,7 @@ def _iso_date_to_datetime(isodate):
 ############################################################################
 
 __LOG__ = None
+LISTE_IGNORE_TAGS = []
 
 ############################################################################
 
@@ -163,12 +164,26 @@ def make_task_from_node(n, prop={}, prev_task=''):
             __LOG__.warning('** Task [{0}] marked as done but PercentDone is set to {1}'.format(name, percentdone))
         percentdone = 100
 
+
+    global LISTE_IGNORE_TAGS
+
+
     # Resources as tag
     if len(n.tags) > 0:
-        ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
+        resst = []
+        for x in n.tags.keys():
+            if x not in LISTE_IGNORE_TAGS:
+                resst.append(x)
+
+        ress = "{0}".format(["{0}".format(x) for x in resst]).replace("'", "")
     # Resources as properties
     elif 'allocate' in n.properties:
-        ress = "{0}".format(["{0}".format(x) for x in n.properties['allocate'].replace(",", " ").split()]).replace("'", "")
+        resst = []
+        for x in n.properties['allocate'].replace(",", " ").split():
+            if x not in LISTE_IGNORE_TAGS:
+                resst.append(x)
+
+        ress = "{0}".format(["{0}".format(x) for x in rest]).replace("'", "")
     else:
         try:
             ress = prop['resources']
@@ -189,8 +204,8 @@ def make_task_from_node(n, prop={}, prev_task=''):
     else:
         color = None
 
-    if start is None and end is None and (duration is None or duration==''):
-        __LOG__.critical('** Task {0}/{1} is not defined by start, stop or duration -> aborting'.format(name, fullname))
+    if start is None and end is None and (duration is None or duration=='' or (duration != '' and depends_of is None)):
+        __LOG__.critical('** Task "{0}" : no start, stop, duration or dependencies -> not included in gantt !'.format(fullname))
         return None
     
     gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9})\n".format(name, name, start, duration, ress, None, end, percentdone, fullname, color)
@@ -292,6 +307,9 @@ import gantt
     my_today = datetime.date.today()
     bar_color = {'TODO':'#FFFF90'}
     one_line_for_tasks = False
+    global LISTE_IGNORE_TAGS
+    LISTE_IGNORE_TAGS = []
+
 
     # Generate code for configuration
     if n_configuration is not None:
@@ -299,6 +317,8 @@ import gantt
             if 'color_{0}'.format(t) in n_configuration.properties:
                 bar_color[t] = n_configuration.properties['color_{0}'.format(t)].strip()
 
+        if 'ignore_tags' in n_configuration.properties:
+             LISTE_IGNORE_TAGS = n_configuration.properties['ignore_tags'].split()
 
         if 'one_line_for_tasks' in n_configuration.properties and n_configuration.properties['one_line_for_tasks'].strip() == 't':
              one_line_for_tasks = True
