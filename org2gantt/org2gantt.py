@@ -171,6 +171,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
     # Resources as tag
     if len(n.tags) > 0:
         resst = []
+        # Filter tags to ignore
         for x in n.tags.keys():
             if x not in LISTE_IGNORE_TAGS:
                 resst.append(x)
@@ -178,12 +179,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         ress = "{0}".format(["{0}".format(x) for x in resst]).replace("'", "")
     # Resources as properties
     elif 'allocate' in n.properties:
-        resst = []
-        for x in n.properties['allocate'].replace(",", " ").split():
-            if x not in LISTE_IGNORE_TAGS:
-                resst.append(x)
-
-        ress = "{0}".format(["{0}".format(x) for x in rest]).replace("'", "")
+        ress = "{0}".format(["{0}".format(x) for x in n.properties['allocate'].replace(",", " ").split()]).replace("'", "")
     else:
         try:
             ress = prop['resources']

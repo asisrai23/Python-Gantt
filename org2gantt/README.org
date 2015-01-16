@@ -99,6 +99,9 @@ TODO keywords must be defined by using #+SEQ_TODO. Otherwise only "TODO" and
 For each keyword, a specific color could be defined by using the
 "color_{KEYWORD}" property.
 
+The property "ignore_tags" make org2gantt ignore thoses tags as resources
+allocation.
+
 Exemple :
 #+begin_src
 #+SEQ_TODO: TODO(t) STARTED(s) WAITING(w) | DONE(d) CANCELED(c)
@@ -113,6 +116,7 @@ Exemple :
 :color_CANCELED: #FF9090
 :color_WAITING: #FFFF00
 :one_line_for_tasks: t
+:ignore_tags: WAITING IQ FORM APPR PPRD PRD
 :END:
 #+end_src
 ** Installation of the scripts
