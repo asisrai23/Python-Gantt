@@ -401,7 +401,7 @@ import gantt
     current_level = 0
     current_group = None
 
-    for nr in range(len(n_resources)):
+    for nr, r in enumerate(n_resources):
         r = n_resources[nr]
 
         rname = r.headline.strip().replace("'","_")
@@ -495,7 +495,7 @@ import gantt
     prev_task = None
     no_gantt_level = None
     late_dependencies = []
-    for nr in range(len(nodes)):
+    for nr, n in enumerate(nodes):
         n = nodes[nr]
 
         __LOG__.debug('Analysing {0}'.format(n.headline))
