@@ -1135,8 +1135,8 @@ class Project(object):
 
         hlines = dwg.add(svgwrite.container.Group(id='hlines', stroke='lightgray'))
 
-        dwg.add(svgwrite.shapes.Line(start=((0)*cm, (2)*cm), end=((maxx+1)*cm, (2)*cm), stroke='black'))
-        dwg.add(svgwrite.shapes.Line(start=((0)*cm, (maxy+2)*cm), end=((maxx+1)*cm, (maxy+2)*cm), stroke='black'))
+        dwg.add(svgwrite.shapes.Line(start=((0)*cm, (2)*cm), end=((maxx)*cm, (2)*cm), stroke='black'))
+        dwg.add(svgwrite.shapes.Line(start=((0)*cm, (maxy+2)*cm), end=((maxx)*cm, (maxy+2)*cm), stroke='black'))
 
         for y in range(2, maxy+3):
             hlines.add(svgwrite.shapes.Line(start=(0*cm, y*cm), end=(maxx*cm, y*cm)))
