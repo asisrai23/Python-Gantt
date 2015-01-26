@@ -1,0 +1,21 @@
+syntax: glob
+*.pyc
+*~
+.~lock.*#
+.#*
+*.deb
+README.txt
+MANIFEST
+build/*
+dist/*
+web
+gantt.html
+CHANGELOG
+python_gantt.egg-info/*
+python-gantt-[0-9].?.?/*
+org2gantt/*.svg
+
+
+syntax: regexp
+(.*/)?\#[^/]*\#$
+(.*/)?\#[^/]*$
