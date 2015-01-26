@@ -830,13 +830,13 @@ class Task(object):
         # cas 2 -S==s==E--e-
         elif self.start_date() < start and self.end_date() <= end:
             x = 0
-            d = ((self.end_date() - start).days) * 10
+            d = ((self.end_date() - start).days) * 10 + 10
             self.drawn_x_begin_coord = x
             self.drawn_x_end_coord = x+d
             add_begin_mark = True
         # cas 3 -s--S==e==E-
         elif self.start_date() >= start and  self.end_date() > end:
-            x = (self.start_date() - start).days * 10
+            x = (self.start_date() - start).days * 10 + 10
             d = ((end - self.start_date()).days) * 10
             self.drawn_x_begin_coord = x
             self.drawn_x_end_coord = x+d
@@ -1536,8 +1536,8 @@ if __name__ == '__main__':
     # non regression test
     doctest.testmod()
 else:
-    #init_log_to_sysout(level=logging.DEBUG)
-    init_log_to_sysout(level=logging.WARNING)
+    init_log_to_sysout(level=logging.DEBUG)
+    #init_log_to_sysout(level=logging.WARNING)
 
 
 #<EOF>######################################################################
