@@ -814,6 +814,7 @@ class Task(object):
         add_end_mark = False
 
         y = prev_y * 10
+
                     
         # cas 1 -s--S==E--e-
         if self.start_date() >= start and self.end_date() <= end:
@@ -822,10 +823,10 @@ class Task(object):
             self.drawn_x_begin_coord = x
             self.drawn_x_end_coord = x+d
        # cas 5 -s--e--S==E-
-        elif self.start_date() >= end:
+        elif self.start_date() > end:
             return (None, 0)
         # cas 6 -S==E-s--e-
-        elif self.end_date() <= start:
+        elif self.end_date() < start:
             return (None, 0)
         # cas 2 -S==s==E--e-
         elif self.start_date() < start and self.end_date() <= end:
