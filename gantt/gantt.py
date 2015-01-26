@@ -1537,8 +1537,8 @@ if __name__ == '__main__':
     # non regression test
     doctest.testmod()
 else:
-    init_log_to_sysout(level=logging.DEBUG)
-    #init_log_to_sysout(level=logging.WARNING)
+    #init_log_to_sysout(level=logging.DEBUG)
+    init_log_to_sysout(level=logging.WARNING)
 
 
 #<EOF>######################################################################
