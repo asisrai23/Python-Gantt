@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.8'
-__last_modification__ = '2015.01.16'
+__version__ = '0.3.9'
+__last_modification__ = '2015.01.27'
 
 
 import copy
@@ -167,6 +167,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
 
     global LISTE_IGNORE_TAGS
 
+    resst = []
 
     # Resources as tag
     if len(n.tags) > 0:
@@ -379,6 +380,7 @@ import gantt
                     planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(years=qte*sign)))
 
 
+    __LOG__.debug('List of ignored tags : {0}'.format(LISTE_IGNORE_TAGS))
 
 
     # Find RESOURCES in heading
@@ -485,7 +487,7 @@ import gantt
 
     # Generate code for Projects
     gantt_code += "\n#### Projects \n"
-    # Mother of all
+    # Mother of all 
     gantt_code += "project = gantt.Project(color='{0}')\n".format(bar_color['TODO'])
 
     prj_found = False
@@ -616,7 +618,7 @@ import gantt
             # Inherits resources
             # Resources as tag
             if len(n.tags) > 0:
-                ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
+                ress = "{0}".format(["{0}".format(x) for x in n.tags.keys() if x not in LISTE_IGNORE_TAGS]).replace("'", "")
                 # Resources as properties
             elif 'allocate' in n.properties:
                 ress = "{0}".format(["{0}".format(x) for x in n.properties['allocate'].replace(",", " ").split()]).replace("'", "")
