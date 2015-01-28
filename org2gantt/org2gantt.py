@@ -78,6 +78,7 @@ def _iso_date_to_datetime(isodate):
 
 __LOG__ = None
 LISTE_IGNORE_TAGS = []
+LISTE_FILTER = []
 
 ############################################################################
 
@@ -126,6 +127,27 @@ def make_task_from_node(n, prop={}, prev_task=''):
     if ' ' in name:
         __LOG__.critical('** Space in task_id: [{0}]'.format(name))
         sys.exit(1)
+
+
+    global LISTE_FILTER
+    if len(LISTE_FILTER) > 0:
+        __LOG__.critical('FILTER:{0}'.format(n.tags))
+        for x in n.tags:
+            if x in LISTE_FILTER:
+                __LOG__.critical('FILTER FOUND:{0}'.format(x))
+                break
+        else:
+            __LOG__.critical('FILTER_PROP:{0}'.format(prop['resources']))
+            if prop['resources'] is not None:
+                for x in prop['resources'].replace('[','').replace(']','').split(','):
+                    if x in LISTE_FILTER:
+                        __LOG__.critical('FILTER FOUND:{0}'.format(x))
+                        break
+                else:
+                    return None
+            else:
+                return None
+        
     
     fullname = n.headline.strip().replace("'", '_')
     start = end = duration = None
@@ -183,7 +205,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         ress = "{0}".format(["{0}".format(x) for x in n.properties['allocate'].replace(",", " ").split()]).replace("'", "")
     else:
         try:
-            ress = prop['resources']
+            ress = "{0}".format(["{0}".format(x.strip()) for x in prop['resources'].replace('[','').replace(']','').split(',') if x not in LISTE_IGNORE_TAGS]).replace("'", "")
         except KeyError:
             ress = None
         except TypeError:
@@ -224,6 +246,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         'start_date': ('s',),
         'end_date': ('e',),
         'today': ('t',),
+        'filter': ('f',),
         },
     extra = (
         clize.make_flag(
@@ -233,7 +256,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
             ),
         )
     )
-def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, resource='', svg='project'):
+def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, resource='', svg='project', filter=''):
     """
     org2gantt.py
     
@@ -250,6 +273,8 @@ def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, r
     end_date: force end date for output or used for checking resource availibility (format : 'yyyy-mm-dd')
 
     today: force today date (format : 'yyyy-mm-dd')
+
+    filter: tag or list of tags separated by comas to filter
     
     debug: debug
 
@@ -307,6 +332,12 @@ import gantt
     global LISTE_IGNORE_TAGS
     LISTE_IGNORE_TAGS = []
 
+    # List of tag to filter
+    global LISTE_FILTER
+    if filter != '':
+        LISTE_FILTER = filter.split(',')
+
+    __LOG__.debug('LISTE_FILTER : {0}'.format(LISTE_FILTER))
 
     # Generate code for configuration
     if n_configuration is not None:
@@ -615,10 +646,13 @@ import gantt
                     color['TODO'] = bar_color['TODO']
 
 
+
             # Inherits resources
             # Resources as tag
             if len(n.tags) > 0:
-                ress = "{0}".format(["{0}".format(x) for x in n.tags.keys() if x not in LISTE_IGNORE_TAGS]).replace("'", "")
+                # For inherit all tags
+                #ress = "{0}".format(["{0}".format(x) for x in n.tags.keys() if x not in LISTE_IGNORE_TAGS]).replace("'", "")
+                ress = "{0}".format(["{0}".format(x) for x in n.tags.keys()]).replace("'", "")
                 # Resources as properties
             elif 'allocate' in n.properties:
                 ress = "{0}".format(["{0}".format(x) for x in n.properties['allocate'].replace(",", " ").split()]).replace("'", "")
