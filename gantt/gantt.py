@@ -1417,6 +1417,7 @@ class Project(object):
                 prj.add(trepr)
                 cy += theight
 
+
         fprj = svgwrite.container.Group()
         if self.name != "":
             # if ((self.start_date() >= start and self.end_date() <= end) 
@@ -1435,6 +1436,10 @@ class Project(object):
                         ))
             else:
                 cy -= 1
+
+        # Do not display empty tasks
+        if (cy - prev_y) == 0 or (cy - prev_y) == 1:
+            return (None, 0)
 
         fprj.add(prj)
 

@@ -243,6 +243,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         'gantt': ('g',),
         'svg': ('S',),
         'resource': ('r',),
+        'availibility': ('a',),
         'start_date': ('s',),
         'end_date': ('e',),
         'today': ('t',),
@@ -256,7 +257,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
             ),
         )
     )
-def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, resource='', svg='project', filter=''):
+def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, resource=False, svg='project', filter='', availibility=''):
     """
     org2gantt.py
     
@@ -266,7 +267,9 @@ def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, r
 
     svg: svg base name for files output
 
-    resource: check resource availibility between start_date and end_date
+    resource: generate resources graphe
+
+    availibility: check resource availibility between start_date and end_date
 
     start_date: force start date for output or used for checking resource availibility (format : 'yyyy-mm-dd')
 
@@ -748,17 +751,19 @@ import gantt
         gantt_code += "task_{0}.add_depends(depends_of={1})\n".format(name, dep)
 
 
-    if resource == '':
+    if availibility == '':
         # Full project
         gantt_code += "\n#### Outputs \n"
 
 
         gantt_code += "project.make_svg_for_tasks(filename='{3}.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date, svg)
-        gantt_code += "project.make_svg_for_resources(filename='{4}_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks, svg)
+        # Generate resource graph
+        if resource:
+            gantt_code += "project.make_svg_for_resources(filename='{4}_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks, svg)
 
     else:
         gantt_code += "\n#### Check resource availibility \n"
-        gantt_code += "print({0}.is_vacant(from_date={1}, to_date={2}))\n".format(resource, planning_start_date, planning_end_date)
+        gantt_code += "print({0}.is_vacant(from_date={1}, to_date={2}))\n".format(availibility, planning_start_date, planning_end_date)
         
 
 
