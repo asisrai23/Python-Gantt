@@ -129,7 +129,9 @@ def make_task_from_node(n, prop={}, prev_task=''):
         sys.exit(1)
 
 
+    # check if we should filter this task from display
     global LISTE_FILTER
+    display = True
     if len(LISTE_FILTER) > 0:
         __LOG__.critical('FILTER:{0}'.format(n.tags))
         for x in n.tags:
@@ -144,9 +146,10 @@ def make_task_from_node(n, prop={}, prev_task=''):
                         __LOG__.critical('FILTER FOUND:{0}'.format(x))
                         break
                 else:
-                    return None
+                    display = False
+
             else:
-                return None
+                display = False
         
     
     fullname = n.headline.strip().replace("'", '_')
@@ -227,7 +230,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         __LOG__.critical('** Task "{0}" : no start, stop, duration or dependencies -> not included in gantt !'.format(fullname))
         return None
     
-    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9})\n".format(name, name, start, duration, ress, None, end, percentdone, fullname, color)
+    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9}, display={10})\n".format(name, name, start, duration, ress, None, end, percentdone, fullname, color, display)
 
     # store dependencies for later
     dependencies = str(depends_of).replace("'", "")
@@ -469,7 +472,7 @@ import gantt
             new_group_this_turn = True
         # Resource
         else:
-            gantt_code += "{0} = gantt.Resource('{1}')\n".format(rid, rname)
+            gantt_code += "{0} = gantt.Resource(name='{0}', fullname='{1}')\n".format(rid, rname)
             
         # Vacations in body of node
         for line in r.body.split('\n'):
@@ -759,7 +762,7 @@ import gantt
         gantt_code += "project.make_svg_for_tasks(filename='{3}.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date, svg)
         # Generate resource graph
         if resource:
-            gantt_code += "project.make_svg_for_resources(filename='{4}_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks, svg)
+            gantt_code += "project.make_svg_for_resources(filename='{4}_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3}, filter='{5}')\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks, svg, filter)
 
     else:
         gantt_code += "\n#### Check resource availibility \n"
