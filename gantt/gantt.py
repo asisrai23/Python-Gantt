@@ -491,7 +491,7 @@ class Task(object):
     """
     Class for manipulating Tasks
     """
-    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, resources=None, percent_done=0, color=None, fullname=None):
+    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, resources=None, percent_done=0, color=None, fullname=None, display=True):
         """
         Initialize task object. Two of start, stop or duration may be given.
         This task can rely on other task and will be completed with resources.
@@ -508,6 +508,7 @@ class Task(object):
         resources -- list of Resources assigned to the task, default None
         percent_done -- int, percent of achievment, default 0
         color -- string, html color, default None
+        display -- boolean, display this task, default True
         """
         __LOG__.debug('** Task::__init__ {0}'.format({'name':name, 'start':start, 'stop':stop, 'duration':duration, 'depends_of':depends_of, 'resources':resources, 'percent_done':percent_done}))
         self.name = name
@@ -520,6 +521,7 @@ class Task(object):
         self.stop = stop
         self.duration = duration
         self.color = color
+        self.display = display
 
         ends = (self.start, self.stop, self.duration)
         nonecount = 0
@@ -790,6 +792,10 @@ class Task(object):
         level -- int, indentation level of the project, not used here
         """
         __LOG__.debug('** Task::svg ({0})'.format({'name':self.name, 'prev_y':prev_y, 'start':start, 'end':end, 'color':color, 'level':level}))
+
+        if not self.display:
+            __LOG__.debug('** Task::svg ({0}) display off'.format({'name':self.name}))
+            return(None, 0)
 
         add_modified_begin_mark = False
         add_modified_end_mark = False
@@ -1202,7 +1208,7 @@ class Project(object):
         dwg.save()
         return
 
-    def make_svg_for_resources(self, filename, today=None, start=None, end=None, resources=None, one_line_for_tasks=False):
+    def make_svg_for_resources(self, filename, today=None, start=None, end=None, resources=None, one_line_for_tasks=False, filter=''):
         """
         Draw resources affectation and output it to filename. If start or end are
         given, use them as reference, otherwise use project first and last day
@@ -1217,6 +1223,7 @@ class Project(object):
         end -- datetime.date of last day to draw
         resources -- list of Resource to check, default all
         one_line_for_tasks -- use only one line to display all tasks ?
+        filter -- display only those tags
         """
 
         if len(self.tasks) == 0:
@@ -1277,6 +1284,9 @@ class Project(object):
         conflict_display_line = 1
         for r in resources:
             # do stuff for each resource
+            if filter != '' and r.name not in filter:
+                continue
+
             ress = svgwrite.container.Group()
             ress.add(svgwrite.text.Text('{0}'.format(r.fullname), insert=(3*mm, (nline*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
             ldwg.add(ress)
