@@ -28,7 +28,7 @@ changelog:
 test:
 	nosetests gantt
 
-	$(PYTHON) org2gantt/org2gantt.py  org2gantt/example.org  -g test.py 
+	$(PYTHON) org2gantt/org2gantt.py  org2gantt/example.org -r -g test.py 
 	$(PYTHON) test.py
 	rm test.py
 

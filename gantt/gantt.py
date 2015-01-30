@@ -1137,7 +1137,7 @@ class Project(object):
             if jour.weekday() == 0:
                 vlines.add(svgwrite.text.Text('{0:02}'.format(jour.isocalendar()[1]), insert=((x*10+1)*mm, 15*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="16", font_weight="bold"))
 
-        vlines.add(svgwrite.shapes.Line(start=(maxx*cm, 1*cm), end=(maxx*cm, (maxy+1)*cm)))
+        vlines.add(svgwrite.shapes.Line(start=(maxx*cm, 2*cm), end=(maxx*cm, (maxy+2)*cm)))
 
 
         hlines = dwg.add(svgwrite.container.Group(id='hlines', stroke='lightgray'))
