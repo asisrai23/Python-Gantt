@@ -54,6 +54,8 @@ web:	test
 	(cd web_upper ; make all)
 	convert project.svg web/project.png 
 	convert project_resources.svg web/project_resources.png 
-	(cd web ; ncftp python-gantt)
+	optipng web/project.png
+	optipng web/project_resources.png
+	echo "put project.png;put project_resources.png;put index.*;put $(ARCHIVE).tar.gz"| (cd web ; ncftp python-gantt)
 
 .PHONY: web
