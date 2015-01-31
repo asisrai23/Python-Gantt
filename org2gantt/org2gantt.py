@@ -213,6 +213,8 @@ def make_task_from_node(n, prop={}, prev_task=''):
             ress = None
         except TypeError:
             ress = None
+        except AttributeError:
+            ress = None
 
 
     # get color from task properties
@@ -274,9 +276,9 @@ def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, r
 
     availibility: check resource availibility between start_date and end_date
 
-    start_date: force start date for output or used for checking resource availibility (format : 'yyyy-mm-dd')
+    start_date: force start date for output or used for checking resource availibility (format : 'yyyy-mm-dd' or '-1w')
 
-    end_date: force end date for output or used for checking resource availibility (format : 'yyyy-mm-dd')
+    end_date: force end date for output or used for checking resource availibility (format : 'yyyy-mm-dd' or '+2m')
 
     today: force today date (format : 'yyyy-mm-dd')
 
@@ -370,8 +372,20 @@ import gantt
                 my_today = datetime.date(int(y), int(m), int(d))
 
         if start_date != '':
-            y, m, d = start_date.split('-')
-            planning_start_date = _iso_date_to_datetime(start_date)
+            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['start_date'])
+            if len(dates) == 1:
+                y, m, d = start_date.split('-')
+                planning_start_date = _iso_date_to_datetime(start_date)
+            elif start_date.startswith('-') or start_date.startswith('+'):
+                sign = start_date[0]
+                qte = int(start_date[1:-1])
+                what = start_date[-1]
+
+                sign = -1*(sign=='-') + 1*(sign=='+')
+                if what == 'd':
+                    planning_start_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(days=qte*sign)))
+                elif what == 'w':
+                    planning_start_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(weeks=qte*sign)))
 
         elif 'start_date' in n_configuration.properties:
             # find date and use it
@@ -392,8 +406,21 @@ import gantt
 
 
         if end_date != '':
-            y, m, d = end_date.split('-')
-            planning_end_date = _iso_date_to_datetime(end_date)
+            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['end_date'])
+            if len(dates) == 1:
+                y, m, d = end_date.split('-')
+                planning_end_date = _iso_date_to_datetime(end_date)
+            # find +1m
+            elif end_date.startswith('-') or end_date.startswith('+'):
+                sign = end_date[0]
+                qte = int(end_date[1:-1])
+                what = end_date[-1]
+
+                sign = -1*(sign=='-') + 1*(sign=='+')
+                if what == 'd':
+                    planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(days=qte*sign)))
+                elif what == 'w':                                 
+                    planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(weeks=qte*sign)))
 
         elif 'end_date' in n_configuration.properties:
             # find date and use it
@@ -411,10 +438,6 @@ import gantt
                     planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(days=qte*sign)))
                 elif what == 'w':                                 
                     planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(weeks=qte*sign)))
-                elif what == 'm':                                 
-                    planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(month=qte*sign)))
-                elif what == 'y':                                 
-                    planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(years=qte*sign)))
 
 
     __LOG__.debug('List of ignored tags : {0}'.format(LISTE_IGNORE_TAGS))
