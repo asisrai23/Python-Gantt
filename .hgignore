@@ -9,12 +9,14 @@ MANIFEST
 build/*
 dist/*
 web
+web_upper
 gantt.html
 CHANGELOG
 python_gantt.egg-info/*
 python-gantt-[0-9].?.?/*
 org2gantt/*.svg
-
+*.svg
+gantt.egg-info/*
 
 syntax: regexp
 (.*/)?\#[^/]*\#$
