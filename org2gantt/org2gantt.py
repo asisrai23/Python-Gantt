@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.9'
-__last_modification__ = '2015.01.30'
+__version__ = '0.3.10'
+__last_modification__ = '2015.02.02'
 
 
 import copy
@@ -50,6 +50,9 @@ try:
 except ImportError:
     print("This program uses Orgnode. See : http://members.optusnet.com.au/~charles57/GTD/orgnode.html")
     sys.exit(1)
+
+
+import gantt
 
 ############################################################################
 
@@ -159,7 +162,17 @@ def make_task_from_node(n, prop={}, prev_task=''):
     if n.deadline != '':
         end = "{0}".format(_iso_date_to_datetime(str(n.deadline)))
     if 'Effort' in n.properties:
-        duration = n.properties['Effort'].replace('d', '')
+        if 'w' in n.properties['Effort']:
+            # convert duration from week to days
+            nbweeks = int(n.properties['Effort'].replace('w', ''))
+            # how much days in one normal week ?
+            len_week = 7 - len(gantt.NOT_WORKED_DAYS)
+            duration = nbweeks * len_week
+        elif 'd' in n.properties['Effort']:
+            duration = n.properties['Effort'].replace('d', '')
+        else:
+            __LOG__.warning('no known unit for duration ({0} / {1})'.format(fullname, n.properties['Effort']))
+            duration = n.properties['Effort']
 
     if 'BLOCKER' in n.properties and n.properties['BLOCKER'].strip() == 'previous-sibling':
         depends_of = ['task_{0}'.format(prev_task)]

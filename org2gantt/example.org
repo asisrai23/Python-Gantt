@@ -197,3 +197,8 @@ SCHEDULED: <2014-12-29 Mon>
 :PROPERTIES:
 :Effort:   3d
 :END:
+** TODO task one week                                                 :ress2:
+SCHEDULED: <2015-01-06 Tue>
+:PROPERTIES:
+:Effort:   1w
+:END:
