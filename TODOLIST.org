@@ -57,6 +57,7 @@ CLOSED: [2015-01-11 Sun 20:08]
 maybe a shell ? or option for the generated script ?
 * TODO let change scale (display of weeks instead of days)
 * SOMEDAY Support repetitive vacations (ie SCHEDULED DATE +1w or ++1w, +1y)
+use yield ?
 * DONE disconnect blocker assignation from task creation
 CLOSED: [2015-01-11 Sun 10:49]
 in order to have a task defined after.
