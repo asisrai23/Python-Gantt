@@ -399,6 +399,9 @@ import gantt
                     planning_start_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(days=qte*sign)))
                 elif what == 'w':
                     planning_start_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(weeks=qte*sign)))
+                else:
+                    __LOG__.critical('Unknown start date format : "{0}". Valid format are yyyy-mm-dd or [-+]x[dw]'.format(start_date))
+                    sys.exit(-1)
 
         elif 'start_date' in n_configuration.properties:
             # find date and use it
@@ -416,6 +419,9 @@ import gantt
                     planning_start_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(days=qte*sign)))
                 elif what == 'w':
                     planning_start_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(weeks=qte*sign)))
+                else:
+                    __LOG__.critical('Unknown start date format : "{0}". Valid format are yyyy-mm-dd or [-+]x[dw]'.format(start_date))
+                    sys.exit(-1)
 
 
         if end_date != '':
@@ -434,6 +440,9 @@ import gantt
                     planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(days=qte*sign)))
                 elif what == 'w':                                 
                     planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(weeks=qte*sign)))
+                else:
+                    __LOG__.critical('Unknown end date format : "{0}". Valid format are yyyy-mm-dd or [-+]x[dw]'.format(end_date))
+                    sys.exit(-1)
 
         elif 'end_date' in n_configuration.properties:
             # find date and use it
@@ -451,6 +460,10 @@ import gantt
                     planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(days=qte*sign)))
                 elif what == 'w':                                 
                     planning_end_date = _iso_date_to_datetime(str(my_today + datetime.timedelta(weeks=qte*sign)))
+                else:
+                    __LOG__.critical('Unknown end date format : "{0}". Valid format are yyyy-mm-dd or [-+]x[dw]'.format(end_date))
+                    sys.exit(-1)
+
 
 
     __LOG__.debug('List of ignored tags : {0}'.format(LISTE_IGNORE_TAGS))
