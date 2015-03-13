@@ -23,9 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.10'
-__last_modification__ = '2015.02.02'
-
+__version__ = '0.3.11'
+__last_modification__ = '2015.03.13'
 
 import copy
 import datetime
@@ -289,9 +288,9 @@ def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, r
 
     availibility: check resource availibility between start_date and end_date
 
-    start_date: force start date for output or used for checking resource availibility (format : 'yyyy-mm-dd' or '-1w')
+    start_date: force start date for output or used for checking resource availibility (format : 'yyyy-mm-dd' or '-1w' (from today))
 
-    end_date: force end date for output or used for checking resource availibility (format : 'yyyy-mm-dd' or '+2m')
+    end_date: force end date for output or used for checking resource availibility (format : 'yyyy-mm-dd' or '+2d' (from today))
 
     today: force today date (format : 'yyyy-mm-dd')
 
@@ -385,7 +384,7 @@ import gantt
                 my_today = datetime.date(int(y), int(m), int(d))
 
         if start_date != '':
-            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['start_date'])
+            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', start_date)
             if len(dates) == 1:
                 y, m, d = start_date.split('-')
                 planning_start_date = _iso_date_to_datetime(start_date)
@@ -425,7 +424,7 @@ import gantt
 
 
         if end_date != '':
-            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', n_configuration.properties['end_date'])
+            dates = re.findall('[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}', end_date)
             if len(dates) == 1:
                 y, m, d = end_date.split('-')
                 planning_end_date = _iso_date_to_datetime(end_date)
@@ -464,6 +463,10 @@ import gantt
                     __LOG__.critical('Unknown end date format : "{0}". Valid format are yyyy-mm-dd or [-+]x[dw]'.format(end_date))
                     sys.exit(-1)
 
+
+    if planning_end_date <= planning_start_date:
+        __LOG__.critical('planning_end_date [{0}] is before planning_start_date [{1}]...'.format(planning_end_date, planning_start_date))
+        sys.exit(-1)
 
 
     __LOG__.debug('List of ignored tags : {0}'.format(LISTE_IGNORE_TAGS))
