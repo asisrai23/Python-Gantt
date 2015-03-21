@@ -26,8 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-
-
 __author__ = 'Alexandre Norman (norman at xael.org)'
 __version__ = '0.3.12'
 __last_modification__ = '2015.03.21'
@@ -42,7 +40,7 @@ import types
 
 try:
     import svgwrite
-    from svgwrite import cm, mm   
+    from svgwrite import cm, mm
 except ImportError:
     print("This program uses svgwrite. See : https://bitbucket.org/mozman/svgwrite/")
     sys.exit(1)
