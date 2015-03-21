@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.12'
+__version__ = '0.3.13'
 __last_modification__ = '2015.03.21'
 
 import datetime
@@ -1574,6 +1574,9 @@ if __name__ == '__main__':
     import doctest
     # non regression test
     doctest.testmod()
+
+else:
+    init_log_to_sysout(level=logging.CRITICAL)
 
 
 #<EOF>######################################################################
