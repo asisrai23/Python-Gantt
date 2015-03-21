@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.11'
-__last_modification__ = '2015.03.13'
+__version__ = '0.3.12'
+__last_modification__ = '2015.03.21'
 
 import copy
 import datetime
@@ -257,6 +257,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
 @clize.clize(
     alias = {
         'debug': ('d',),
+        'warning': ('w',),
         'gantt': ('g',),
         'svg': ('S',),
         'resource': ('r',),
@@ -274,7 +275,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
             ),
         )
     )
-def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, resource=False, svg='project', filter='', availibility=''):
+def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, resource=False, svg='project', filter='', availibility='', warning=False):
     """
     org2gantt.py
     
@@ -298,6 +299,8 @@ def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, r
     
     debug: debug
 
+    warning: set warning level for creating gantt
+
     Example :
     python org2gantt.py TEST.org
 
@@ -314,10 +317,13 @@ import gantt
     global __LOG__
     if debug:
         _init_log_to_sysout(logging.DEBUG)
-        gantt_code += "\nimport logging\ngantt.init_log_to_sysout(logging.DEBUG)\n"
-
+        gantt_code += "\nimport logging\ngantt.init_log_to_sysout(level=logging.DEBUG)\n"
+    elif warning:
+        _init_log_to_sysout(logging.WARNING)
+        gantt_code += "\nimport logging\ngantt.init_log_to_sysout(level=logging.WARNING)"
     else:
         _init_log_to_sysout()
+        gantt_code += "\nimport logging\ngantt.init_log_to_sysout(level=logging.CRITICAL)"
 
     if not os.path.isfile(org):
         __LOG__.error('** File do not exist : {0}'.format(org))

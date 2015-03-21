@@ -29,12 +29,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.9'
-__last_modification__ = '2015.01.30'
+__version__ = '0.3.12'
+__last_modification__ = '2015.03.21'
 
 import datetime
 import logging
 import sys
+import types
 
 # https://bitbucket.org/mozman/svgwrite
 # http://svgwrite.readthedocs.org/en/latest/
@@ -45,6 +46,30 @@ try:
 except ImportError:
     print("This program uses svgwrite. See : https://bitbucket.org/mozman/svgwrite/")
     sys.exit(1)
+
+
+
+
+class _my_svgwrite_drawing_wrapper(svgwrite.Drawing):
+    """
+    Hack for beeing able to use a file descriptor as filename
+    """
+    def save(self):
+        """ Write the XML string to **filename**. """
+        test = False
+        import io
+        if sys.version_info[0] == 2:
+            test = type(self.filename) == types.FileType or type(self.filename) == types.InstanceType
+        elif sys.version_info[0] == 3:
+            test = type(self.filename) == io.TextIOWrapper
+
+        if test:
+            self.write(self.filename)
+        else:
+            fileobj = io.open(str(self.filename), mode='w', encoding='utf-8')
+            self.write(fileobj)
+            fileobj.close()
+
 
 
 ############################################################################
@@ -1157,7 +1182,7 @@ class Project(object):
         given, use them as reference, otherwise use project first and last day
 
         Keyword arguments:
-        filename -- string, filename to save to
+        filename -- string, filename to save to OR file object
         today -- datetime.date of day marked as a reference
         start -- datetime.date of first day to draw
         end -- datetime.date of last day to draw
@@ -1194,7 +1219,7 @@ class Project(object):
         if dep is not None:
             ldwg.add(dep)
 
-        dwg = svgwrite.Drawing(filename, debug=True)
+        dwg = _my_svgwrite_drawing_wrapper(filename, debug=True)
         dwg.add(svgwrite.shapes.Rect(
                     insert=(0*cm, 0*cm),
                     size=((maxx+1)*cm, (pheight+3)*cm),
@@ -1217,7 +1242,7 @@ class Project(object):
         conflicts for resources
 
         Keyword arguments:
-        filename -- string, filename to save to
+        filename -- string, filename to save to OR file object
         today -- datetime.date of day marked as a reference
         start -- datetime.date of first day to draw
         end -- datetime.date of last day to draw
@@ -1351,7 +1376,7 @@ class Project(object):
                 nline += 1
 
 
-        dwg = svgwrite.Drawing(filename, debug=True)
+        dwg = _my_svgwrite_drawing_wrapper(filename, debug=True)
         dwg.add(svgwrite.shapes.Rect(
                     insert=(0*cm, 0*cm),
                     size=((maxx+1)*cm, (nline+1)*cm),
@@ -1551,9 +1576,6 @@ if __name__ == '__main__':
     import doctest
     # non regression test
     doctest.testmod()
-else:
-    #init_log_to_sysout(level=logging.DEBUG)
-    init_log_to_sysout(level=logging.WARNING)
 
 
 #<EOF>######################################################################
