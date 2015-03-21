@@ -46,7 +46,7 @@ register: test
 	python2.7 setup.py sdist upload --identity="Alexandre Norman" --sign --quiet
 
 doc:
-	@pydoc3 -w gantt/gantt.py
+	@pydoc -w gantt/gantt.py
 
 web:	test
 	cp dist/$(ARCHIVE).tar.gz web/
