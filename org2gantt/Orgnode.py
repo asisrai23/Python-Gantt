@@ -85,6 +85,10 @@ def makelist(filename):
           bodytext = ""
           tag1 = ""
           alltags = []       # list of all tags in headline
+
+          # if heading.split()[-1][0] == heading.split()[-1][-1] == ':':
+          #    alltags = heading.split()[-1][1:-1].split(':')
+          #    heading = ' '.join(heading.split()[0:-1])
           tagsrch = re.search('(.*?)\s*:([A-Za-z0-9].*?):(.*?)$',heading)
           if tagsrch:
               heading = tagsrch.group(1)

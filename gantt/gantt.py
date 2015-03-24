@@ -1210,9 +1210,10 @@ class Project(object):
         maxx = (end_date - start_date).days 
 
         ldwg = svgwrite.container.Group()
-    
         psvg, pheight = self.svg(prev_y=2, start=start_date, end=end_date, color = self.color)
-        ldwg.add(psvg)
+        if psvg is not None:
+            ldwg.add(psvg)
+            
         dep = self.svg_dependencies(self)
         if dep is not None:
             ldwg.add(dep)
@@ -1450,8 +1451,8 @@ class Project(object):
                 prj.add(trepr)
                 cy += theight
 
-
         fprj = svgwrite.container.Group()
+        prj_bar = False
         if self.name != "":
             # if ((self.start_date() >= start and self.end_date() <= end) 
             #     or (self.start_date() >= start and (self.end_date() <= end or self.start_date() <= end))) or level == 1: 
@@ -1467,11 +1468,12 @@ class Project(object):
                         stroke_width=0,
                         opacity=0.5
                         ))
+                prj_bar = True
             else:
                 cy -= 1
 
         # Do not display empty tasks
-        if (cy - prev_y) == 0 or (cy - prev_y) == 1:
+        if (cy - prev_y) == 0 or ((cy - prev_y) == 1 and prj_bar):
             return (None, 0)
 
         fprj.add(prj)
