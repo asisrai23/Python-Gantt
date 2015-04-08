@@ -1373,6 +1373,12 @@ class Project(object):
             # nline += 1
             if one_line_for_tasks:
                 nline += 1
+                ldwg.add(
+                    svgwrite.shapes.Line(
+                        start=((0)*cm, (nline)*cm), 
+                        end=((maxx+1)*cm, (nline)*cm), 
+                        stroke='black',
+                        ))
 
 
         dwg = _my_svgwrite_drawing_wrapper(filename, debug=True)
