@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.14'
-__last_modification__ = '2015.03.24'
+__version__ = '0.3.15'
+__last_modification__ = '2015.04.08'
 
 import copy
 import datetime
@@ -262,6 +262,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         'svg': ('S',),
         'resource': ('r',),
         'availibility': ('a',),
+        'one_line_for_tasks': ('o',),
         'start_date': ('s',),
         'end_date': ('e',),
         'today': ('t',),
@@ -275,7 +276,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
             ),
         )
     )
-def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, resource=False, svg='project', filter='', availibility='', warning=False):
+def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, resource=False, svg='project', filter='', availibility='', warning=False, one_line_for_tasks=False):
     """
     org2gantt.py
     
@@ -285,9 +286,11 @@ def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, r
 
     svg: svg base name for files output
 
-    resource: generate resources graphe
+    resource: generate resources graph
 
     availibility: check resource availibility between start_date and end_date
+
+    one_line_for_tasks: generate graph for each resources with all tasks on the same line
 
     start_date: force start date for output or used for checking resource availibility (format : 'yyyy-mm-dd' or '-1w' (from today))
 
@@ -354,7 +357,12 @@ import gantt
     planning_today_date = _iso_date_to_datetime(str(datetime.date.today()))
     my_today = datetime.date.today()
     bar_color = {'TODO':'#FFFF90'}
-    one_line_for_tasks = False
+
+    if one_line_for_tasks and not resource:
+        __LOG__.critical('option one_line_for_tasks must be used in conjonction with resource graph generation')
+        sys.exit(-1)
+        
+
     global LISTE_IGNORE_TAGS
     LISTE_IGNORE_TAGS = []
 
@@ -374,7 +382,7 @@ import gantt
         if 'ignore_tags' in n_configuration.properties:
              LISTE_IGNORE_TAGS = n_configuration.properties['ignore_tags'].split()
 
-        if 'one_line_for_tasks' in n_configuration.properties and n_configuration.properties['one_line_for_tasks'].strip() == 't':
+        if not one_line_for_tasks and ('one_line_for_tasks' in n_configuration.properties and n_configuration.properties['one_line_for_tasks'].strip() == 't'):
              one_line_for_tasks = True
 
         if today != '':
@@ -821,11 +829,14 @@ import gantt
         # Generate resource graph
         if resource:
             gantt_code += "project.make_svg_for_resources(filename='{4}_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3}, filter='{5}')\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks, svg, filter)
-
+            
     else:
         gantt_code += "\n#### Check resource availibility \n"
         gantt_code += "print({0}.is_vacant(from_date={1}, to_date={2}))\n".format(availibility, planning_start_date, planning_end_date)
         
+
+
+
 
 
     # write Gantt code
