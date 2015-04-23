@@ -1313,7 +1313,7 @@ class Project(object):
 
             ress = svgwrite.container.Group()
             ress.add(svgwrite.text.Text('{0}'.format(r.fullname), insert=(3*mm, (nline*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
-            ldwg.add(ress)
+            #ldwg.add(ress)
 
 
             overcharged_days = r.search_for_task_conflicts()
@@ -1350,31 +1350,39 @@ class Project(object):
                 
                 cday += datetime.timedelta(days=1)
 
-            ldwg.add(vac)
-            ldwg.add(conflicts)
 
+            nb_tasks = 0
             for t in self.get_tasks():
                 if t.get_resources() is not None and r in t.get_resources():
                     psvg, void = t.svg(prev_y = nline, start=start_date, end=end_date, color=self.color)
                     if psvg is not None:
                         ldwg.add(psvg)
+                        nb_tasks +=1
                         if not one_line_for_tasks:
                             nline += 1
 
+            if nb_tasks == 0:
+                nline -= 1
+            elif nb_tasks > 0:
+                print(r.fullname, nb_tasks)
+                ldwg.add(ress)
+                ldwg.add(vac)
+                ldwg.add(conflicts)
 
-            if not one_line_for_tasks:
-                ldwg.add(
-                    svgwrite.shapes.Line(
-                        start=((0)*cm, (nline)*cm), 
-                        end=((maxx+1)*cm, (nline)*cm), 
-                        stroke='black',
-                        ))
+
+                if not one_line_for_tasks:
+                    ldwg.add(
+                        svgwrite.shapes.Line(
+                            start=((0)*cm, (nline)*cm), 
+                            end=((maxx+1)*cm, (nline)*cm), 
+                            stroke='black',
+                            ))
                 
-            # nline += 1
-            if one_line_for_tasks:
-                nline += 1
-                ldwg.add(
-                    svgwrite.shapes.Line(
+                # nline += 1
+                if one_line_for_tasks:
+                    nline += 1
+                    ldwg.add(
+                        svgwrite.shapes.Line(
                         start=((0)*cm, (nline)*cm), 
                         end=((maxx+1)*cm, (nline)*cm), 
                         stroke='black',
