@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.15'
-__last_modification__ = '2015.04.08'
+__version__ = '0.3.16'
+__last_modification__ = '2015.05.20'
 
 import copy
 import datetime
@@ -220,7 +220,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         ress = "{0}".format(["{0}".format(x) for x in n.properties['allocate'].replace(",", " ").split()]).replace("'", "")
     else:
         try:
-            ress = "{0}".format(["{0}".format(x.strip()) for x in prop['resources'].replace('[','').replace(']','').split(',') if x not in LISTE_IGNORE_TAGS]).replace("'", "")
+            ress = "{0}".format(["{0}".format(x.strip()) for x in prop['resources'].replace('[','').replace(']','').split(',') if x.strip() not in LISTE_IGNORE_TAGS]).replace("'", "")
         except KeyError:
             ress = None
         except TypeError:
