@@ -27,9 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.17'
-__last_modification__ = '2015.05.20'
+__version__ = '0.3.18'
+__last_modification__ = '2015.05.21'
 
+import codecs
 import datetime
 import logging
 import sys
@@ -514,7 +515,7 @@ class Task(object):
     """
     Class for manipulating Tasks
     """
-    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, resources=None, percent_done=0, color=None, fullname=None, display=True):
+    def __init__(self, name, start=None, stop=None, duration=None, depends_of=None, resources=None, percent_done=0, color=None, fullname=None, display=True, state=''):
         """
         Initialize task object. Two of start, stop or duration may be given.
         This task can rely on other task and will be completed with resources.
@@ -532,6 +533,7 @@ class Task(object):
         percent_done -- int, percent of achievment, default 0
         color -- string, html color, default None
         display -- boolean, display this task, default True
+        state -- string, state of the task
         """
         __LOG__.debug('** Task::__init__ {0}'.format({'name':name, 'start':start, 'stop':stop, 'duration':duration, 'depends_of':depends_of, 'resources':resources, 'percent_done':percent_done}))
         self.name = name
@@ -545,6 +547,7 @@ class Task(object):
         self.duration = duration
         self.color = color
         self.display = display
+        self.state = state
 
         ends = (self.start, self.stop, self.duration)
         nonecount = 0
@@ -1062,6 +1065,29 @@ class Task(object):
                     __LOG__.warning('** Caution resource "{0}" is affected on task "{2}" during vacations on day {1}'.format(r.name, cday, self.fullname))
                 cday += datetime.timedelta(days=1)
         return conflicts
+
+
+    def csv(self, csv=None):
+        """
+        Create CSV output from tasks
+
+        Keyword arguments:
+        csv -- None, dymmy object
+        """
+        if self.resources is not None:
+            resources = ', '.join([x.fullname for x in self.resources])
+        else:
+            resources = ''
+            
+        csv_text = '"{0}";"{1}";{2};{3};{4};"{5}";\r\n'.format(
+            self.state.replace('"', '\\"'),
+            self.fullname.replace('"', '\\"'),
+            self.start_date(),
+            self.end_date(),
+            self.duration,
+            resources.replace('"', '\\"')
+            )
+        return csv_text
 
 
 ############################################################################
@@ -1584,6 +1610,56 @@ class Project(object):
                 flist.append(r)
         return flist
 
+
+    def csv(self, csv=None):
+        """
+        Create CSV output from projects
+
+        Keyword arguments:
+        csv -- string, filename to save to OR file object OR None
+        """
+        if len(self.tasks) == 0:
+            __LOG__.warning('** Empty project : {0}'.format(self.name))
+            return
+
+        if csv is not None:
+            csv_text = bytes.decode(codecs.BOM_UTF8, 'utf-8')
+            csv_text += '"State";"Task Name";"Start date";"End date";"Duration";"Resources";\r\n'
+        else:
+            csv_text = ''
+
+        for t in self.tasks:
+            c = t.csv()
+            if c is not None:
+                if sys.version_info[0] == 2:
+                    try:
+                        c = unicode(c, "utf-8")
+                    except TypeError:
+                        pass
+                    csv_text += c
+                elif sys.version_info[0] == 3:
+                    csv_text += c
+                else:
+                    csv_text += c
+
+
+        if csv is not None:
+            test = False
+            import io
+            if sys.version_info[0] == 2:
+                test = type(csv) == types.FileType or type(csv) == types.InstanceType
+            elif sys.version_info[0] == 3:
+                test = type(csv) == io.TextIOWrapper
+
+            if test:
+                csv.write(csv_text)
+            else:
+                fileobj = io.open(csv, mode='w', encoding='utf-8')
+                fileobj.write(csv_text)
+                fileobj.close()
+
+
+        return csv_text
 
 # MAIN -------------------
 if __name__ == '__main__':
