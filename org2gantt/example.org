@@ -202,3 +202,19 @@ SCHEDULED: <2015-01-06 Tue>
 :PROPERTIES:
 :Effort:   1w
 :END:
+* Test Group
+** TODO task g1                                                        :grp1:
+SCHEDULED: <2014-12-15 Mon>
+:PROPERTIES:
+:Effort:   1d
+:END:
+** TODO task g2                                                        :grp1:
+SCHEDULED: <2014-12-16 Tue>
+:PROPERTIES:
+:Effort:   1d
+:END:
+** TODO task g2r2                                                     :ress2:
+SCHEDULED: <2014-12-16 Tue>
+:PROPERTIES:
+:Effort:   1d
+:END:
