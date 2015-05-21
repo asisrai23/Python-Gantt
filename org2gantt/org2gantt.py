@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.17'
-__last_modification__ = '2015.05.20'
+__version__ = '0.3.18'
+__last_modification__ = '2015.05.21'
 
 import copy
 import datetime
@@ -244,7 +244,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         __LOG__.critical('** Task "{0}" : no start, stop, duration or dependencies -> not included in gantt !'.format(fullname))
         return None
     
-    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9}, display={10})\n".format(name, name, start, duration, ress, None, end, percentdone, fullname, color, display)
+    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9}, display={10}, state='{11}')\n".format(name, name, start, duration, ress, None, end, percentdone, fullname, color, display, n.todo)
 
     # store dependencies for later
     dependencies = str(depends_of).replace("'", "")
@@ -257,6 +257,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
 @clize.clize(
     alias = {
         'debug': ('d',),
+        'csv': ('c',),
         'warning': ('w',),
         'gantt': ('g',),
         'svg': ('S',),
@@ -276,7 +277,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
             ),
         )
     )
-def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, resource=False, svg='project', filter='', availibility='', warning=False, one_line_for_tasks=False):
+def __main__(org, csv='', gantt='', start_date='', end_date='', today='', debug=False, resource=False, svg='project', filter='', availibility='', warning=False, one_line_for_tasks=False):
     """
     org2gantt.py
     
@@ -299,6 +300,8 @@ def __main__(org, gantt='', start_date='', end_date='', today='', debug=False, r
     today: force today date (format : 'yyyy-mm-dd')
 
     filter: tag or list of tags separated by comas to filter
+
+    csv: filename for csv output
     
     debug: debug
 
@@ -836,7 +839,9 @@ import gantt
         
 
 
-
+    if csv != '':
+        gantt_code += "\n#### CSV Outputs \n"
+        gantt_code += "project.csv('{0}')\n".format(csv)
 
 
     # write Gantt code
