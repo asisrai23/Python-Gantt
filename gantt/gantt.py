@@ -80,8 +80,33 @@ __LOG__ = None
 # Unworked days (0: Monday ... 6: Sunday)
 NOT_WORKED_DAYS = [5, 6]
 
+
+def define_not_worked_days(list_of_days):
+    """
+    Define specific days off
+
+    Keyword arguments:
+    list_of_days -- list of integer (0: Monday ... 6: Sunday) - default [5, 6]
+    """
+    global NOT_WORKED_DAYS
+    NOT_WORKED_DAYS = list_of_days
+    return
+
+
+def _not_worked_days():
+    """
+    Returns list of days off (0: Monday ... 6: Sunday)
+    """
+    global NOT_WORKED_DAYS
+    return NOT_WORKED_DAYS
+
+
+############################################################################
+
+
 # list of vacations as datetime (non worked days)
 VACATIONS = []
+
 
 ############################################################################
 
@@ -297,7 +322,7 @@ class GroupOfResources(object):
         for t in self.tasks:
             cday = t.start_date()
             while cday <= t.end_date():
-                if cday.weekday() not in NOT_WORKED_DAYS:
+                if cday.weekday() not in _not_worked_days():
                     try:
                         affected_days[cday].append(t.fullname)
                     except KeyError:
@@ -460,7 +485,7 @@ class Resource(object):
         for t in self.tasks:
             cday = t.start_date()
             while cday <= t.end_date():
-                if cday.weekday() not in NOT_WORKED_DAYS:
+                if cday.weekday() not in _not_worked_days():
                     try:
                         affected_days[cday].append(t.fullname)
                     except KeyError:
@@ -497,7 +522,7 @@ class Resource(object):
         non_vacant_days = self.search_for_task_conflicts(all_tasks=True)
         cday = from_date
         while cday <= to_date:
-            if cday.weekday() not in NOT_WORKED_DAYS:
+            if cday.weekday() not in _not_worked_days():
                 if not self.is_available(cday):
                     __LOG__.debug('** Ressource "{0}" is not available on day {1} (vacation)'.format(self.name, cday))
                     return []
@@ -622,7 +647,7 @@ class Task(object):
                 # depends of nothing... start date is start
                 #__LOG__.debug('*** Do not depend of other task')
                 start = self.start
-                while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
+                while start.weekday() in _not_worked_days() or start in VACATIONS:
                     start = start + datetime.timedelta(days=1)
 
                 if start > self.start:
@@ -634,7 +659,7 @@ class Task(object):
                 # depends of other task, start date could vary
                 #__LOG__.debug('*** Do depend of other tasks')
                 start = self.start
-                while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
+                while start.weekday() in _not_worked_days() or start in VACATIONS:
                     start = start + datetime.timedelta(days=1)
 
                 prev_task_end = start
@@ -643,7 +668,7 @@ class Task(object):
                         #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
                         prev_task_end = t.end_date() + datetime.timedelta(days=1)
 
-                while prev_task_end.weekday() in NOT_WORKED_DAYS or prev_task_end in VACATIONS:
+                while prev_task_end.weekday() in _not_worked_days() or prev_task_end in VACATIONS:
                     prev_task_end = prev_task_end + datetime.timedelta(days=1)
 
                 if prev_task_end > self.start:
@@ -665,7 +690,7 @@ class Task(object):
                     depend_start_date = prev_task_end
                 else:
                     start = self.start
-                    while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
+                    while start.weekday() in _not_worked_days() or start in VACATIONS:
                         start = start + datetime.timedelta(days=1)
                     depend_start_date = start
 
@@ -687,7 +712,7 @@ class Task(object):
 
             start = prev_task_end + datetime.timedelta(days=1)
             
-            while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
+            while start.weekday() in _not_worked_days() or start in VACATIONS:
                 start = start + datetime.timedelta(days=1)
 
             # should be first day of start...
@@ -699,7 +724,7 @@ class Task(object):
             real_duration = 0
             duration = self.duration 
             while duration > 0:
-                if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
+                if not (current_day.weekday() in _not_worked_days() or current_day in VACATIONS):
                     real_duration = real_duration + 1
                     duration -= 1
                 else:
@@ -723,7 +748,7 @@ class Task(object):
                     start = current_day
 
                 
-                while start.weekday() in NOT_WORKED_DAYS or start in VACATIONS:
+                while start.weekday() in _not_worked_days() or start in VACATIONS:
                     start = start + datetime.timedelta(days=1)
 
                 depend_start_date = start
@@ -758,15 +783,15 @@ class Task(object):
         if self.duration is None or self.start is None and self.stop is not None:
             real_end = self.stop
             # Take care of vacations
-            while real_end.weekday() in NOT_WORKED_DAYS or real_end in VACATIONS:
+            while real_end.weekday() in _not_worked_days() or real_end in VACATIONS:
                 real_end -= datetime.timedelta(days=1)
 
             if real_end <= self.start_date():
                 current_day = self.start_date()
                 real_duration = 0
                 duration = self.duration   
-                while duration > 1 or (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
-                    if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
+                while duration > 1 or (current_day.weekday() in _not_worked_days() or current_day in VACATIONS):
+                    if not (current_day.weekday() in _not_worked_days() or current_day in VACATIONS):
                         real_duration = real_duration + 1
                         duration -= 1
                     else:
@@ -791,8 +816,8 @@ class Task(object):
             current_day = self.start_date()
             real_duration = 0
             duration = self.duration   
-            while duration > 1 or (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
-                if not (current_day.weekday() in NOT_WORKED_DAYS or current_day in VACATIONS):
+            while duration > 1 or (current_day.weekday() in _not_worked_days() or current_day in VACATIONS):
+                if not (current_day.weekday() in _not_worked_days() or current_day in VACATIONS):
                     real_duration = real_duration + 1
                     duration -= 1
                 else:
@@ -1060,7 +1085,7 @@ class Task(object):
         for r in self.get_resources():
             cday = self.start_date()
             while cday <= self.end_date():
-                if cday.weekday() not in NOT_WORKED_DAYS and not r.is_available(cday):
+                if cday.weekday() not in _not_worked_days() and not r.is_available(cday):
                     conflicts.append({'resource':r.name,'date':cday, 'task':self.name})
                     __LOG__.warning('** Caution resource "{0}" is affected on task "{2}" during vacations on day {1}'.format(r.name, cday, self.fullname))
                 cday += datetime.timedelta(days=1)
@@ -1146,7 +1171,7 @@ class Project(object):
         vlines = dwg.add(svgwrite.container.Group(id='vlines', stroke='lightgray'))
         for x in range(maxx):
             vlines.add(svgwrite.shapes.Line(start=(x*cm, 2*cm), end=(x*cm, (maxy+2)*cm)))
-            if (start_date + datetime.timedelta(days=x)).weekday() in NOT_WORKED_DAYS or (start_date + datetime.timedelta(days=x)) in VACATIONS:
+            if (start_date + datetime.timedelta(days=x)).weekday() in _not_worked_days() or (start_date + datetime.timedelta(days=x)) in VACATIONS:
                 vlines.add(svgwrite.shapes.Rect(
                     insert=(x*cm, 2*cm),
                     size=(1*cm, maxy*cm),
@@ -1353,7 +1378,7 @@ class Project(object):
             cday = start_date
             while cday <= end_date:
                 # Vacations
-                if cday.weekday() not in NOT_WORKED_DAYS and cday not in VACATIONS and not r.is_available(cday):
+                if cday.weekday() not in _not_worked_days() and cday not in VACATIONS and not r.is_available(cday):
                      vac.add(svgwrite.shapes.Rect(
                             insert=(((cday - start_date).days * 10 + 1)*mm, ((conflict_display_line)*10+1)*mm),
                             size=(4*mm, 8*mm),
@@ -1364,7 +1389,7 @@ class Project(object):
                             ))
 
                 # Overcharge
-                if cday.weekday() not in NOT_WORKED_DAYS and cday not in VACATIONS and cday in overcharged_days:
+                if cday.weekday() not in _not_worked_days() and cday not in VACATIONS and cday in overcharged_days:
                     conflicts.add(svgwrite.shapes.Rect(
                         insert=(((cday - start_date).days * 10 + 1 + 4)*mm, ((conflict_display_line)*10+1)*mm),
                         size=(4*mm, 8*mm),
