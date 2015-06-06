@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.3.19'
-__last_modification__ = '2015.06.05'
+__version__ = '0.4.0'
+__last_modification__ = '2015.06.06'
 
 import copy
 import datetime
@@ -268,6 +268,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
         'end_date': ('e',),
         'today': ('t',),
         'filter': ('f',),
+        'scale': ('k',),
         },
     extra = (
         clize.make_flag(
@@ -277,7 +278,7 @@ def make_task_from_node(n, prop={}, prev_task=''):
             ),
         )
     )
-def __main__(org, csv='', gantt='', start_date='', end_date='', today='', debug=False, resource=False, svg='project', filter='', availibility='', warning=False, one_line_for_tasks=False):
+def __main__(org, csv='', gantt='', start_date='', end_date='', today='', debug=False, resource=False, svg='project', filter='', availibility='', warning=False, one_line_for_tasks=False, scale='d'):
     """
     org2gantt.py
     
@@ -300,6 +301,8 @@ def __main__(org, csv='', gantt='', start_date='', end_date='', today='', debug=
     today: force today date (format : 'yyyy-mm-dd')
 
     filter: tag or list of tags separated by comas to filter
+
+    scale: scale for the graph (d: days, w: weeks, m: months, q: quaterly)
 
     csv: filename for csv output
     
@@ -481,9 +484,29 @@ import gantt
                     sys.exit(-1)
 
 
+
     if planning_end_date <= planning_start_date:
         __LOG__.critical('planning_end_date [{0}] is before planning_start_date [{1}]...'.format(planning_end_date, planning_start_date))
         sys.exit(-1)
+
+
+    if scale != '':
+        scale_ref = {
+            'd': 'DRAW_WITH_DAILY_SCALE',
+            'w': 'DRAW_WITH_WEEKLY_SCALE',
+            'm': 'DRAW_WITH_MONTHLY_SCALE',
+            'q': 'DRAW_WITH_QUATERLY_SCALE',
+            }
+        try:
+            scale_name = scale_ref[scale]
+        except KeyError:
+            __LOG__.critical('unknown scale {0}'.format(scale))
+            sys.exit(-1)
+        else:
+            __LOG__.info('drawing with scale : {0}'.format(scale_name))
+    else:
+        scale_name = 'DRAW_WITH_DAILY_SCALE'
+            
 
 
     __LOG__.debug('List of ignored tags : {0}'.format(LISTE_IGNORE_TAGS))
@@ -828,10 +851,10 @@ import gantt
         gantt_code += "\n#### Outputs \n"
 
 
-        gantt_code += "project.make_svg_for_tasks(filename='{3}.svg', today={0}, start={1}, end={2})\n".format(planning_today_date, planning_start_date, planning_end_date, svg)
+        gantt_code += "project.make_svg_for_tasks(filename='{3}.svg', today={0}, start={1}, end={2}, scale=gantt.{4})\n".format(planning_today_date, planning_start_date, planning_end_date, svg, scale_name)
         # Generate resource graph
         if resource:
-            gantt_code += "project.make_svg_for_resources(filename='{4}_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3}, filter='{5}')\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks, svg, filter)
+            gantt_code += "project.make_svg_for_resources(filename='{4}_resources.svg', today={0}, start={1}, end={2}, one_line_for_tasks={3}, filter='{5}', scale=gantt.{6})\n".format(planning_today_date, planning_start_date, planning_end_date, one_line_for_tasks, svg, filter, scale_name)
             
     else:
         gantt_code += "\n#### Check resource availibility \n"
