@@ -872,13 +872,13 @@ class Task(object):
         if start is None:
             start = self.start_date()
 
-        if self.start_date() != self.start and self.start is not None:
+        if self.start is not None and self.start_date() != self.start:
             add_modified_begin_mark = True
 
         if end is None:
             end = self.end_date()
 
-        if self.end_date() != self.stop and self.stop is not None:
+        if self.stop is not None and self.end_date() != self.stop:
             add_modified_end_mark = True
 
         # override project color if defined
@@ -1175,6 +1175,428 @@ class Task(object):
             )
         return csv_text
 
+
+############################################################################
+
+
+class Milestone(Task):
+    """
+    Class for manipulating Milestones
+    """
+    def __init__(self, name, start=None, depends_of=None, color=None, fullname=None, display=True):
+        """
+        Initialize milestone object. Two of start, stop or duration may be given.
+        This milestone can rely on other milestone and will be completed with resources.
+        If percent done is given, a progress bar will be included on the milestone.
+        If color is specified, it will be used for the milestone.
+
+        Keyword arguments:
+        name -- name of the milestone (id)
+        fullname -- long name given to the resource
+        start -- datetime.date, first day of the milestone, default None
+        depends_of -- list of Milestone which are parents of this one, default None
+        color -- string, html color, default None
+        display -- boolean, display this milestone, default True
+        """
+        __LOG__.debug('** Milestone::__init__ {0}'.format({'name':name, 'start':start, 'depends_of':depends_of}))
+        self.name = name
+        if fullname is not None:
+            self.fullname = fullname
+        else:
+            self.fullname = name
+
+        self.start = start
+        self.stop = start
+        self.duration = 0
+        if color is not None:
+            self.color = color
+        else:
+            self.color = '#FF3030'
+            
+        self.display = display
+        self.state = 'Milestone'
+
+        if type(depends_of) is type([]):
+            self.depends_of = depends_of
+        elif depends_of is not None:
+            self.depends_of = [depends_of]
+        else:
+            self.depends_of = None
+
+        self.drawn_x_begin_coord = None
+        self.drawn_x_end_coord = None
+        self.drawn_y_coord = None
+        self.cache_start_date = None
+        self.cache_end_date = None
+
+        return
+
+
+    def add_depends(self, depends_of):
+        """
+        Adds dependency to a milestone
+
+        Keyword arguments:
+        depends_of -- list of Milestone which are parents of this one
+        """
+        if type(depends_of) is type([]):
+            if self.depends_of is None:
+                self.depends_of = depends_of
+            else:
+                for d in depends_of:
+                    self.depends_of.append(d)
+        else:
+            if self.depends_of is None:
+                self.depends_of = depends_of
+            else:
+                self.depends_of.append(depends_of)
+
+        return
+
+
+    def start_date(self):
+        """
+        Returns the first day of the milestone, either the one which was given at
+        milestone creation or the one calculated after checking dependencies
+        """
+        if self.cache_start_date is not None:
+            return self.cache_start_date
+
+        __LOG__.debug('** Milestone::start_date ({0})'.format(self.name))
+        if self.start is not None:
+            # start date setted, calculate begining
+            if self.depends_of is None:
+                # depends of nothing... start date is start
+                #__LOG__.debug('*** Do not depend of other milestone')
+                start = self.start
+                while start.weekday() in _not_worked_days() or start in VACATIONS:
+                    start = start + datetime.timedelta(days=1)
+
+                if start > self.start:
+                    __LOG__.warning('** Due to vacations, Milestone "{0}", will not start on date {1} but {2}'.format(self.fullname, self.start, start))
+
+                self.cache_start_date = start
+                return self.cache_start_date
+            else:
+                # depends of other milestone, start date could vary
+                #__LOG__.debug('*** Do depend of other milestones')
+                start = self.start
+                while start.weekday() in _not_worked_days() or start in VACATIONS:
+                    start = start + datetime.timedelta(days=1)
+
+                prev_task_end = start
+                for t in self.depends_of:
+                    if t.end_date() >= prev_milestone_end:
+                        #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
+                        prev_milestone_end = t.end_date() + datetime.timedelta(days=1)
+
+                while prev_task_end.weekday() in _not_worked_days() or prev_task_end in VACATIONS:
+                    prev_task_end = prev_task_end + datetime.timedelta(days=1)
+
+                if prev_task_end > self.start:
+                    __LOG__.warning('** Due to dependencies, Milestone "{0}", will not start on date {1} but {2}'.format(self.fullname, self.start, prev_task_end))
+
+                self.cache_start_date = prev_task_end
+                return self.cache_start_date
+        elif self.duration is not None and self.depends_of is not None and self.stop is None :  # duration and dependencies fixed
+            prev_task_end = self.depends_of[0].end_date()
+            for t in self.depends_of:
+                if t.end_date() > prev_task_end:
+                    __LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
+                    prev_task_end = t.end_date()
+
+            start = prev_task_end + datetime.timedelta(days=1)
+            
+            while start.weekday() in _not_worked_days() or start in VACATIONS:
+                start = start + datetime.timedelta(days=1)
+
+            # should be first day of start...
+            self.cache_start_date = start
+
+
+        if self.cache_start_date != self.start:
+            __LOG__.warning('** starting date for milestone "{0}" is changed from {1} to {2}'.format(self.fullname, self.start, self.cache_start_date))
+        return self.cache_start_date
+
+
+    def end_date(self):
+        """
+        Returns the last day of the milestone, either the one which was given at milestone
+        creation or the one calculated after checking dependencies
+        """
+        __LOG__.debug('** Milestone::end_date ({0})'.format(self.name))
+        return self.start_date() - datetime.timedelta(days=1)
+
+
+    def svg(self, prev_y=0, start=None, end=None, color=None, level=None, scale=DRAW_WITH_DAILY_SCALE, title_align_on_left=False):
+        """
+        Return SVG for drawing this milestone.
+
+        Keyword arguments:
+        prev_y -- int, line to start to draw
+        start -- datetime.date of first day to draw
+        end -- datetime.date of last day to draw
+        color -- string of color for drawing the project
+        level -- int, indentation level of the project, not used here
+        scale -- drawing scale (d: days, w: weeks, m: months, q: quaterly)
+        title_align_on_left -- boolean, align milestone title on left
+        """
+        __LOG__.debug('** Milestone::svg ({0})'.format({'name':self.name, 'prev_y':prev_y, 'start':start, 'end':end, 'color':color, 'level':level}))
+
+        if not self.display:
+            __LOG__.debug('** Milestone::svg ({0}) display off'.format({'name':self.name}))
+            return(None, 0)
+
+        add_modified_begin_mark = False
+        add_modified_end_mark = False
+
+        if start is None:
+            start = self.start_date()
+
+        if self.start_date() != self.start and self.start is not None:
+            add_modified_begin_mark = True
+
+        if end is None:
+            end = self.end_date()
+
+        if self.end_date() != self.stop and self.stop is not None:
+            add_modified_end_mark = True
+
+        # override project color if defined
+        if self.color is not None:
+            color = self.color
+
+        add_begin_mark = False
+        add_end_mark = False
+
+        y = prev_y * 10 + 10
+
+
+        if scale == DRAW_WITH_DAILY_SCALE:
+            def _time_diff(e, s):
+                return (e - s).days
+            def _time_diff_d(e, s):
+                return _time_diff(e, s) + 1
+
+        elif scale == DRAW_WITH_WEEKLY_SCALE:
+            def _time_diff(end_date, start_date):
+                td = 0
+                guess = start_date
+                while guess.weekday() != 0:
+                    guess = guess + dateutil.relativedelta.relativedelta(days=-1)
+
+                while end_date.weekday() != 6:
+                    end_date = end_date + dateutil.relativedelta.relativedelta(days=+1)
+                    
+                while guess <= end_date:
+                    td += 1
+                    guess = guess + dateutil.relativedelta.relativedelta(weeks=+1)
+
+                return td 
+            def _time_diff_d(e, s):
+                return _time_diff(e, s)
+
+        elif scale == DRAW_WITH_MONTHLY_SCALE:
+            def _time_diff(end_date, start_date):
+                return dateutil.relativedelta.relativedelta(end_date, start_date).months + dateutil.relativedelta.relativedelta(end_date, start_date).years*12
+            def _time_diff_d(e, s):
+                return _time_diff(e, s) + 1
+
+
+        elif scale == DRAW_WITH_QUATERLY_SCALE:
+            __LOG__.critical('DRAW_WITH_QUATERLY_SCALE not implemented yet')
+            sys.exit(1)
+
+
+
+        # cas 1 -s--S==E--e-
+        if self.start_date() >= start and self.end_date() <= end:
+            x = _time_diff(self.start_date(), start) * 10
+            d = _time_diff_d(self.end_date(), self.start_date()) * 10
+            self.drawn_x_begin_coord = x
+            self.drawn_x_end_coord = x+d
+        # cas 5 -s--e--S==E-
+        elif self.start_date() > end:
+            return (None, 0)
+        # cas 6 -S==E-s--e-
+        elif self.end_date() < start:
+            return (None, 0)
+        # cas 2 -S==s==E--e-
+        elif self.start_date() < start and self.end_date() <= end:
+            x = 0
+            d = _time_diff_d(self.end_date(), start) * 10
+            self.drawn_x_begin_coord = x
+            self.drawn_x_end_coord = x+d
+            add_begin_mark = True
+        # cas 3 -s--S==e==E-
+        elif self.start_date() >= start and  self.end_date() > end:
+            x = _time_diff(self.start_date(), start) * 10 
+            d = _time_diff_d(end - self.start_date()) * 10
+            self.drawn_x_begin_coord = x
+            self.drawn_x_end_coord = x+d
+            add_end_mark = True
+        # cas 4 -S==s==e==E-
+        elif self.start_date() < start and self.end_date() > end:
+            x = 0
+            d = _time_diff_d(end - start) * 10 
+            self.drawn_x_begin_coord = x
+            self.drawn_x_end_coord = x+d
+            add_end_mark = True
+            add_begin_mark = True
+        else:
+            return (None, 0)    
+
+
+        self.drawn_y_coord = y
+        
+
+        #insert=((x+1)*mm, (y+1)*mm),
+        #size=((d-2)*mm, 8*mm),
+
+        svg = svgwrite.container.Group(id=self.name.replace(' ', '_'))
+        # 3.543307 is for conversion from mm to pt units !
+        svg.add(svgwrite.shapes.Polygon(
+                points=[
+                ((x+5)*3.543307, (y+2)*3.543307),
+                ((x+8)*3.543307, (y+5)*3.543307),
+                ((x+5)*3.543307, (y+8)*3.543307),
+                ((x+2)*3.543307, (y+5)*3.543307)
+                ],
+                fill=color,
+                stroke=color,
+                stroke_width=2,
+                opacity=0.85,
+                ))
+
+
+
+        if not title_align_on_left:
+            tx = x+2
+        else:
+            tx = 5
+            
+        svg.add(svgwrite.text.Text(self.fullname, insert=((tx)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
+
+
+        return (svg, 3)
+
+
+    def svg_dependencies(self, prj):
+        """
+        Draws svg dependencies between milestone and project according to coordinates
+        cached when drawing milestones
+
+        Keyword arguments:
+        prj -- Project object to check against
+        """
+        __LOG__.debug('** Milestone::svg_dependencies ({0})'.format({'name':self.name, 'prj':prj}))
+        if self.depends_of is None:
+            return None
+        else:
+            svg = svgwrite.container.Group()
+            for t in self.depends_of:
+                if not (t.drawn_x_end_coord is None or t.drawn_y_coord is None or self.drawn_x_begin_coord is None) and prj.is_in_project(t):
+                    svg.add(svgwrite.shapes.Line(
+                            start=((t.drawn_x_end_coord-2)*mm, (t.drawn_y_coord+5)*mm), 
+                            end=((self.drawn_x_begin_coord+5)*mm, (t.drawn_y_coord+5)*mm), 
+                            stroke='black',
+                            stroke_dasharray='5,3',
+                            ))
+
+                    marker = svgwrite.container.Marker(insert=(5,5), size=(10,10))
+                    marker.add(svgwrite.shapes.Circle((5, 5), r=5, fill='#000000', opacity=0.5, stroke_width=0))
+                    svg.add(marker)
+                    eline = svgwrite.shapes.Line(
+                        start=((self.drawn_x_begin_coord+5)*mm, (t.drawn_y_coord+5)*mm), 
+                        end=((self.drawn_x_begin_coord+5)*mm, (self.drawn_y_coord + 0)*mm), 
+                        stroke='black',
+                        stroke_dasharray='5,3',
+                        )
+                    eline['marker-end'] = marker.get_funciri()
+                    svg.add(eline)
+
+        return svg
+
+
+    def nb_elements(self):
+        """
+        Returns the number of milestone, 1 here
+        """
+        __LOG__.debug('** Milestone::nb_elements ({0})'.format({'name':self.name}))
+        return 1
+
+
+    def _reset_coord(self):
+        """
+        Reset cached elements of milestone
+        """
+        __LOG__.debug('** Milestone::reset_coord ({0})'.format({'name':self.name}))
+        self.drawn_x_begin_coord = None
+        self.drawn_x_end_coord = None
+        self.drawn_y_coord = None
+        self.cache_start_date = None
+        self.cache_end_date = None
+        return
+
+
+    def is_in_project(self, task):
+        """
+        Return True if the given Milestone is itself... (lazy coding ;)
+        
+        Keyword arguments:
+        task -- Task object 
+        """
+        __LOG__.debug('** Milestone::is_in_project ({0})'.format({'name':self.name, 'task':task}))
+        if task is self:
+            return True
+
+        return False
+
+
+    def get_resources(self):
+        """
+        Returns Resources used in the milestone
+        """
+        return self.resources
+
+
+
+    def check_conflicts_between_task_and_resources_vacations(self):
+        """
+        Displays a warning for each conflict between milestones and vacation of
+        resources affected to the milestone
+
+        And returns a dictionnary for resource vacation conflicts
+        """
+        return []
+
+
+    def csv(self, csv=None):
+        """
+        Create CSV output from milestones
+
+        Keyword arguments:
+        csv -- None, dymmy object
+        """
+        if self.resources is not None:
+            resources = ', '.join([x.fullname for x in self.resources])
+        else:
+            resources = ''
+            
+        csv_text = '"{0}";"{1}";{2};{3};{4};"{5}";\r\n'.format(
+            self.state.replace('"', '\\"'),
+            self.fullname.replace('"', '\\"'),
+            self.start_date(),
+            self.end_date(),
+            self.duration,
+            resources.replace('"', '\\"')
+            )
+        return csv_text
+    
+
+
+
+##</Milestone>##############################################################
 
 ############################################################################
 

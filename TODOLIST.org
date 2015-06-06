@@ -64,12 +64,19 @@ use yield ?
 * DONE disconnect blocker assignation from task creation
 CLOSED: [2015-01-11 Sun 10:49]
 in order to have a task defined after.
-* TODO is there a way to adapt the font properties of the Task descriptions?
-* TODO Milestones
-is there a way to specify a special class of Tasks, namely a milestone?
-Typically these are shown as diamonds.
-* TODO option to align task titles on the left
+* DONE option to align task titles on the left
+CLOSED: [2015-06-06 Sat 23:54]
 > just an additional recommendation: For longer Task titles, they don't fit well into the barchart itself.
 > This is in particular the case when times are short (few months in my case). It would be therefore best,
 > if all Task names would be simply aligned as a list left to the actual diagram (like a row label).
 > Hope you understand what I mean.
+* TODO is there a way to adapt the font properties of the Task descriptions?
+* STARTED Milestones
+is there a way to specify a special class of Tasks, namely a milestone?
+Typically these are shown as diamonds.
+
+Started : a milestone is on 3 lines.
+** TODO duration of 1 is a problem for linked tasks (one day is lost)
+** TODO draw dependency lines using blank lines before and after
+- for milestone itself
+- for task depending on milestone
