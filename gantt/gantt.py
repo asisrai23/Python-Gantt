@@ -847,7 +847,7 @@ class Task(object):
         raise(ValueError)
         return None
 
-    def svg(self, prev_y=0, start=None, end=None, color=None, level=None, scale=DRAW_WITH_DAILY_SCALE):
+    def svg(self, prev_y=0, start=None, end=None, color=None, level=None, scale=DRAW_WITH_DAILY_SCALE, title_align_on_left=False):
         """
         Return SVG for drawing this task.
 
@@ -858,6 +858,7 @@ class Task(object):
         color -- string of color for drawing the project
         level -- int, indentation level of the project, not used here
         scale -- drawing scale (d: days, w: weeks, m: months, q: quaterly)
+        title_align_on_left -- boolean, align task title on left
         """
         __LOG__.debug('** Task::svg ({0})'.format({'name':self.name, 'prev_y':prev_y, 'start':start, 'end':end, 'color':color, 'level':level}))
 
@@ -1037,7 +1038,12 @@ class Task(object):
                     opacity=0.35,
                 ))
 
-        svg.add(svgwrite.text.Text(self.fullname, insert=((x+2)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
+        if not title_align_on_left:
+            tx = x+2
+        else:
+            tx = 5
+            
+        svg.add(svgwrite.text.Text(self.fullname, insert=((tx)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
 
         if self.resources is not None:
             t = " / ".join(["{0}".format(r.name) for r in self.resources])
@@ -1334,7 +1340,7 @@ class Project(object):
         return dwg
 
 
-    def make_svg_for_tasks(self, filename, today=None, start=None, end=None, scale=DRAW_WITH_DAILY_SCALE):
+    def make_svg_for_tasks(self, filename, today=None, start=None, end=None, scale=DRAW_WITH_DAILY_SCALE, title_align_on_left=False):
         """
         Draw gantt of tasks and output it to filename. If start or end are
         given, use them as reference, otherwise use project first and last day
@@ -1345,6 +1351,7 @@ class Project(object):
         start -- datetime.date of first day to draw
         end -- datetime.date of last day to draw
         scale -- drawing scale (d: days, w: weeks, m: months, q: quaterly)
+        title_align_on_left -- boolean, align task title on left
         """
         if len(self.tasks) == 0:
             __LOG__.warning('** Empty project : {0}'.format(self.name))
@@ -1369,7 +1376,7 @@ class Project(object):
             sys.exit(1)
 
         ldwg = svgwrite.container.Group()
-        psvg, pheight = self.svg(prev_y=2, start=start_date, end=end_date, color = self.color, scale=scale)
+        psvg, pheight = self.svg(prev_y=2, start=start_date, end=end_date, color = self.color, scale=scale, title_align_on_left=title_align_on_left)
         if psvg is not None:
             ldwg.add(psvg)
             
@@ -1631,7 +1638,7 @@ class Project(object):
                 last = t.end_date()
         return last
 
-    def svg(self, prev_y=0, start=None, end=None, color=None, level=0, scale=DRAW_WITH_DAILY_SCALE):
+    def svg(self, prev_y=0, start=None, end=None, color=None, level=0, scale=DRAW_WITH_DAILY_SCALE, title_align_on_left=False):
         """
         Return (SVG code, number of lines drawn) for the project. Draws all
         tasks and add project name with a purple bar on the left side.
@@ -1643,6 +1650,7 @@ class Project(object):
         color -- string of color for drawing the project
         level -- int, indentation level of the project
         scale -- drawing scale (d: days, w: weeks, m: months, q: quaterly)
+        title_align_on_left -- boolean, align task title on left
         """
         if start is None:
             start = self.start_date()
@@ -1657,7 +1665,7 @@ class Project(object):
         prj = svgwrite.container.Group()
 
         for t in self.tasks:
-            trepr, theight = t.svg(cy, start=start, end=end, color=color, level=level+1, scale=scale)
+            trepr, theight = t.svg(cy, start=start, end=end, color=color, level=level+1, scale=scale, title_align_on_left=title_align_on_left)
             if trepr is not None:
                 prj.add(trepr)
                 cy += theight
