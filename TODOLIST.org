@@ -55,9 +55,21 @@ in example : tasks 11, 2, 7, 10
 * DONE make a function to get if a resource or a resource in a group is available on a timeframe
 CLOSED: [2015-01-11 Sun 20:08]
 maybe a shell ? or option for the generated script ?
-* TODO let change scale (display of weeks instead of days)
+* STARTED let change scale (display of weeks instead of days)
+** DONE Week
+** DONE Month
+** TODO Quaterly
 * SOMEDAY Support repetitive vacations (ie SCHEDULED DATE +1w or ++1w, +1y)
 use yield ?
 * DONE disconnect blocker assignation from task creation
 CLOSED: [2015-01-11 Sun 10:49]
 in order to have a task defined after.
+* TODO is there a way to adapt the font properties of the Task descriptions?
+* TODO Milestones
+is there a way to specify a special class of Tasks, namely a milestone?
+Typically these are shown as diamonds.
+* TODO option to align task titles on the left
+> just an additional recommendation: For longer Task titles, they don't fit well into the barchart itself.
+> This is in particular the case when times are short (few months in my case). It would be therefore best,
+> if all Task names would be simply aligned as a list left to the actual diagram (like a row label).
+> Hope you understand what I mean.
