@@ -80,3 +80,5 @@ Started : a milestone is on 3 lines.
 ** TODO draw dependency lines using blank lines before and after
 - for milestone itself
 - for task depending on milestone
+* TODO mode for showing critical path and tasks that can be moved without incidence
+exemple : http://www.4csys.com/images/gantt_chart_2.jpg / http://www.4csys.com/gantt_chart.htm

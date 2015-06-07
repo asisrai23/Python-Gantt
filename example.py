@@ -4,6 +4,9 @@
 import datetime
 import gantt
 
+import logging
+gantt.init_log_to_sysout(level=logging.CRITICAL)
+
 # Add vacations for everyone
 gantt.add_vacations(datetime.date(2014, 12, 25))
 gantt.add_vacations(datetime.date(2015, 1, 1))
@@ -73,6 +76,31 @@ p.add_task(t6)
 
 
 
+# Test cases for milestones
+# Create another project
+ptcm = gantt.Project(name='Test case for milestones')
+
+tcm11 = gantt.Task(name='tcm11', start=datetime.date(2014, 12, 25), duration=4)
+tcm12 = gantt.Task(name='tcm12', start=datetime.date(2014, 12, 26), duration=5)
+ms1 = gantt.Milestone(name=' ', depends_of=[tcm11, tcm12])
+tcm21 = gantt.Task(name='tcm21', start=datetime.date(2014, 12, 30), duration=4, depends_of=[ms1])
+tcm22 = gantt.Task(name='tcm22', start=datetime.date(2014, 12, 30), duration=6, depends_of=[ms1])
+ms2 = gantt.Milestone(name='MS2', depends_of=[ms1, tcm21, tcm22])
+tcm31 = gantt.Task(name='tcm31', start=datetime.date(2014, 12, 30), duration=6, depends_of=[ms2])
+ms3 = gantt.Milestone(name='MS3', depends_of=[ms1])
+
+
+ptcm.add_task(tcm11)
+ptcm.add_task(tcm12)
+ptcm.add_task(ms1)
+ptcm.add_task(tcm21)
+ptcm.add_task(tcm22)
+ptcm.add_task(ms2)
+ptcm.add_task(tcm31)
+ptcm.add_task(ms3)
+
+
+p.add_task(ptcm)
 
 ##########################$ MAKE DRAW ###############
 p.make_svg_for_tasks(filename='test_full.svg', today=datetime.date(2014, 12, 31), start=datetime.date(2014,12, 15), end=datetime.date(2015, 01, 14))

@@ -680,9 +680,12 @@ class Task(object):
 
                 prev_task_end = start
                 for t in self.depends_of:
-                    if t.end_date() >= prev_task_end:
-                        #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
-                        prev_task_end = t.end_date() + datetime.timedelta(days=1)
+                    if isinstance(t, Milestone):
+                        if t.end_date() >= prev_task_end:
+                            prev_task_end = t.end_date()
+                    elif isinstance(t, Task):
+                        if t.end_date() >= prev_task_end:
+                            prev_task_end = t.end_date() + datetime.timedelta(days=1)
 
                 while prev_task_end.weekday() in _not_worked_days() or prev_task_end in VACATIONS:
                     prev_task_end = prev_task_end + datetime.timedelta(days=1)
@@ -699,9 +702,15 @@ class Task(object):
             if self.depends_of is not None:
                 prev_task_end = self.depends_of[0].end_date()
                 for t in self.depends_of:
-                    if t.end_date() > prev_task_end:
-                        #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
-                        prev_task_end = t.end_date()
+                    if isinstance(t, Milestone):
+                        if t.end_date() > prev_task_end:
+                            prev_task_end = t.end_date() - datetime.timedelta(days=1)
+                    elif isinstance(t, Task):
+                        if t.end_date() > prev_task_end:
+                            prev_task_end = t.end_date()
+                    # if t.end_date() > prev_task_end:
+                    #     #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
+                    #     prev_task_end = t.end_date()
                 if prev_task_end > current_day:
                     depend_start_date = prev_task_end
                 else:
@@ -722,9 +731,15 @@ class Task(object):
         elif self.duration is not None and self.depends_of is not None and self.stop is None :  # duration and dependencies fixed
             prev_task_end = self.depends_of[0].end_date()
             for t in self.depends_of:
-                if t.end_date() > prev_task_end:
-                    __LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
-                    prev_task_end = t.end_date()
+                if isinstance(t, Milestone):
+                    if t.end_date() > prev_task_end:
+                        prev_task_end = t.end_date() - datetime.timedelta(days=1)
+                elif isinstance(t, Task):
+                    if t.end_date() > prev_task_end:
+                        prev_task_end = t.end_date()
+                # if t.end_date() > prev_task_end:
+                #     __LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
+                #     prev_task_end = t.end_date()
 
             start = prev_task_end + datetime.timedelta(days=1)
             
@@ -753,9 +768,15 @@ class Task(object):
             if self.depends_of is not None:
                 prev_task_end = self.depends_of[0].end_date()
                 for t in self.depends_of:
-                    if t.end_date() > prev_task_end:
-                        __LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
-                        prev_task_end = t.end_date()
+                    if isinstance(t, Milestone):
+                        if t.end_date() > prev_task_end:
+                            prev_task_end = t.end_date()
+                    elif isinstance(t, Task):
+                        if t.end_date() > prev_task_end:
+                            prev_task_end = t.end_date()
+                    # if t.end_date() > prev_task_end:
+                    #     __LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
+                    #     prev_task_end = t.end_date()
 
                 if prev_task_end > current_day:
                     start = prev_task_end + datetime.timedelta(days=1)
@@ -950,14 +971,14 @@ class Task(object):
         # cas 3 -s--S==e==E-
         elif self.start_date() >= start and  self.end_date() > end:
             x = _time_diff(self.start_date(), start) * 10 
-            d = _time_diff_d(end - self.start_date()) * 10
+            d = _time_diff_d(end, self.start_date()) * 10
             self.drawn_x_begin_coord = x
             self.drawn_x_end_coord = x+d
             add_end_mark = True
         # cas 4 -S==s==e==E-
         elif self.start_date() < start and self.end_date() > end:
             x = 0
-            d = _time_diff_d(end - start) * 10 
+            d = _time_diff_d(end, start) * 10 
             self.drawn_x_begin_coord = x
             self.drawn_x_end_coord = x+d
             add_end_mark = True
@@ -1067,26 +1088,89 @@ class Task(object):
         else:
             svg = svgwrite.container.Group()
             for t in self.depends_of:
-                if not (t.drawn_x_end_coord is None or t.drawn_y_coord is None or self.drawn_x_begin_coord is None) and prj.is_in_project(t):
-                    svg.add(svgwrite.shapes.Line(
-                            start=((t.drawn_x_end_coord-2)*mm, (t.drawn_y_coord+5)*mm), 
-                            end=((self.drawn_x_begin_coord)*mm, (t.drawn_y_coord+5)*mm), 
+                if isinstance(t, Milestone):
+                    if not (t.drawn_x_end_coord is None or t.drawn_y_coord is None or self.drawn_x_begin_coord is None) and prj.is_in_project(t):
+                        if t.drawn_x_end_coord < self.drawn_x_begin_coord:
+                            # horizontal line
+                            svg.add(svgwrite.shapes.Line(
+                                    start=((t.drawn_x_end_coord + 9)*mm, (t.drawn_y_coord + 5)*mm), 
+                                    end=((self.drawn_x_begin_coord)*mm, (t.drawn_y_coord + 5)*mm), 
+                                    stroke='black',
+                                    stroke_dasharray='5,3',
+                                    ))
+
+                            marker = svgwrite.container.Marker(insert=(5,5), size=(10,10))
+                            marker.add(svgwrite.shapes.Circle((5, 5), r=5, fill='#000000', opacity=0.5, stroke_width=0))
+                            svg.add(marker)
+                            # vertical line
+                            eline = svgwrite.shapes.Line(
+                                start=((self.drawn_x_begin_coord)*mm, (t.drawn_y_coord + 5)*mm), 
+                                end=((self.drawn_x_begin_coord)*mm, (self.drawn_y_coord + 5)*mm), 
+                                stroke='black',
+                                stroke_dasharray='5,3',
+                                )
+                            eline['marker-end'] = marker.get_funciri()
+                            svg.add(eline)
+
+                        else:
+                            # horizontal line
+                            svg.add(svgwrite.shapes.Line(
+                                    start=((t.drawn_x_end_coord + 9)*mm, (t.drawn_y_coord + 5)*mm), 
+                                    end=((self.drawn_x_begin_coord + 10)*mm, (t.drawn_y_coord + 5)*mm), 
+                                    stroke='black',
+                                    stroke_dasharray='5,3',
+                                    ))
+                            # vertical
+                            svg.add(svgwrite.shapes.Line(
+                                start=((self.drawn_x_begin_coord + 10)*mm, (t.drawn_y_coord + 5)*mm), 
+                                end=((self.drawn_x_begin_coord + 10)*mm, (t.drawn_y_coord + 15)*mm), 
+                                stroke='black',
+                                stroke_dasharray='5,3',
+                                ))
+                            # horizontal line
+                            svg.add(svgwrite.shapes.Line(
+                                    start=((self.drawn_x_begin_coord)*mm, (t.drawn_y_coord + 15)*mm), 
+                                    end=((self.drawn_x_begin_coord + 10)*mm, (t.drawn_y_coord + 15)*mm), 
+                                    stroke='black',
+                                    stroke_dasharray='5,3',
+                                    ))
+    
+                            marker = svgwrite.container.Marker(insert=(5,5), size=(10,10))
+                            marker.add(svgwrite.shapes.Circle((5, 5), r=5, fill='#000000', opacity=0.5, stroke_width=0))
+                            svg.add(marker)
+                            # vertical line
+                            eline = svgwrite.shapes.Line(
+                                start=((self.drawn_x_begin_coord)*mm, (t.drawn_y_coord + 15)*mm), 
+                                end=((self.drawn_x_begin_coord)*mm, (self.drawn_y_coord + 5)*mm), 
+                                stroke='black',
+                                stroke_dasharray='5,3',
+                                )
+                            eline['marker-end'] = marker.get_funciri()
+                            svg.add(eline)
+    
+                elif isinstance(t, Task):
+                    if not (t.drawn_x_end_coord is None or t.drawn_y_coord is None or self.drawn_x_begin_coord is None) and prj.is_in_project(t):
+                        # horizontal line
+                        svg.add(svgwrite.shapes.Line(
+                                start=((t.drawn_x_end_coord - 2)*mm, (t.drawn_y_coord + 5)*mm), 
+                                end=((self.drawn_x_begin_coord)*mm, (t.drawn_y_coord + 5)*mm), 
+                                stroke='black',
+                                stroke_dasharray='5,3',
+                                ))
+    
+                        marker = svgwrite.container.Marker(insert=(5,5), size=(10,10))
+                        marker.add(svgwrite.shapes.Circle((5, 5), r=5, fill='#000000', opacity=0.5, stroke_width=0))
+                        svg.add(marker)
+                        # vertical line
+                        eline = svgwrite.shapes.Line(
+                            start=((self.drawn_x_begin_coord)*mm, (t.drawn_y_coord + 5)*mm), 
+                            end=((self.drawn_x_begin_coord)*mm, (self.drawn_y_coord + 5)*mm), 
                             stroke='black',
                             stroke_dasharray='5,3',
-                            ))
-
-                    marker = svgwrite.container.Marker(insert=(5,5), size=(10,10))
-                    marker.add(svgwrite.shapes.Circle((5, 5), r=5, fill='#000000', opacity=0.5, stroke_width=0))
-                    svg.add(marker)
-                    eline = svgwrite.shapes.Line(
-                        start=((self.drawn_x_begin_coord)*mm, (t.drawn_y_coord+5)*mm), 
-                        end=((self.drawn_x_begin_coord)*mm, (self.drawn_y_coord + 5)*mm), 
-                        stroke='black',
-                        stroke_dasharray='5,3',
-                        )
-                    eline['marker-end'] = marker.get_funciri()
-                    svg.add(eline)
-
+                            )
+                        eline['marker-end'] = marker.get_funciri()
+                        svg.add(eline)
+                    
         return svg
 
 
@@ -1232,100 +1316,14 @@ class Milestone(Task):
         return
 
 
-    def add_depends(self, depends_of):
-        """
-        Adds dependency to a milestone
-
-        Keyword arguments:
-        depends_of -- list of Milestone which are parents of this one
-        """
-        if type(depends_of) is type([]):
-            if self.depends_of is None:
-                self.depends_of = depends_of
-            else:
-                for d in depends_of:
-                    self.depends_of.append(d)
-        else:
-            if self.depends_of is None:
-                self.depends_of = depends_of
-            else:
-                self.depends_of.append(depends_of)
-
-        return
-
-
-    def start_date(self):
-        """
-        Returns the first day of the milestone, either the one which was given at
-        milestone creation or the one calculated after checking dependencies
-        """
-        if self.cache_start_date is not None:
-            return self.cache_start_date
-
-        __LOG__.debug('** Milestone::start_date ({0})'.format(self.name))
-        if self.start is not None:
-            # start date setted, calculate begining
-            if self.depends_of is None:
-                # depends of nothing... start date is start
-                #__LOG__.debug('*** Do not depend of other milestone')
-                start = self.start
-                while start.weekday() in _not_worked_days() or start in VACATIONS:
-                    start = start + datetime.timedelta(days=1)
-
-                if start > self.start:
-                    __LOG__.warning('** Due to vacations, Milestone "{0}", will not start on date {1} but {2}'.format(self.fullname, self.start, start))
-
-                self.cache_start_date = start
-                return self.cache_start_date
-            else:
-                # depends of other milestone, start date could vary
-                #__LOG__.debug('*** Do depend of other milestones')
-                start = self.start
-                while start.weekday() in _not_worked_days() or start in VACATIONS:
-                    start = start + datetime.timedelta(days=1)
-
-                prev_task_end = start
-                for t in self.depends_of:
-                    if t.end_date() >= prev_milestone_end:
-                        #__LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
-                        prev_milestone_end = t.end_date() + datetime.timedelta(days=1)
-
-                while prev_task_end.weekday() in _not_worked_days() or prev_task_end in VACATIONS:
-                    prev_task_end = prev_task_end + datetime.timedelta(days=1)
-
-                if prev_task_end > self.start:
-                    __LOG__.warning('** Due to dependencies, Milestone "{0}", will not start on date {1} but {2}'.format(self.fullname, self.start, prev_task_end))
-
-                self.cache_start_date = prev_task_end
-                return self.cache_start_date
-        elif self.duration is not None and self.depends_of is not None and self.stop is None :  # duration and dependencies fixed
-            prev_task_end = self.depends_of[0].end_date()
-            for t in self.depends_of:
-                if t.end_date() > prev_task_end:
-                    __LOG__.debug('*** latest one {0} which end on {1}'.format(t.name, t.end_date()))
-                    prev_task_end = t.end_date()
-
-            start = prev_task_end + datetime.timedelta(days=1)
-            
-            while start.weekday() in _not_worked_days() or start in VACATIONS:
-                start = start + datetime.timedelta(days=1)
-
-            # should be first day of start...
-            self.cache_start_date = start
-
-
-        if self.cache_start_date != self.start:
-            __LOG__.warning('** starting date for milestone "{0}" is changed from {1} to {2}'.format(self.fullname, self.start, self.cache_start_date))
-        return self.cache_start_date
-
-
     def end_date(self):
         """
         Returns the last day of the milestone, either the one which was given at milestone
         creation or the one calculated after checking dependencies
         """
         __LOG__.debug('** Milestone::end_date ({0})'.format(self.name))
-        return self.start_date() - datetime.timedelta(days=1)
+        #return self.start_date() - datetime.timedelta(days=1)
+        return self.start_date()
 
 
     def svg(self, prev_y=0, start=None, end=None, color=None, level=None, scale=DRAW_WITH_DAILY_SCALE, title_align_on_left=False):
@@ -1409,40 +1407,11 @@ class Milestone(Task):
 
 
 
-        # cas 1 -s--S==E--e-
+        # cas 1 -s--X--e-
         if self.start_date() >= start and self.end_date() <= end:
             x = _time_diff(self.start_date(), start) * 10
-            d = _time_diff_d(self.end_date(), self.start_date()) * 10
             self.drawn_x_begin_coord = x
-            self.drawn_x_end_coord = x+d
-        # cas 5 -s--e--S==E-
-        elif self.start_date() > end:
-            return (None, 0)
-        # cas 6 -S==E-s--e-
-        elif self.end_date() < start:
-            return (None, 0)
-        # cas 2 -S==s==E--e-
-        elif self.start_date() < start and self.end_date() <= end:
-            x = 0
-            d = _time_diff_d(self.end_date(), start) * 10
-            self.drawn_x_begin_coord = x
-            self.drawn_x_end_coord = x+d
-            add_begin_mark = True
-        # cas 3 -s--S==e==E-
-        elif self.start_date() >= start and  self.end_date() > end:
-            x = _time_diff(self.start_date(), start) * 10 
-            d = _time_diff_d(end - self.start_date()) * 10
-            self.drawn_x_begin_coord = x
-            self.drawn_x_end_coord = x+d
-            add_end_mark = True
-        # cas 4 -S==s==e==E-
-        elif self.start_date() < start and self.end_date() > end:
-            x = 0
-            d = _time_diff_d(end - start) * 10 
-            self.drawn_x_begin_coord = x
-            self.drawn_x_end_coord = x+d
-            add_end_mark = True
-            add_begin_mark = True
+            self.drawn_x_end_coord = x
         else:
             return (None, 0)    
 
@@ -1495,69 +1464,95 @@ class Milestone(Task):
         else:
             svg = svgwrite.container.Group()
             for t in self.depends_of:
-                if not (t.drawn_x_end_coord is None or t.drawn_y_coord is None or self.drawn_x_begin_coord is None) and prj.is_in_project(t):
-                    svg.add(svgwrite.shapes.Line(
-                            start=((t.drawn_x_end_coord-2)*mm, (t.drawn_y_coord+5)*mm), 
-                            end=((self.drawn_x_begin_coord+5)*mm, (t.drawn_y_coord+5)*mm), 
+                if isinstance(t, Milestone):
+                    if not (t.drawn_x_end_coord is None or t.drawn_y_coord is None or self.drawn_x_begin_coord is None) and prj.is_in_project(t):
+                        # horizontal line
+                        svg.add(svgwrite.shapes.Line(
+                                start=((t.drawn_x_end_coord + 9)*mm, (t.drawn_y_coord + 5)*mm), 
+                                end=((self.drawn_x_begin_coord + 5)*mm, (t.drawn_y_coord + 5)*mm), 
+                                stroke='black',
+                                stroke_dasharray='5,3',
+                                ))
+                        
+                        marker = svgwrite.container.Marker(insert=(5,5), size=(10,10))
+                        marker.add(svgwrite.shapes.Circle((5, 5), r=5, fill='#000000', opacity=0.5, stroke_width=0))
+                        svg.add(marker)
+                        # vertical line
+                        eline = svgwrite.shapes.Line(
+                            start=((self.drawn_x_begin_coord + 5)*mm, (t.drawn_y_coord + 5)*mm), 
+                            end=((self.drawn_x_begin_coord+5)*mm, (self.drawn_y_coord)*mm), 
                             stroke='black',
                             stroke_dasharray='5,3',
-                            ))
+                            )
+                        eline['marker-end'] = marker.get_funciri()
+                        svg.add(eline)
 
-                    marker = svgwrite.container.Marker(insert=(5,5), size=(10,10))
-                    marker.add(svgwrite.shapes.Circle((5, 5), r=5, fill='#000000', opacity=0.5, stroke_width=0))
-                    svg.add(marker)
-                    eline = svgwrite.shapes.Line(
-                        start=((self.drawn_x_begin_coord+5)*mm, (t.drawn_y_coord+5)*mm), 
-                        end=((self.drawn_x_begin_coord+5)*mm, (self.drawn_y_coord + 0)*mm), 
-                        stroke='black',
-                        stroke_dasharray='5,3',
-                        )
-                    eline['marker-end'] = marker.get_funciri()
-                    svg.add(eline)
-
+                elif isinstance(t, Task):                
+                    if not (t.drawn_x_end_coord is None or t.drawn_y_coord is None or self.drawn_x_begin_coord is None) and prj.is_in_project(t):
+                        # horizontal line
+                        svg.add(svgwrite.shapes.Line(
+                                start=((t.drawn_x_end_coord - 2)*mm, (t.drawn_y_coord + 5)*mm), 
+                                end=((self.drawn_x_begin_coord + 5)*mm, (t.drawn_y_coord + 5)*mm), 
+                                stroke='black',
+                                stroke_dasharray='5,3',
+                                ))
+    
+                        marker = svgwrite.container.Marker(insert=(5,5), size=(10,10))
+                        marker.add(svgwrite.shapes.Circle((5, 5), r=5, fill='#000000', opacity=0.5, stroke_width=0))
+                        svg.add(marker)
+                        # vertical line
+                        eline = svgwrite.shapes.Line(
+                            start=((self.drawn_x_begin_coord+5)*mm, (t.drawn_y_coord+5)*mm), 
+                            end=((self.drawn_x_begin_coord+5)*mm, (self.drawn_y_coord + 0)*mm), 
+                            stroke='black',
+                            stroke_dasharray='5,3',
+                            )
+                        eline['marker-end'] = marker.get_funciri()
+                        svg.add(eline)
+    
         return svg
 
 
-    def nb_elements(self):
-        """
-        Returns the number of milestone, 1 here
-        """
-        __LOG__.debug('** Milestone::nb_elements ({0})'.format({'name':self.name}))
-        return 1
+    # def nb_elements(self):
+    #     """
+    #     Returns the number of milestone, 1 here
+    #     """
+    #     __LOG__.debug('** Milestone::nb_elements ({0})'.format({'name':self.name}))
+    #     return 1
 
 
-    def _reset_coord(self):
-        """
-        Reset cached elements of milestone
-        """
-        __LOG__.debug('** Milestone::reset_coord ({0})'.format({'name':self.name}))
-        self.drawn_x_begin_coord = None
-        self.drawn_x_end_coord = None
-        self.drawn_y_coord = None
-        self.cache_start_date = None
-        self.cache_end_date = None
-        return
+    # def _reset_coord(self):
+    #     """
+    #     Reset cached elements of milestone
+    #     """
+    #     __LOG__.debug('** Milestone::reset_coord ({0})'.format({'name':self.name}))
+    #     self.drawn_x_begin_coord = None
+    #     self.drawn_x_end_coord = None
+    #     self.drawn_y_coord = None
+    #     self.cache_start_date = None
+    #     self.cache_end_date = None
+    #     return
 
 
-    def is_in_project(self, task):
-        """
-        Return True if the given Milestone is itself... (lazy coding ;)
+    # def is_in_project(self, task):
+    #     """
+    #     Return True if the given Milestone is itself... (lazy coding ;)
         
-        Keyword arguments:
-        task -- Task object 
-        """
-        __LOG__.debug('** Milestone::is_in_project ({0})'.format({'name':self.name, 'task':task}))
-        if task is self:
-            return True
+    #     Keyword arguments:
+    #     task -- Task object 
+    #     """
+    #     __LOG__.debug('** Milestone::is_in_project ({0})'.format({'name':self.name, 'task':task}))
+    #     if task is self:
+    #         return True
 
-        return False
+    #     return False
 
 
     def get_resources(self):
         """
         Returns Resources used in the milestone
         """
-        return self.resources
+        return []
 
 
 
