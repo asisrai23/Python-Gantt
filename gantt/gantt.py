@@ -928,13 +928,13 @@ class Task(object):
                 while end_date.weekday() != 6:
                     end_date = end_date + dateutil.relativedelta.relativedelta(days=+1)
                     
-                while guess <= end_date:
+                while guess + dateutil.relativedelta.relativedelta(days=+6) < end_date:
                     td += 1
                     guess = guess + dateutil.relativedelta.relativedelta(weeks=+1)
 
                 return td 
             def _time_diff_d(e, s):
-                return _time_diff(e, s)
+                return _time_diff(e, s) + 1
 
         elif scale == DRAW_WITH_MONTHLY_SCALE:
             def _time_diff(end_date, start_date):
@@ -1392,7 +1392,7 @@ class Milestone(Task):
 
                 return td 
             def _time_diff_d(e, s):
-                return _time_diff(e, s)
+                return _time_diff(e, s) + 1
 
         elif scale == DRAW_WITH_MONTHLY_SCALE:
             def _time_diff(end_date, start_date):
@@ -1513,39 +1513,6 @@ class Milestone(Task):
         return svg
 
 
-    # def nb_elements(self):
-    #     """
-    #     Returns the number of milestone, 1 here
-    #     """
-    #     __LOG__.debug('** Milestone::nb_elements ({0})'.format({'name':self.name}))
-    #     return 1
-
-
-    # def _reset_coord(self):
-    #     """
-    #     Reset cached elements of milestone
-    #     """
-    #     __LOG__.debug('** Milestone::reset_coord ({0})'.format({'name':self.name}))
-    #     self.drawn_x_begin_coord = None
-    #     self.drawn_x_end_coord = None
-    #     self.drawn_y_coord = None
-    #     self.cache_start_date = None
-    #     self.cache_end_date = None
-    #     return
-
-
-    # def is_in_project(self, task):
-    #     """
-    #     Return True if the given Milestone is itself... (lazy coding ;)
-        
-    #     Keyword arguments:
-    #     task -- Task object 
-    #     """
-    #     __LOG__.debug('** Milestone::is_in_project ({0})'.format({'name':self.name, 'task':task}))
-    #     if task is self:
-    #         return True
-
-    #     return False
 
 
     def get_resources(self):
@@ -1704,6 +1671,7 @@ class Project(object):
                                                   insert=((x*10+1)*mm, 15*mm),
                                                   fill='black', stroke='black', stroke_width=0,
                                                   font_family="Verdana", font_size="16", font_weight="bold"))
+
             elif scale == DRAW_WITH_WEEKLY_SCALE:
                 # Year
                 if jour.isocalendar()[1] == 1 and jour.month == 1:
@@ -1721,6 +1689,7 @@ class Project(object):
                                               insert=((x*10+1)*mm, 15*mm),
                                               fill='black', stroke='black', stroke_width=0,
                                               font_family="Verdana", font_size="16", font_weight="bold"))
+
             elif scale == DRAW_WITH_MONTHLY_SCALE:
                 # Month number
                 vlines.add(svgwrite.text.Text('{0}'.format(jour.strftime("%m")),
