@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
 __version__ = '0.4.0'
-__last_modification__ = '2015.06.05'
+__last_modification__ = '2015.06.11'
 
 import codecs
 import datetime
@@ -115,6 +115,57 @@ def _not_worked_days():
     """
     global NOT_WORKED_DAYS
     return NOT_WORKED_DAYS
+
+
+############################################################################
+
+FONT_ATTR = {
+    'fill': 'black',
+    'stroke': 'black',
+    'stroke_width': 0,
+    'font_family': 'Verdana',
+    'font_size': 15
+    }
+
+
+def define_font_attributes(fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size=15):
+    """
+    Define font attributes
+    
+    Keyword arguments:
+    fill -- fill - default 'black'
+    stroke -- stroke - default 'black'
+    stroke_width -- stroke width - default 0
+    font_family -- font family - default 'verdana'
+    font_size -- font size - default 15
+    """
+    global FONT_ATTR
+
+    FONT_ATTR = {
+        'fill': fill,
+        'stroke' : stroke,
+        'stroke_width': stroke_width,
+        'font_family': font_family, 
+        'font_size': font_size
+        }
+
+    return
+
+
+def _font_attributes():
+    """
+    Return dictionnary of font attributes
+    Example :
+    FONT_ATTR = {
+      'fill': 'black',
+      'stroke': 'black',
+      'stroke_width': 0,
+      'font_family': 'Verdana',
+      'font_size': 15
+    }
+    """
+    global FONT_ATTR
+    return FONT_ATTR
 
 
 ############################################################################
