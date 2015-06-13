@@ -7,7 +7,7 @@
 #+DRAWERS: PROPERTIES NOTE LOGBOOK
 #+OPTIONS: ^:{}
 #+EXCLUDE_TAGS: no_gantt
-#+SEQ_TODO: TODO(t) STARTED(s) WAITING(w) | DONE(d) CANCELED(c)
+#+SEQ_TODO: TODO(t) STARTED(s) WAITING(w) MILESTONE(m) | DONE(d) CANCELED(c)
 * CONFIGURATION
 :PROPERTIES:
 :start_date: -3w
@@ -88,6 +88,11 @@ DEADLINE: <2014-12-22 lun.>
 :Effort:   3d
 :task_id: task5
 :END:
+** MILESTONE  Milestone
+:PROPERTIES:
+:BLOCKER: task1 task2 task3 task5
+:task_id: ms1
+:END:
 ** TODO Task 6                                                  :ress3:
 SCHEDULED: <2014-12-26 ven.> DEADLINE: <2015-01-13 mar.>
 :PROPERTIES:
@@ -98,7 +103,7 @@ SCHEDULED: <2014-12-26 ven.> DEADLINE: <2015-01-13 mar.>
 SCHEDULED: <2015-01-10 lun.>
 :PROPERTIES:
 :Effort:   4d
-:BLOCKER: task1 task2 task3 task6
+:BLOCKER: task6 ms1
 :task_id: task4
 :END:
 * Project 2
