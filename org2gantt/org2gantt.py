@@ -240,11 +240,16 @@ def make_task_from_node(n, prop={}, prev_task=''):
     else:
         color = None
 
-    if start is None and end is None and (duration is None or duration=='' or (duration != '' and depends_of is None)):
-        __LOG__.critical('** Task "{0}" : no start, stop, duration or dependencies -> not included in gantt !'.format(fullname))
-        return None
+
     
-    gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9}, display={10}, state='{11}')\n".format(name, name, start, duration, ress, None, end, percentdone, fullname, color, display, n.todo)
+    if n.todo != 'MILESTONE':
+        if start is None and end is None and (duration is None or duration=='' or (duration != '' and depends_of is None)):
+            __LOG__.critical('** Task "{0}" : no start, stop, duration or dependencies -> not included in gantt !'.format(fullname))
+            return None
+        
+        gantt_code += "task_{0} = gantt.Task(name='{1}', start={2}, stop={6}, duration={3}, resources={4}, depends_of={5}, percent_done={7}, fullname='{8}', color={9}, display={10}, state='{11}')\n".format(name, name, start, duration, ress, None, end, percentdone, fullname, color, display, n.todo)
+    else:
+        gantt_code += "task_{0} = gantt.Milestone(name='{1}', depends_of={2}, fullname='{3}', color={4}, display={5})\n".format(name, name, None, fullname, color, display)
 
     # store dependencies for later
     dependencies = str(depends_of).replace("'", "")
@@ -344,7 +349,7 @@ import gantt
     __LOG__.debug('_analyse_nodes ({0})'.format({'nodes':nodes}))
 
     # Get all todo items
-    LISTE_TODOS = {'TODO':None, 'DONE':None}
+    LISTE_TODOS = {'TODO':None, 'DONE':None, 'MILESTONE':None}
     with open(org) as f:
         for line in f.readlines():
             if line[:10] == '#+SEQ_TODO':
