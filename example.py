@@ -7,6 +7,9 @@ import gantt
 import logging
 gantt.init_log_to_sysout(level=logging.CRITICAL)
 
+# Change font default
+gantt.define_font_attributes(fill='black', stroke='black', stroke_width=0, font_family="Verdana")
+
 # Add vacations for everyone
 gantt.add_vacations(datetime.date(2014, 12, 25))
 gantt.add_vacations(datetime.date(2015, 1, 1))
@@ -109,4 +112,5 @@ p.make_svg_for_tasks(filename='test.svg', today=datetime.date(2014, 12, 31), sta
 p1.make_svg_for_tasks(filename='test_p1.svg', today=datetime.date(2014, 12, 31))
 p2.make_svg_for_tasks(filename='test_p2.svg', today=datetime.date(2014, 12, 31))
 p.make_svg_for_resources(filename='test_resources.svg', today=datetime.date(2014, 12, 31), resources=[rANO, rJLS])
+p.make_svg_for_tasks(filename='test_weekly.svg', today=datetime.date(2014, 12, 31), scale=gantt.DRAW_WITH_WEEKLY_SCALE)
 ##########################$ /MAKE DRAW ###############

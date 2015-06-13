@@ -58,6 +58,7 @@ maybe a shell ? or option for the generated script ?
 * STARTED let change scale (display of weeks instead of days)
 ** DONE Week
 ** DONE Month
+** TODO Vacations are only drawn for daily scale
 ** TODO Quaterly
 * SOMEDAY Support repetitive vacations (ie SCHEDULED DATE +1w or ++1w, +1y)
 use yield ?
