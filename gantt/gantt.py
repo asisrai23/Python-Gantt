@@ -1428,9 +1428,10 @@ class Milestone(Task):
             def _time_diff(end_date, start_date):
                 td = 0
                 guess = start_date
+                # find first day of the week
                 while guess.weekday() != 0:
                     guess = guess + dateutil.relativedelta.relativedelta(days=-1)
-
+                # find last day of the week                
                 while end_date.weekday() != 6:
                     end_date = end_date + dateutil.relativedelta.relativedelta(days=+1)
                     
@@ -1438,7 +1439,7 @@ class Milestone(Task):
                     td += 1
                     guess = guess + dateutil.relativedelta.relativedelta(weeks=+1)
 
-                return td 
+                return td - 1
             def _time_diff_d(e, s):
                 return _time_diff(e, s) + 1
 
@@ -1665,15 +1666,6 @@ class Project(object):
         vlines = dwg.add(svgwrite.container.Group(id='vlines', stroke='lightgray'))
         for x in range(maxx):
             vlines.add(svgwrite.shapes.Line(start=(x*cm, 2*cm), end=(x*cm, (maxy+2)*cm)))
-            if (start_date + datetime.timedelta(days=x)).weekday() in _not_worked_days() or (start_date + datetime.timedelta(days=x)) in VACATIONS:
-                vlines.add(svgwrite.shapes.Rect(
-                    insert=(x*cm, 2*cm),
-                    size=(1*cm, maxy*cm),
-                    fill='gray',
-                    stroke='lightgray',
-                    stroke_width=1,
-                    opacity=0.7,
-                    ))
             if scale == DRAW_WITH_DAILY_SCALE:
                 jour = start_date + datetime.timedelta(days=x)
             elif scale == DRAW_WITH_WEEKLY_SCALE:
@@ -1696,6 +1688,17 @@ class Project(object):
                     ))
 
             if scale == DRAW_WITH_DAILY_SCALE:
+                # draw vacations
+                if (start_date + datetime.timedelta(days=x)).weekday() in _not_worked_days() or (start_date + datetime.timedelta(days=x)) in VACATIONS:
+                    vlines.add(svgwrite.shapes.Rect(
+                        insert=(x*cm, 2*cm),
+                        size=(1*cm, maxy*cm),
+                        fill='gray',
+                        stroke='lightgray',
+                        stroke_width=1,
+                        opacity=0.7,
+                        ))
+
                 # Current day
                 vlines.add(svgwrite.text.Text('{1} {0:02}'.format(jour.day, cal[jour.weekday()][0]),
                                               insert=((x*10+1)*mm, 19*mm),
