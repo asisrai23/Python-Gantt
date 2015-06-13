@@ -1393,27 +1393,27 @@ class Milestone(Task):
             __LOG__.debug('** Milestone::svg ({0}) display off'.format({'name':self.name}))
             return(None, 0)
 
-        add_modified_begin_mark = False
-        add_modified_end_mark = False
+        #add_modified_begin_mark = False
+        #add_modified_end_mark = False
 
         if start is None:
             start = self.start_date()
 
-        if self.start_date() != self.start and self.start is not None:
-            add_modified_begin_mark = True
+        #if self.start_date() != self.start and self.start is not None:
+        #    add_modified_begin_mark = True
 
         if end is None:
             end = self.end_date()
 
-        if self.end_date() != self.stop and self.stop is not None:
-            add_modified_end_mark = True
+        #if self.end_date() != self.stop and self.stop is not None:
+        #    add_modified_end_mark = True
 
         # override project color if defined
         if self.color is not None:
             color = self.color
 
-        add_begin_mark = False
-        add_end_mark = False
+        #add_begin_mark = False
+        #add_end_mark = False
 
         y = prev_y * 10
 
