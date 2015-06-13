@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
 __version__ = '0.4.0'
-__last_modification__ = '2015.06.11'
+__last_modification__ = '2015.06.13'
 
 import codecs
 import datetime
@@ -128,7 +128,7 @@ FONT_ATTR = {
     }
 
 
-def define_font_attributes(fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size=15):
+def define_font_attributes(fill='black', stroke='black', stroke_width=0, font_family="Verdana"):
     """
     Define font attributes
     
@@ -136,8 +136,7 @@ def define_font_attributes(fill='black', stroke='black', stroke_width=0, font_fa
     fill -- fill - default 'black'
     stroke -- stroke - default 'black'
     stroke_width -- stroke width - default 0
-    font_family -- font family - default 'verdana'
-    font_size -- font size - default 15
+    font_family -- font family - default 'Verdana'
     """
     global FONT_ATTR
 
@@ -146,7 +145,6 @@ def define_font_attributes(fill='black', stroke='black', stroke_width=0, font_fa
         'stroke' : stroke,
         'stroke_width': stroke_width,
         'font_family': font_family, 
-        'font_size': font_size
         }
 
     return
@@ -161,7 +159,6 @@ def _font_attributes():
       'stroke': 'black',
       'stroke_width': 0,
       'font_family': 'Verdana',
-      'font_size': 15
     }
     """
     global FONT_ATTR
@@ -1115,11 +1112,11 @@ class Task(object):
         else:
             tx = 5
             
-        svg.add(svgwrite.text.Text(self.fullname, insert=((tx)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
+        svg.add(svgwrite.text.Text(self.fullname, insert=((tx)*mm, (y + 5)*mm), fill=_font_attributes()['fill'], stroke=_font_attributes()['stroke'], stroke_width=_font_attributes()['stroke_width'], font_family=_font_attributes()['font_family'], font_size=15))
 
         if self.resources is not None:
             t = " / ".join(["{0}".format(r.name) for r in self.resources])
-            svg.add(svgwrite.text.Text("{0}".format(t), insert=((x+2)*mm, (y + 8.5)*mm), fill='purple', stroke='black', stroke_width=0, font_family="Verdana", font_size="10"))
+            svg.add(svgwrite.text.Text("{0}".format(t), insert=((x+2)*mm, (y + 8.5)*mm), fill='purple', stroke=_font_attributes()['stroke'], stroke_width=_font_attributes()['stroke_width'], font_family=_font_attributes()['font_family'], font_size=15-5))
 
 
         return (svg, 1)
@@ -1418,7 +1415,7 @@ class Milestone(Task):
         add_begin_mark = False
         add_end_mark = False
 
-        y = prev_y * 10 + 10
+        y = prev_y * 10
 
 
         if scale == DRAW_WITH_DAILY_SCALE:
@@ -1495,10 +1492,10 @@ class Milestone(Task):
         else:
             tx = 5
             
-        svg.add(svgwrite.text.Text(self.fullname, insert=((tx)*mm, (y + 5)*mm), fill='black', stroke='black', stroke_width=0, font_family="Verdana", font_size="15"))
+        svg.add(svgwrite.text.Text(self.fullname, insert=((tx)*mm, (y + 5)*mm), fill=_font_attributes()['fill'], stroke=_font_attributes()['stroke'], stroke_width=_font_attributes()['stroke_width'], font_family=_font_attributes()['font_family'], font_size=15))
 
 
-        return (svg, 3)
+        return (svg, 2)
 
 
     def svg_dependencies(self, prj):
@@ -1703,25 +1700,29 @@ class Project(object):
                 vlines.add(svgwrite.text.Text('{1} {0:02}'.format(jour.day, cal[jour.weekday()][0]),
                                               insert=((x*10+1)*mm, 19*mm),
                                               fill='black', stroke='black', stroke_width=0,
-                                              font_family="Verdana", font_size="12"))
+                                              font_family=_font_attributes()['font_family'], font_size=15-3))
                 # Year
                 if jour.day == 1 and jour.month == 1:
                     vlines.add(svgwrite.text.Text('{0}'.format(jour.year),
                                                   insert=((x*10+1)*mm, 5*mm),
                                                   fill='#400000', stroke='#400000', stroke_width=0,
-                                                  font_family="Verdana", font_size="20", font_weight="bold"))
+                                                  font_family=_font_attributes()['font_family'], font_size=15+5,
+                                                  font_weight="bold"))
                 # Month name
                 if jour.day == 1:
                     vlines.add(svgwrite.text.Text('{0}'.format(jour.strftime("%B")),
                                                   insert=((x*10+1)*mm, 10*mm),
                                                   fill='#800000', stroke='#800000', stroke_width=0,
-                                                  font_family="Verdana", font_size="18", font_weight="bold"))
+                                                  font_family=_font_attributes()['font_family'], font_size=15+3,
+                                                  font_weight="bold"))
                 # Week number
                 if jour.weekday() == 0:
                     vlines.add(svgwrite.text.Text('{0:02}'.format(jour.isocalendar()[1]),
                                                   insert=((x*10+1)*mm, 15*mm),
                                                   fill='black', stroke='black', stroke_width=0,
-                                                  font_family="Verdana", font_size="16", font_weight="bold"))
+                                                  font_family=_font_attributes()['font_family'],
+                                                  font_size=15+1,
+                                                  font_weight="bold"))
 
             elif scale == DRAW_WITH_WEEKLY_SCALE:
                 # Year
@@ -1729,30 +1730,30 @@ class Project(object):
                     vlines.add(svgwrite.text.Text('{0}'.format(jour.year),
                                                   insert=((x*10+1)*mm, 5*mm),
                                                   fill='#400000', stroke='#400000', stroke_width=0,
-                                                  font_family="Verdana", font_size="20", font_weight="bold"))
+                                                  font_family=_font_attributes()['font_family'], font_size=15+5, font_weight="bold"))
                 # Month name
                 if jour.day <= 7:
                     vlines.add(svgwrite.text.Text('{0}'.format(jour.strftime("%B")),
                                                   insert=((x*10+1)*mm, 10*mm),
                                                   fill='#800000', stroke='#800000', stroke_width=0,
-                                                  font_family="Verdana", font_size="18", font_weight="bold"))
+                                                  font_family=_font_attributes()['font_family'], font_size=15+3, font_weight="bold"))
                 vlines.add(svgwrite.text.Text('{0:02}'.format(jour.isocalendar()[1]),
                                               insert=((x*10+1)*mm, 15*mm),
                                               fill='black', stroke='black', stroke_width=0,
-                                              font_family="Verdana", font_size="16", font_weight="bold"))
+                                              font_family=_font_attributes()['font_family'], font_size=15+1, font_weight="bold"))
 
             elif scale == DRAW_WITH_MONTHLY_SCALE:
                 # Month number
                 vlines.add(svgwrite.text.Text('{0}'.format(jour.strftime("%m")),
                                               insert=((x*10+1)*mm, 19*mm),
                                               fill='black', stroke='black', stroke_width=0,
-                                              font_family="Verdana", font_size="12"))
+                                              font_family=_font_attributes()['font_family'], font_size=15-3))
                 # Year
                 if jour.month == 1:
                     vlines.add(svgwrite.text.Text('{0}'.format(jour.year),
                                                   insert=((x*10+1)*mm, 5*mm),
                                                   fill='#400000', stroke='#400000', stroke_width=0,
-                                                  font_family="Verdana", font_size="20", font_weight="bold"))
+                                                  font_family=_font_attributes()['font_family'], font_size=15+5, font_weight="bold"))
 
 
             elif scale == DRAW_WITH_QUATERLY_SCALE:
@@ -1952,7 +1953,7 @@ class Project(object):
                 continue
 
             ress = svgwrite.container.Group()
-            ress.add(svgwrite.text.Text('{0}'.format(r.fullname), insert=(3*mm, (nline*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
+            ress.add(svgwrite.text.Text('{0}'.format(r.fullname), insert=(3*mm, (nline*10+7)*mm), fill=_font_attributes()['fill'], stroke=_font_attributes()['stroke'], stroke_width=_font_attributes()['stroke_width'], font_family=_font_attributes()['font_family'], font_size=15+3))
             #ldwg.add(ress)
 
 
@@ -2114,7 +2115,7 @@ class Project(object):
             #     or (self.start_date() >= start and (self.end_date() <= end or self.start_date() <= end))) or level == 1: 
             if ((self.start_date() >= start and self.end_date() <= end) 
                 or ((self.end_date() >=start and self.start_date() <= end))) or level == 1: 
-                fprj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, ((prev_y)*10+7)*mm), fill='black', stroke='white', stroke_width=0, font_family="Verdana", font_size="18"))
+                fprj.add(svgwrite.text.Text('{0}'.format(self.name), insert=((6*level+3)*mm, ((prev_y)*10+7)*mm), fill=_font_attributes()['fill'], stroke=_font_attributes()['stroke'], stroke_width=_font_attributes()['stroke_width'], font_family=_font_attributes()['font_family'], font_size=15+3))
 
                 fprj.add(svgwrite.shapes.Rect(
                         insert=((6*level+0.8)*mm, (prev_y+0.5)*cm),
