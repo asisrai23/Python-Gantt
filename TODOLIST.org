@@ -81,5 +81,9 @@ Started : a milestone is on 3 lines.
 ** TODO draw dependency lines using blank lines before and after
 - for milestone itself
 - for task depending on milestone
+* TODO change to the code for the horizontal alignment of the text
+I changed "tx = 5" to "tx = 20". I would suggest to make this horizontal offset
+an attribute of the project class. Then one can specify it as a property of each
+project.
 * TODO mode for showing critical path and tasks that can be moved without incidence
 exemple : http://www.4csys.com/images/gantt_chart_2.jpg / http://www.4csys.com/gantt_chart.htm
