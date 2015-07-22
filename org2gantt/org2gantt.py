@@ -243,7 +243,14 @@ def make_task_from_node(n, prop={}, prev_task=''):
 
     
     if n.todo != 'MILESTONE':
-        if start is None and end is None and (duration is None or duration=='' or (duration != '' and depends_of is None)):
+        # check stops
+        ends = (start, end, duration)
+        nonecount = 0
+        for e in ends:
+            if e is None:
+                nonecount += 1
+
+        if nonecount !=1 and (duration is None or duration=='' or (duration != '' and depends_of is None)):
             __LOG__.critical('** Task "{0}" : no start, stop, duration or dependencies -> not included in gantt !'.format(fullname))
             return None
         
