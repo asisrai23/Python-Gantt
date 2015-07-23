@@ -15,9 +15,9 @@ def setup():
     return
 
 
-def test_flatten():
-    assert_equals(gantt._flatten([1, [2, 3], [[4, 5], 6]]), [1, 2, 3, 4, 5, 6])
-    return
+#def test_flatten():
+#    assert_equals(gantt._flatten([1, [2, 3], [[4, 5], 6]]), [1, 2, 3, 4, 5, 6])
+#    return
 
 
 def test_add_vacations_1():
