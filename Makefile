@@ -40,10 +40,10 @@ conformity:
 
 
 pipregister:
-	python2.7 setup.py register
+	$(PYTHON) setup.py register
 
 register: test
-	python2.7 setup.py sdist upload --identity="Alexandre Norman" --sign --quiet
+	$(PYTHON) setup.py sdist upload --identity="Alexandre Norman" --sign --quiet
 
 doc:
 	@pydoc -w gantt/gantt.py
