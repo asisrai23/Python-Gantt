@@ -10,6 +10,7 @@ Output format is SVG.
 This projects needs the following libraries:
 
 * svgwrite see https://bitbucket.org/mozman/svgwrite/
+* dateutil see https://labix.org/python-dateutil
 
 ### Additionnal requirements ###
 
