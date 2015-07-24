@@ -497,7 +497,7 @@ import gantt
 
 
 
-    if planning_end_date <= planning_start_date:
+    if eval(planning_end_date) <= eval(planning_start_date):
         __LOG__.critical('planning_end_date [{0}] is before planning_start_date [{1}]...'.format(planning_end_date, planning_start_date))
         sys.exit(-1)
 
