@@ -39,7 +39,7 @@ setup (
         "Topic :: Scientific/Engineering :: Visualization",
         ],
     packages=['gantt'],
-    url = 'http://xael.org/norman/python/python-gantt/',
+    url = 'http://xael.org/pages/python-gantt-en.html',
     description = 'This is a python class to create gantt chart using SVG.',
     long_description=long_description,
     install_requires=[
