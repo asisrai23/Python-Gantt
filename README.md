@@ -3,6 +3,8 @@
 Python-Gantt make possible to easily draw gantt charts from Python.  
 Output format is SVG.
 
+You can see output examples here :  http://xael.org/pages/python-gantt-en.html
+
 ## Installation ##
 
 ### Requirements ###
