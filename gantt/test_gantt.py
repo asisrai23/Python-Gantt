@@ -153,8 +153,8 @@ def test_Tasks():
     assert_equals(p1.end_date(), datetime.date(2015, 1, 20))
 
 
-    p1.make_svg_for_tasks(filename='/tmp/h.svg', today=datetime.date(2014, 12, 31))
-    assert os.path.isfile('/tmp/h.svg')
+    p1.make_svg_for_tasks(filename='./h.svg', today=datetime.date(2014, 12, 31))
+    assert os.path.isfile('./h.svg')
 
 
     assert_equals(p1.get_resources(), [])
