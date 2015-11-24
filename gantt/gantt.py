@@ -27,8 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.4.2'
-__last_modification__ = '2015.06.13'
+__version__ = '0.4.3'
+__last_modification__ = '2015.11.24'
 
 import codecs
 import datetime
@@ -62,10 +62,15 @@ class _my_svgwrite_drawing_wrapper(svgwrite.Drawing):
     """
     Hack for beeing able to use a file descriptor as filename
     """
-    def save(self):
+    def save(self, width='100%', height='100%'):
         """ Write the XML string to **filename**. """
         test = False
         import io
+
+        # Fix height and width
+        self['height'] = height
+        self['width'] = width
+        
         if sys.version_info[0] == 2:
             test = type(self.filename) == types.FileType or type(self.filename) == types.InstanceType
         elif sys.version_info[0] == 3:
@@ -1868,7 +1873,7 @@ class Project(object):
 
         dwg.add(self._svg_calendar(maxx, pheight, start_date, today, scale))
         dwg.add(ldwg)
-        dwg.save()
+        dwg.save(width=(maxx+1)*cm, height=(pheight+3)*cm)
         return
 
     def make_svg_for_resources(self, filename, today=None, start=None, end=None, resources=None, one_line_for_tasks=False, filter='', scale=DRAW_WITH_DAILY_SCALE):
@@ -2043,7 +2048,7 @@ class Project(object):
                     ))
         dwg.add(self._svg_calendar(maxx, nline-2, start_date, today, scale))
         dwg.add(ldwg)
-        dwg.save()
+        dwg.save(width=(maxx+1)*cm, height=(nline+1)*cm)
         return {
             'conflicts_vacations': conflicts_vacations, 
             'conflicts_tasks':conflicts_tasks
