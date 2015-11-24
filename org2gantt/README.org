@@ -128,7 +128,7 @@ and of course those scripts :
 - org2gantt.py : to transform org mode project file in my source code for my
   python gantt generator
 - gantt.py : to transform gantt source code in SVG.
-You can download them from http://xael.org/norman/python/python-gantt/
+You can download them from http://xael.org/pages/python-gantt-en.html
 ** Running the scripts
 *** Transform org-mode file [[file:example.org][example.org]] in [[../example.py][example.py]]
 #+begin_src sh

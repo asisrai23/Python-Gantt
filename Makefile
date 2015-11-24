@@ -27,9 +27,8 @@ changelog:
 
 test:
 	nosetests gantt
-
-	$(PYTHON) org2gantt/org2gantt.py  org2gantt/example.org -r -g test.py 
-	$(PYTHON) test.py
+	export PYTHONPATH=$(shell pwd)/gantt; $(PYTHON) org2gantt/org2gantt.py  org2gantt/example.org -r -g test.py 
+	export PYTHONPATH=$(shell pwd)/gantt; $(PYTHON) test.py
 	rm test.py
 
 conformity:
@@ -42,20 +41,25 @@ conformity:
 pipregister:
 	$(PYTHON) setup.py register
 
-register: test
+register:
 	$(PYTHON) setup.py sdist upload --identity="Alexandre Norman" --sign --quiet
 
 doc:
 	@pydoc -w gantt/gantt.py
 
-web:	test
-	cp dist/$(ARCHIVE).tar.gz web/
-	m4 -DVERSION=$(VERSION) -DMD5SUM=$(shell md5sum dist/$(ARCHIVE).tar.gz |cut -d' ' -f1) -DDATE=$(shell date +%Y-%m-%d) web/index.gtm.m4 > web/index.gtm
-	(cd web_upper ; make all)
-	convert project.svg web/project.png 
-	convert project_resources.svg web/project_resources.png 
-	optipng web/project.png
-	optipng web/project_resources.png
-	echo "put project.png;put project_resources.png;put index.*;put $(ARCHIVE).tar.gz"| (cd web ; ncftp python-gantt)
+web:
+	@cp dist/$(ARCHIVE).tar.gz web2/
+	@m4 -DVERSION=$(VERSION) -DMD5SUM=$(shell md5sum dist/$(ARCHIVE).tar.gz |cut -d' ' -f1) -DDATE=$(shell date +%Y-%m-%d) web2/index.md.m4 > web2/index.md
+	@m4 -DVERSION=$(VERSION) -DMD5SUM=$(shell md5sum dist/$(ARCHIVE).tar.gz |cut -d' ' -f1) -DDATE=$(shell date +%Y-%m-%d) web2/index-en.md.m4 > web2/index-en.md
+	@bash -c 'source /usr/local/bin/virtualenvwrapper.sh; workon xael.org; make ftp_upload'
+
+hgcommit:
+	@hg commit
+	@hg tag $(VERSION) -f
+	@hg push
+
+
+release: test doc changelog hgcommit register web
+
 
 .PHONY: web

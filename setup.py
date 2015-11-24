@@ -17,7 +17,7 @@ with open(path.join(here, 'README.txt'), encoding='utf-8') as f:
 
 setup (
     name = 'python-gantt',
-    version = '0.4.2',
+    version = '0.4.3',
     author = 'Alexandre Norman',
     author_email = 'norman@xael.org',
     license ='gpl-3.0.txt',
@@ -39,7 +39,8 @@ setup (
         "Topic :: Scientific/Engineering :: Visualization",
         ],
     packages=['gantt'],
-    url = 'http://xael.org/norman/python/python-gantt/',
+    url = 'http://xael.org/pages/python-gantt-en.html',
+    bugtrack_url = 'https://bitbucket.org/xael/python-gantt',
     description = 'This is a python class to create gantt chart using SVG.',
     long_description=long_description,
     install_requires=[
