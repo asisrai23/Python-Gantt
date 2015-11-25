@@ -27,8 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.4.3'
-__last_modification__ = '2015.11.24'
+__version__ = '0.4.4'
+__last_modification__ = '2015.11.25'
 
 import codecs
 import datetime
@@ -41,7 +41,11 @@ import types
 
 try:
     import svgwrite
-    from svgwrite import cm, mm
+    # conversion from mm/cm to pixel is done by ourselve as firefox seems
+    # to have a bug for big numbers...
+    # 3.543307 is for conversion from mm to pt units !
+    mm = 3.543307
+    cm = 35.43307
 except ImportError:
     print("This program uses svgwrite. See : https://bitbucket.org/mozman/svgwrite/")
     sys.exit(1)
@@ -1480,10 +1484,10 @@ class Milestone(Task):
         # 3.543307 is for conversion from mm to pt units !
         svg.add(svgwrite.shapes.Polygon(
                 points=[
-                ((x+5)*3.543307, (y+2)*3.543307),
-                ((x+8)*3.543307, (y+5)*3.543307),
-                ((x+5)*3.543307, (y+8)*3.543307),
-                ((x+2)*3.543307, (y+5)*3.543307)
+                    ((x+5)*mm, (y+2)*mm),
+                    ((x+8)*mm, (y+5)*mm),
+                    ((x+5)*mm, (y+8)*mm),
+                    ((x+2)*mm, (y+5)*mm)
                 ],
                 fill=color,
                 stroke=color,
