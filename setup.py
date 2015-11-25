@@ -13,11 +13,11 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.txt'), encoding='utf-8') as f:
     long_description = f.read()
 
-
+import gantt
 
 setup (
     name = 'python-gantt',
-    version = '0.4.3',
+    version = gantt.__version__,
     author = 'Alexandre Norman',
     author_email = 'norman@xael.org',
     license ='gpl-3.0.txt',
