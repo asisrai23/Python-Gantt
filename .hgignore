@@ -17,6 +17,9 @@ python-gantt-[0-9].?.?/*
 org2gantt/*.svg
 *.svg
 gantt.egg-info/*
+htmlcov/*
+.tox/*
+docs/*
 
 syntax: regexp
 (.*/)?\#[^/]*\#$
