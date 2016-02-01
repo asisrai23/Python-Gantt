@@ -1,4 +1,4 @@
-include *.txt
+#include *.txt
 include CHANGELOG
 include MANIFEST.in
 include Makefile
