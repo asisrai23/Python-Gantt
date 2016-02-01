@@ -45,7 +45,6 @@ setup (
     long_description=long_description,
     install_requires=[
         'svgwrite>=1.1.6',
-        'python-dateutil>=2.4.2',
         'clize>=2.0',
         'python-dateutil>=2.4'
         ],
