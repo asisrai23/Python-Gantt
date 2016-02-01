@@ -4,29 +4,13 @@
 #
 #    pip-compile requirements.in
 #
-alabaster==0.7.6          # via sphinx
-argh==0.26.1              # via sphinx-autobuild, watchdog
 argparse==1.4.0           # via dateutils
-babel==2.1.1              # via sphinx
-backports-abc==0.4        # via tornado
-commonmark==0.5.4         # via recommonmark
+clize==3.0
 dateutils==0.6.6
-docutils==0.12            # via recommonmark, sphinx
-jinja2==2.8               # via sphinx
-livereload==2.4.0         # via sphinx-autobuild
-markupsafe==0.23          # via jinja2
-pathtools==0.1.2          # via sphinx-autobuild, watchdog
-pygments==2.0.2           # via sphinx
-pyparsing==2.0.6          # via svgwrite
+funcsigs==0.4             # via sigtools
+pyparsing==2.0.7          # via svgwrite
 python-dateutil==2.4.2    # via dateutils
-pytz==2015.7              # via babel, dateutils
-pyyaml==3.11              # via sphinx-autobuild, watchdog
-recommonmark==0.2.0
-six==1.10.0               # via livereload, python-dateutil, sphinx
-snowballstemmer==1.2.0    # via sphinx
-sphinx-autobuild==0.5.2
-sphinx-rtd-theme==0.1.9   # via sphinx
-sphinx==1.3.3
+pytz==2015.7              # via dateutils
+sigtools==1.0             # via clize
+six==1.10.0               # via clize, python-dateutil, sigtools
 svgwrite==1.1.6
-tornado==4.3              # via livereload, sphinx-autobuild
-watchdog==0.8.3           # via sphinx-autobuild
