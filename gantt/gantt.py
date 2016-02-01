@@ -39,27 +39,16 @@ import types
 # https://bitbucket.org/mozman/svgwrite
 # http://svgwrite.readthedocs.org/en/latest/
 
-try:
-    import svgwrite
-    # conversion from mm/cm to pixel is done by ourselve as firefox seems
-    # to have a bug for big numbers...
-    # 3.543307 is for conversion from mm to pt units !
-    mm = 3.543307
-    cm = 35.43307
-except ImportError:
-    print("This program uses svgwrite. See : https://bitbucket.org/mozman/svgwrite/")
-    sys.exit(1)
+import svgwrite
+# conversion from mm/cm to pixel is done by ourselve as firefox seems
+# to have a bug for big numbers...
+# 3.543307 is for conversion from mm to pt units !
+mm = 3.543307
+cm = 35.43307
 
 
 # https://labix.org/python-dateutil
-try:
-    import dateutil.relativedelta
-
-except ImportError:
-    print("This program uses dateutil. See : https://labix.org/python-dateutil")
-    sys.exit(1)
-
-
+import dateutil.relativedelta
 
 
 class _my_svgwrite_drawing_wrapper(svgwrite.Drawing):
