@@ -43,8 +43,8 @@ tox:
 
 toxtest:
 	nosetests gantt
-	python org2gantt/org2gantt.py  org2gantt/example.org -r -g test.py 
-	python test.py
+	export PYTHONPATH=$(shell pwd)/gantt; $(PYTHON) org2gantt/org2gantt.py  org2gantt/example.org -r -g test.py 
+	export PYTHONPATH=$(shell pwd)/gantt; $(PYTHON) test.py
 	rm test.py
 
 conformity:
@@ -75,7 +75,7 @@ hgcommit:
 	@hg push
 
 
-release: check_version_consistency test doc changelog hgcommit register web
+release: check_version_consistency tox doc changelog hgcommit register web
 
 
 .PHONY: web
