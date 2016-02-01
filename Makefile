@@ -1,12 +1,19 @@
 # python-gantt Makefile
 
-VERSION=`$(PYTHON) setup.py --version`
-ARCHIVE=`$(PYTHON) setup.py --fullname`
+VERSION=$(shell $(PYTHON) setup.py --version)
+ARCHIVE=$(shell $(PYTHON) setup.py --fullname)
 PYTHON=python3.4
 PANDOC=~/.cabal/bin/pandoc
 
 install:
 	@$(PYTHON) setup.py install
+
+check_version_consistency:
+	SETUPVERSION=$(shell python setup.py --version 2> /dev/null)
+	PYTHOVERSION=$(shell python -c 'import gantt; print(gantt.__version__)')
+ifneq ($(shell python setup.py --version 2> /dev/null), $(shell python -c 'import gantt; print(gantt.__version__)'))
+	$(error VERSION INCONSISTENCY between setup.py and gantt/gantt.py)
+endif
 
 archive: doc readme changelog
 	@$(PYTHON) setup.py sdist
@@ -68,7 +75,7 @@ hgcommit:
 	@hg push
 
 
-release: test doc changelog hgcommit register web
+release: check_version_consistency test doc changelog hgcommit register web
 
 
 .PHONY: web

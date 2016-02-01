@@ -27,8 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 __author__ = 'Alexandre Norman (norman at xael.org)'
-__version__ = '0.4.4'
-__last_modification__ = '2015.11.25'
+__version__ = '0.5.0'
+__last_modification__ = '2016.02.01'
 
 import codecs
 import datetime
