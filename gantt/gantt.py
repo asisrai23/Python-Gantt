@@ -872,7 +872,7 @@ class Task(object):
             if real_end <= self.start_date():
                 current_day = self.start_date()
                 real_duration = 0
-                duration = self.duration   
+                duration = self.duration if self.duration else 0 
                 while duration > 1 or (current_day.weekday() in _not_worked_days() or current_day in VACATIONS):
                     if not (current_day.weekday() in _not_worked_days() or current_day in VACATIONS):
                         real_duration = real_duration + 1
